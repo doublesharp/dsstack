@@ -7,6 +7,6 @@ Build a small, portable collection of skills for scoped delivery and proportiona
 - Use Python standard-library tooling so maintaining this stack needs no compiler, package download, or build cache.
 - Run generated fixtures, logs, bytecode, and test output under /Volumes/Scratch/dsstack. Set TMPDIR and PYTHONDONTWRITEBYTECODE=1 for tests.
 - Skills do not grant permission to merge, deploy, delete data, send messages, or bypass harness policy.
-- Preserve other projects and installed global skills. Provide an explicit, dry-run-first installer.
+- Preserve unrelated projects and global skills. Global migrations need explicit user authorization and a verified archive; the installer itself remains dry-run-first.
 - Document borrowed ideas and exact upstream sources. Keep license notices for adapted material.
 - Scope validation to changed behavior and mandatory checks. Once those pass, finish the requested work.

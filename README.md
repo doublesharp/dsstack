@@ -60,23 +60,23 @@ Keep the target warm. Do not rebuild the entire workspace after every edit, repe
 
 A harmless wording, generated-data, or configuration change can use a direct check rather than inventing a behavioral test. Production behavior and high-impact security, financial, migration, or native-lifecycle changes still deserve meaningful regression coverage.
 
-## Install after review
+## Install or recreate links
 
-Choose one skill home. The installer previews by default and never edits Codex/T3 configuration:
+The local trial is active; see [trial and rollback](docs/trial.md). Codex/T3 uses the shared user skill home below. The installer previews by default and never edits provider configuration:
 
 ```sh
-python3 scripts/dsstack.py install --dest ~/.codex/skills
-python3 scripts/dsstack.py install --dest ~/.codex/skills --apply
-python3 scripts/dsstack.py doctor --dest ~/.codex/skills
+python3 scripts/dsstack.py install --dest ~/.agents/skills
+python3 scripts/dsstack.py install --dest ~/.agents/skills --apply
+python3 scripts/dsstack.py doctor --dest ~/.agents/skills
 ```
 
-For Claude Code use `~/.claude/skills`; for a shared skill home use `~/.agents/skills`. Avoid installing the same collection in multiple homes that the same session discovers. The installed entries are symlinks to this checkout, so keep the checkout available. Moving it requires reinstalling from the new location. Restart the provider or start a fresh thread after changing the active skill set. If Claude Code loads Superpowers through a plugin SessionStart hook, disable that plugin when choosing dsstack as its workflow; installing skills alone leaves the hook active. Doctor does not inspect provider plugins or hooks.
+Claude Code uses `~/.claude/skills`. Both providers link to this checkout. Keep one dsstack entry per provider; avoid adding duplicate Codex links under `~/.codex/skills`. The installed entries are symlinks to this checkout, so keep the checkout available. Moving it requires reinstalling from the new location. Restart the provider or start a fresh thread after changing the active skill set. If Claude Code loads Superpowers through a plugin SessionStart hook, disable that plugin when choosing dsstack as its workflow; installing skills alone leaves the hook active. Doctor does not inspect provider plugins or hooks.
 
 Existing directories and foreign symlinks are conflicts, never overwritten. If any conflict exists, installation changes nothing. Re-running an unchanged install is idempotent. Removal also previews first and only unlinks entries pointing to this checkout:
 
 ```sh
-python3 scripts/dsstack.py uninstall --dest ~/.codex/skills
-python3 scripts/dsstack.py uninstall --dest ~/.codex/skills --apply
+python3 scripts/dsstack.py uninstall --dest ~/.agents/skills
+python3 scripts/dsstack.py uninstall --dest ~/.agents/skills --apply
 ```
 
 Installing dsstack does not disable another workflow pack. Review [examples/codex-overrides.toml](examples/codex-overrides.toml) when adopting it alongside Superpowers. Replace the matching existing entries rather than appending conflicting ones. Use full `SKILL.md` paths and your actual home paths. T3 provider homes may share the same config and skill directory through symlinks.
