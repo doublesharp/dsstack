@@ -1,4 +1,6 @@
+from contextlib import redirect_stderr, redirect_stdout
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -111,6 +113,16 @@ class StackTests(unittest.TestCase):
             result = ds.preflight(scratch, "app", "task-one", expected_gib=40, reserve_gib=150)
         self.assertEqual(result["paths"]["build"], str(scratch / "app/build/task-one"))
         self.assertEqual(list(scratch.iterdir()), [])
+
+    def test_explicit_missing_profile_is_rejected_instead_of_using_defaults(self):
+        output, errors = io.StringIO(), io.StringIO()
+        missing = self.base / "misspelled-profile.json"
+        with patch.object(ds, "preflight", return_value={"ok": True}) as admit:
+            with redirect_stdout(output), redirect_stderr(errors):
+                status = ds.main(["--stack-root", str(self.root), "preflight", "--project", "app", "--task", "fix", "--profile", str(missing)])
+        self.assertEqual(status, 2)
+        self.assertIn(str(missing), json.loads(errors.getvalue())["error"])
+        admit.assert_not_called()
 
     def test_preflight_rejects_an_unmounted_scratch(self):
         scratch = self.base / "Scratch"

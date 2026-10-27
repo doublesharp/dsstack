@@ -196,7 +196,9 @@ def preflight(scratch, project, task, expected_gib=0, reserve_gib=150, warning_g
 
 
 def _profile(root, override=None):
-    path = Path(override) if override else Path(root) / "profiles/default.json"
+    if override is not None:
+        return json.loads(Path(override).read_text(encoding="utf-8"))
+    path = Path(root) / "profiles/default.json"
     if not path.exists():
         return {"reserve_gib": 150, "warning_gib": 300}
     return json.loads(path.read_text(encoding="utf-8"))

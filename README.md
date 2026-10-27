@@ -6,7 +6,7 @@ This is a curated collection, not a new agent runtime. T3 owns execution, each p
 
 ## Start here
 
-Python 3.10 or later is sufficient. These checks are read-only:
+Python 3.9 or later is sufficient; this checkout was tested with macOS `/usr/bin/python3` 3.9.6. These checks are read-only:
 
 ```sh
 python3 scripts/dsstack.py doctor
@@ -14,7 +14,7 @@ python3 scripts/dsstack.py list
 python3 scripts/dsstack.py preflight --project app --task parser-fix --expected-gib 20
 ```
 
-`preflight` verifies that Scratch is mounted, rejects unsafe output paths, checks expected peak growth plus the free-space reserve, and prints task-specific build, temporary, and report paths. It creates no directories and runs no build. Existing project wrappers remain responsible for routing the actual command. Do not create a parallel output layout that violates a project's contract.
+`preflight` verifies that Scratch is mounted, rejects unsafe output paths, checks expected peak growth plus the free-space reserve, and prints task-specific build, temporary, and report paths. It creates no directories and runs no build. Existing project wrappers remain responsible for routing the actual command. Preserve warm compiler targets keyed by worktree across tasks; the suggested task build path is for new task-owned output. Do not create a parallel output layout that violates a project's contract. Run preflight once per task or when capacity assumptions materially change.
 
 ## Skills
 
@@ -53,7 +53,7 @@ python3 scripts/dsstack.py install --dest ~/.codex/skills --apply
 python3 scripts/dsstack.py doctor --dest ~/.codex/skills
 ```
 
-For Claude Code use `~/.claude/skills`; for a shared skill home use `~/.agents/skills`. Avoid installing the same collection in multiple homes that the same session discovers. The installed entries are symlinks to this checkout, so keep the checkout available. Moving it requires reinstalling from the new location. Restart the provider or start a fresh thread after changing the active skill set.
+For Claude Code use `~/.claude/skills`; for a shared skill home use `~/.agents/skills`. Avoid installing the same collection in multiple homes that the same session discovers. The installed entries are symlinks to this checkout, so keep the checkout available. Moving it requires reinstalling from the new location. Restart the provider or start a fresh thread after changing the active skill set. If Claude Code loads Superpowers through a plugin SessionStart hook, disable that plugin when choosing dsstack as its workflow; installing skills alone leaves the hook active. Doctor does not inspect provider plugins or hooks.
 
 Existing directories and foreign symlinks are conflicts, never overwritten. If any conflict exists, installation changes nothing. Re-running an unchanged install is idempotent. Removal also previews first and only unlinks entries pointing to this checkout:
 
@@ -66,7 +66,7 @@ Installing dsstack does not disable another workflow pack. Review [examples/code
 
 ## Machine and project settings
 
-[profiles/default.json](profiles/default.json) contains a 150 GiB admission reserve, 300 GiB warning target, and suggested concurrency values. These are starting policies, not benchmarks. `preflight` enforces the capacity check only; this version does not schedule jobs or delete output. Override the reserve per invocation or supply a reviewed JSON profile with `--profile`.
+[profiles/default.json](profiles/default.json) contains a 150 GiB admission reserve, 300 GiB warning target, and suggested concurrency values. These are starting policies, not benchmarks. `preflight` enforces the capacity check only; this version does not schedule jobs or delete output. Use a different reserve only under an explicit user or project policy, or supply that reviewed JSON policy with `--profile`. An explicitly supplied missing profile is an error.
 
 
 [examples/projects.json](examples/projects.json) maps current repositories to their existing entry points. Treat those commands as orientation examples, re-read live project instructions, and preserve its Node/Rust/pnpm pins. [examples/task-brief.md](examples/task-brief.md) shows a compact task contract without creating a competing task tracker.

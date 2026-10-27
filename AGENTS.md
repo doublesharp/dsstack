@@ -1,7 +1,6 @@
 # Working on dsstack
 
 Build a small, portable collection of skills for scoped delivery and proportionate verification.
-The user authorized implementation through a completed reviewable stack in this session.
 
 - Keep skill descriptions narrow. No automatic session-start router or mandatory agent fan-out.
 - Favor behavioral TDD for code changes. Use focused tests in the inner loop; run broader required checks at integration boundaries. Do not add tests that only mirror skill wording.

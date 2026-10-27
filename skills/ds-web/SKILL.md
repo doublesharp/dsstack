@@ -9,7 +9,7 @@ Work within the existing framework, design system, routing, and component owners
 
 For behavior changes, reproduce the failure with a focused component or journey test at the boundary that owns it. Preserve mounted state, pending requests, account context, and cleanup when changing navigation or visibility. A static screenshot cannot establish these lifecycles.
 
-For CSS or layout changes, identify affected viewport sizes and interactions. Completion evidence should show the rendered interface at actual relevant dimensions, including scrolling, clipping, focus, overlays, and controls touched by the change. Test nearby breakpoints when a rule changes there. DOM assertions and a successful build do not establish appearance.
+For CSS or layout changes, identify affected viewport sizes and interactions. When browser verification is in scope, completion evidence should show the rendered interface at actual relevant dimensions, including scrolling, clipping, focus, overlays, and controls touched by the change. Test nearby breakpoints when a rule changes there. DOM assertions and a successful build do not establish appearance.
 
 Use T3 preview only when the current request asks for browser work. Loading this skill does not itself request a browser launch. When browser verification is outside the request or unavailable, state the visual or journey behavior that remains unverified.
 
