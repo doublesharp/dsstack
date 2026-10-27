@@ -8,6 +8,7 @@ Exact source revisions and file hashes are in [upstreams.lock.json](../upstreams
 | t3dotgg/tstack council | Independent named reviewers and synthesis | Explicit council only; two default seats, shared bounded rounds, no agreement loop or silent fallback. |
 | t3dotgg/tstack full-stop | Own preparation through a clear readiness gate | No emphasis-triggered activation. User authority and current harness policy remain binding. |
 | obra/superpowers | Behavioral RED/GREEN and root-cause hypotheses | No test-per-helper requirement, blanket workspace rerun, repeated revert cycle, or configuration approval ritual. |
+| obra/superpowers brainstorming/writing-plans | Intent discovery, buildable specs, requirement coverage, interfaces and task decomposition | Scaled notes/plans, existing trackers and authorization, no compulsory spec/plan/reviewer sequence or build per checkbox. |
 | Existing project contracts | Scratch ownership and domain proof boundaries | Preserve the project's commands, versions, tracker, and release gates. |
 
 Official references used for domain guidance:

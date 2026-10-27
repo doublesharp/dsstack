@@ -1,0 +1,4 @@
+interface:
+  display_name: "DS Spec"
+  short_description: "Buildable specs for unclear requirements and design"
+  default_prompt: "Use $ds-spec to clarify this feature and write a concise, buildable specification."

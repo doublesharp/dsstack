@@ -9,7 +9,7 @@ Use existing framework, design system, routing, component ownership, scripts, an
 
 Reproduce behavior failures with a focused component/journey test at the owning boundary. Preserve mounted state, pending requests, account context, and cleanup through navigation/visibility changes; screenshots cannot prove lifecycles.
 
-For CSS/layout, identify affected dimensions and interactions. Authorized browser checks should show actual rendered dimensions, scrolling, clipping, focus, overlays, and affected controls; check nearby breakpoints when rules change there. DOM assertions/builds cannot prove appearance.
+For CSS/layout, identify affected visual states. When browser verification is authorized, inspect the rendered UI; include dimensions, scrolling, clipping, focus, overlays, and nearby breakpoints only when affected. DOM assertions/builds cannot prove appearance.
 
 Use T3 preview only when the current request authorizes browser work under the active harness. Loading this skill grants no browser launch. State remaining visual/journey gaps when checks are unavailable or outside scope.
 

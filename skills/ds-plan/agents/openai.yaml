@@ -1,0 +1,4 @@
+interface:
+  display_name: "DS Plan"
+  short_description: "Executable plans tied to clear requirements and specs"
+  default_prompt: "Use $ds-plan to turn these requirements into a concise implementation plan with focused checks."

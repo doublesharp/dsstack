@@ -1,6 +1,6 @@
 ---
 name: "ds-work"
-description: "Use when a requested implementation or repair spans several concrete outcomes and needs a scoped delivery plan."
+description: "Use when tracking several requested outcomes, coordinating their delivery, or resuming interrupted work."
 ---
 
 # Scoped delivery

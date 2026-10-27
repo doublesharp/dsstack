@@ -20,6 +20,8 @@ python3 scripts/dsstack.py preflight --project app --task parser-fix --expected-
 
 | Skill | Use it for |
 |---|---|
+| [ds-spec](skills/ds-spec/SKILL.md) | Clarifying requirements and recording consequential design decisions |
+| [ds-plan](skills/ds-plan/SKILL.md) | Turning clear requirements into deliverable tasks, interfaces, and checks |
 | [ds-work](skills/ds-work/SKILL.md) | Delivering agreed outcomes and recovering the remaining work after interruptions |
 | [ds-tdd](skills/ds-tdd/SKILL.md) | Behavioral RED/GREEN with a focused, affordable feedback loop |
 | [ds-debug](skills/ds-debug/SKILL.md) | Reproducing a failure and testing a concrete root-cause hypothesis |
@@ -35,6 +37,10 @@ python3 scripts/dsstack.py preflight --project app --task parser-fix --expected-
 | [ds-ai](skills/ds-ai/SKILL.md) | Deterministic tool contracts, bounded evals, and real provider boundaries |
 
 Skills use ordinary discovery with narrow descriptions. You can name one directly, for example `Use $ds-tdd and $ds-rust for this parser fix`. Only load the domains relevant to the changed behavior. There is no requirement to invoke every core skill for every task.
+
+## Planning that fits the work
+
+Clear small fixes proceed directly. Use `ds-spec` for material uncertainty about what to build, `ds-plan` for implementation dependencies or handoffs, and `ds-work` to track delivery and remaining outcomes. Reuse existing specs, plans, and project task records. These are separate capabilities, not a required sequence; load only those the request needs. A short note can be enough, and existing authorization does not need another approval ceremony. The [bulk review](docs/bulk-review.md) records the current size, responsibility boundaries, and limits.
 
 ## Cross-model review
 
