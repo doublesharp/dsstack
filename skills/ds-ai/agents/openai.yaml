@@ -1,0 +1,4 @@
+interface:
+  display_name: "DS AI"
+  short_description: "Test model boundaries with bounded evaluations"
+  default_prompt: "Use $ds-ai to implement this model-backed change with deterministic boundary tests and a small evaluation set."

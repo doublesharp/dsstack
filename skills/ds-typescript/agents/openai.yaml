@@ -1,0 +1,4 @@
+interface:
+  display_name: "DS TypeScript"
+  short_description: "Test TypeScript service and package boundaries"
+  default_prompt: "Use $ds-typescript to implement this package change and verify the affected runtime boundary."

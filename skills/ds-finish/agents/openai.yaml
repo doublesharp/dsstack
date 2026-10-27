@@ -1,0 +1,4 @@
+interface:
+  display_name: "DS Finish"
+  short_description: "Hand off completed work with precise evidence"
+  default_prompt: "Use $ds-finish to reconcile the requested outcomes and prepare a concise evidence-backed handoff."

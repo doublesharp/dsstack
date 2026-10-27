@@ -1,0 +1,4 @@
+interface:
+  display_name: "DS Work"
+  short_description: "Deliver requested outcomes with clear scope"
+  default_prompt: "Use $ds-work to plan and complete the requested outcomes with proportionate evidence."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "DS Solidity"
+  short_description: "Scope contract tests and preserve proof boundaries"
+  default_prompt: "Use $ds-solidity to implement this contract change with focused Foundry tests and appropriate security gates."

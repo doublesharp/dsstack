@@ -1,0 +1,4 @@
+interface:
+  display_name: "DS Resources"
+  short_description: "Admit costly work with owned Scratch outputs"
+  default_prompt: "Use $ds-resources to check capacity and choose owned Scratch output paths before costly work."
