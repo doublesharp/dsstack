@@ -5,14 +5,12 @@ description: "Use when a requested implementation or repair spans several concre
 
 # Scoped delivery
 
-Turn the request into a small outcome map: requested result, acceptance evidence, dependencies, and current status. Read the project's instructions and existing execution wrappers. Keep an existing usable plan; do not manufacture a new planning system or an approval gate.
+Map each requested outcome to acceptance evidence, dependencies, and status. Read project instructions and wrappers; reuse an existing plan or tracker without creating approval gates.
 
-Work through authorized outcomes until the request is complete. Ask only for information that materially changes correctness or authority and cannot be found locally. When one outcome is blocked, record the exact dependency and continue independent outcomes. A missing optional tool does not block work that can be completed safely with available tools.
+Continue authorized work until complete. Ask only for missing information that materially affects correctness or authority and cannot be found locally. Record blocked dependencies and continue independent outcomes; an optional missing tool need not stop delivery.
 
-Keep changes and verification tied to that map. Expand scope only for a concrete interaction or risk: identify the affected behavior, plausible failure, and evidence needed. Record unrelated improvements separately; they do not become automatic blockers. Required integration or release gates remain required when the work reaches those boundaries.
+Tie edits and checks to the outcome map. Expand only for a concrete interaction or risk, naming the affected behavior and failure. Keep unrelated improvements optional. Preserve mandatory integration and release gates at their proper boundaries.
 
-Delegate when independent work materially shortens delivery of a mapped outcome, or when the user asks. Give each worker a bounded outcome, owned files, evidence expectations, and completion condition. Use T3's available tools and harness protocol; this skill adds no agent runtime or mandatory fan-out. If a requested review model is unavailable, disclose that fact and the available path instead of silently substituting a model.
+Delegate when independent work materially shortens a mapped outcome, or when requested. Give workers bounded outcomes, owned files, expected evidence, and stopping conditions. Follow the active harness protocol; disclose unavailable requested models without silent substitution or mandatory fan-out.
 
-Before handoff, reconcile every outcome with the resulting changes and actual evidence. State any remaining gate and its owner. Finish when the authorized request is complete and reviewable; further polishing needs a concrete benefit to the requested result.
-
-Inspiration: tstack's sol-loop approach to scoped delivery. This skill does not grant permission for external actions.
+Before handoff, reconcile every outcome with the diff and actual evidence. Name remaining gates and owners. Finish when the authorized result is complete and reviewable; further polishing needs a concrete benefit to that result.

@@ -5,14 +5,14 @@ description: "Use when changing Solidity contracts, Foundry tests, upgrade layou
 
 # Solidity contract changes
 
-Use the repository's compiler, Foundry configuration, libraries, wrappers, and deployment conventions. Identify the changed invariant, caller permissions, and affected state before editing. Preserve existing compiler and dependency pins.
+Use pinned compiler/dependencies, Foundry configuration, libraries, wrappers, and deployment conventions. Identify changed invariants, caller permissions, and affected state.
 
-Begin behavioral changes with a focused Foundry test that fails for the expected contract behavior. Compilation failure or a broken fork fixture does not qualify as RED. Cover the meaningful authorized and rejected paths, then rerun the same target after implementation. Route outputs and caches through the project's Scratch configuration, propagating those locations into downstream Forge invocations.
+Start with a focused failing behavioral Foundry test; compile failures or broken fork fixtures do not qualify as RED. Cover meaningful authorized/rejected paths, implement, and rerun the target. Route outputs/caches to Scratch and propagate those paths into downstream Forge invocations.
 
-Choose broader gates from the change's risk. Accounting, state-machine, and adversarial interaction changes can warrant fuzz or invariant tests. Upgrade changes require the project's storage-layout and upgrade checks. Run coverage when required or when it resolves a concrete reachability question. Avoid rerunning every expensive gate after each local assertion change.
+Choose broader gates by risk: accounting, state-machine, and adversarial interactions may warrant fuzz/invariant tests; upgrades require storage-layout/upgrade checks. Run coverage when required or resolving concrete reachability questions. Avoid repeating expensive gates after each assertion edit.
 
-Fork evidence needs an explicit chain, block number or hash, source identity, and suitable historical RPC. Keep pinned historical calls pinned. An unavailable archive or an incomplete response is an unresolved proof, not a successful zero. Tests against mocks, forked state, and live contracts support different claims.
+Fork evidence needs explicit chain, block number/hash, source identity, and suitable historical RPC. Preserve historical pins; unavailable archives or incomplete responses leave proof unresolved, never a successful zero. Distinguish mocks, forks, and live contracts.
 
-Assess security severity by plausible impact and exploit conditions. A rare path that can lose funds, seize authority, or prevent recovery remains serious. For an explicitly requested audit or harness effort, use available user-selected tooling, such as Pashov for an audit or fizz for fuzz harness work; do not reproduce those workflows here.
+Assess severity by plausible impact and exploit conditions: rare paths that lose funds, seize authority, or prevent recovery remain serious. For explicitly requested audits/harnesses, use available user-selected tooling, such as Pashov or fizz, without duplicating their workflows.
 
-Passing tests does not authorize moving funds, upgrading, deploying, or publishing verification. Report the tested source and remaining live operation gates explicitly.
+Tests grant no authority to move funds, upgrade, deploy, or publish verification. Report tested source and remaining live-operation gates.

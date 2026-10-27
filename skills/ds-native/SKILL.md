@@ -5,14 +5,14 @@ description: "Use when changing desktop or mobile application behavior that cros
 
 # Native application boundaries
 
-Use the application's existing native framework, platform projects, build wrappers, and supported operating systems. Read its lifecycle and release conventions before changing bridges or packaging. A native task does not imply migrating to Tauri or another framework.
+Use existing native frameworks, platform projects, wrappers, supported operating systems, and lifecycle/release conventions. Native work does not imply a framework migration.
 
-Place a focused behavioral regression test at the lowest boundary that owns the failure. Source and unit checks can establish state transitions, serialization, or bridge request construction. They cannot establish that the packaged application launches, receives OS callbacks, or has permission to access a device resource.
+Put focused behavioral regressions at the lowest owning boundary. Source/unit checks can establish state transitions, serialization, or bridge requests; packaged launch, OS callbacks, and device permissions need runtime evidence.
 
-Select runtime checks from the changed boundary: packaged launch for entrypoint and asset changes; permission grant, denial, and revocation for protected resources; restart, suspend/resume, cancellation, and shutdown for lifecycle changes. Check ownership of background work and stale callbacks when windows, activities, or application sessions end. Exercise recovery paths when interrupted writes or updates can affect user data.
+Select checks by affected boundary: packaged launch for entrypoints/assets; permission grant, denial, and revocation for protected resources; restart, suspend/resume, cancellation, and shutdown for lifecycle changes. Check background-work ownership and stale callbacks as windows, activities, or sessions end. Exercise recovery when interrupted writes/updates can affect user data.
 
-Use the project's isolated simulator or test-device setup when available. Keep task-owned build products, captures, symbols, and installers on Scratch through existing wrappers. Reuse valid artifacts and avoid installing additional SDKs or downloading large toolchains merely to fill a reporting gap.
+Use isolated project simulators/test devices when available. Keep builds, captures, symbols, and installers on Scratch through existing wrappers; reuse valid artifacts. Do not install SDKs or large toolchains merely to fill evidence gaps.
 
-Signing, entitlements, notarization, installation, and updater behavior each require their appropriate artifact or platform evidence when affected. A development launch cannot establish a signed release's permissions or update recovery. Preserve established release authorization for distribution and signing operations.
+Signing, entitlements, notarization, installation, and updater changes need appropriate artifact/platform evidence. Development launch cannot prove signed-release permissions or update recovery. Preserve distribution/signing authorization.
 
-Report the exact platform, artifact, and lifecycle tested. If the host cannot exercise another supported operating system, state that platform's unverified behavior and its required gate; do not describe a source pass as cross-platform runtime acceptance.
+Report exact platform, artifact, and lifecycle tested. For supported systems unavailable on the host, state unverified behavior and required gates; source passes cannot establish cross-platform runtime acceptance.

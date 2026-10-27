@@ -3,14 +3,14 @@ name: "ds-review"
 description: "Use when reviewing a scoped change or coordinating requested independent code review before handoff."
 ---
 
-# Bounded, evidence-based review
+# Bounded review
 
-Identify the requested outcomes, exact checkout or diff, relevant contracts, and available verification. Review correctness and material risk within that scope. Broaden only for a concrete interaction, explaining the affected behavior and failure path. Optional improvements and style preferences do not become blockers.
+Establish requested outcomes, exact checkout/diff, relevant contracts, and proof limits. Review correctness and material risk. Broaden only for a concrete affected behavior and failure path; optional improvements and style do not block delivery.
 
-Use one independent reviewer when requested, required by the project, or justified by security, financial, data-recovery, or concurrency risk in the changed behavior. Give that reviewer the scope, raw artifacts, and proof limits; do not seed a desired verdict. Reviewers must not launch nested reviewers. Follow T3's tool and harness protocol. If the requested model is unavailable, disclose the limitation and available path instead of silently substituting one.
+Use one independent reviewer when requested, project-required, or justified by security, financial, recovery, or concurrency risk. Supply scope and raw evidence without seeding a verdict. Reviewers cannot launch reviewers. Follow the active harness protocol; use [ds-consult](../ds-consult/SKILL.md) for reciprocal Codex/Claude review or an explicitly requested council. Disclose unavailable models without substitution.
 
-Default to **three review rounds total**: the initial review and at most two scoped re-reviews. Count the initial review as round one. A re-review checks material fixes and their affected interactions; it does not restart the whole review. Nits, wording, and already-resolved findings do not create another round. At the cap, report unresolved evidence and decisions honestly instead of cycling until a reviewer is silent. Explicit user direction can change the budget.
+Default to **three rounds total**: initial review plus at most two scoped re-reviews of material fixes and open findings. Nits and resolved findings do not restart review. At the cap, report unresolved issues honestly; the cap grants no acceptance. Explicit user direction may change the budget.
 
-For each actionable finding, state severity, file/location, triggering scenario, impact, and supporting evidence; suggest the smallest correction when clear. Rank by impact, reachability, and existing protections. Rare security, authorization, financial, recovery, or concurrency failures can remain severe: low frequency alone is not a downgrade.
+Findings need severity, location, triggering scenario, impact, evidence, and a minimal correction when clear. Rank by impact, reachability, and protections; rarity alone does not downgrade security, authority, financial, recovery, or concurrency failures.
 
-The implementer verifies each finding and may disagree with source, contract, or runtime evidence. Record the disposition: fixed, accepted with rationale, disproved, or unresolved. Agreement is not a substitute for correctness. Re-run checks relevant to material edits and preserve mandatory integration gates. Finish with a clear verdict, concise evidence, and any exact remaining blocker; distinguish source acceptance from runtime or release qualification.
+The implementer verifies findings and records fixed, accepted-with-rationale, disproved, or unresolved dispositions. Recheck material edits and preserve mandatory gates. End with a verdict, actual evidence, and exact blockers; source acceptance does not qualify runtime or release.

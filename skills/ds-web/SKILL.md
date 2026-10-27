@@ -5,14 +5,14 @@ description: "Use when changing an existing web interface, responsive layout, or
 
 # Web interface changes
 
-Work within the existing framework, design system, routing, and component ownership. Identify the user's affected task and the states that make the change observable. Use existing application scripts and browser tools; avoid introducing a second UI framework or test runner for a local edit.
+Use existing framework, design system, routing, component ownership, scripts, and browser tools. Identify the affected user task and observable states; avoid adding frameworks or runners for local edits.
 
-For behavior changes, reproduce the failure with a focused component or journey test at the boundary that owns it. Preserve mounted state, pending requests, account context, and cleanup when changing navigation or visibility. A static screenshot cannot establish these lifecycles.
+Reproduce behavior failures with a focused component/journey test at the owning boundary. Preserve mounted state, pending requests, account context, and cleanup through navigation/visibility changes; screenshots cannot prove lifecycles.
 
-For CSS or layout changes, identify affected viewport sizes and interactions. When browser verification is in scope, completion evidence should show the rendered interface at actual relevant dimensions, including scrolling, clipping, focus, overlays, and controls touched by the change. Test nearby breakpoints when a rule changes there. DOM assertions and a successful build do not establish appearance.
+For CSS/layout, identify affected dimensions and interactions. Authorized browser checks should show actual rendered dimensions, scrolling, clipping, focus, overlays, and affected controls; check nearby breakpoints when rules change there. DOM assertions/builds cannot prove appearance.
 
-Use T3 preview only when the current request asks for browser work. Loading this skill does not itself request a browser launch. When browser verification is outside the request or unavailable, state the visual or journey behavior that remains unverified.
+Use T3 preview only when the current request authorizes browser work under the active harness. Loading this skill grants no browser launch. State remaining visual/journey gaps when checks are unavailable or outside scope.
 
-When browser work is authorized, establish which server owns the app, its ports, and the correct authentication context before opening pages. Reuse the authoritative server where appropriate. Respect existing per-context cookies, test accounts, waiters, and write-retry rules; do not create service instances or issue external writes to simplify a check.
+Before opening pages, establish the authoritative server, ports, and authentication context; reuse it where appropriate. Respect cookies per context, accounts, waiters, and write-retry rules. Do not create service instances or issue external writes to simplify checks.
 
-Run the affected journeys and required integration checks. Broader end-to-end coverage is justified by shared routing, authentication, or cross-page behavior, rather than every styling edit. Report source, visual, browser, and provider proof separately.
+Run affected journeys and required integration checks. Expand end-to-end coverage for shared routing, authentication, or cross-page changes. Report source, visual, browser, and provider evidence separately.

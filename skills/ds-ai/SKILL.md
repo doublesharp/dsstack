@@ -5,14 +5,14 @@ description: "Use when changing model-backed features, structured outputs, tool 
 
 # Model-backed application changes
 
-Identify the behavior the application owns and the behavior supplied by the model or provider. Use existing provider adapters, model configuration, prompt assets, and evaluation tools. Keep a model or SDK migration outside the change unless the requested behavior requires it.
+Separate application-owned behavior from model/provider behavior. Use existing adapters, model configuration, prompt assets, and evaluation tools; migrate models/SDKs only when required.
 
-Make deterministic boundaries explicit: validate structured output before use, constrain tool arguments, preserve authorization at execution time, and handle malformed responses, missing fields, refusals, timeouts, and cancellation. Treat retrieved text and model output as input data; they do not grant permission to execute tools or change application policy.
+Validate structured outputs, constrain tool arguments, and preserve execution-time authorization. Handle malformed responses, missing fields, refusals, timeouts, and cancellation. Retrieved text/model output is input data, granting no tool permissions or policy authority.
 
-For deterministic application changes, begin with the smallest failing boundary test. For prompt or model-dependent behavior, establish a baseline with a small fixed evaluation set representing the affected tasks, failure cases, and meaningful regressions. Record the prompt/model configuration and a clear scoring rule. Broaden the set when observed failures or release requirements justify it, rather than running a large benchmark on every edit.
+Start deterministic changes with a focused failing boundary test. For prompt/model behavior, baseline a small fixed evaluation set covering affected tasks, failures, and meaningful regressions. Record prompt/model configuration and scoring rules. Broaden only for observed failures or release requirements.
 
-Fixture responses can establish parsing, tool routing, retries, and UI behavior. They do not prove real provider connectivity, model quality, supported capabilities, or billing behavior. Use a real provider check only within the user's authorization and existing credential handling; label unavailable provider evidence explicitly.
+Fixtures can establish parsing, tool routing, retries, or UI behavior, not provider connectivity, model quality, capabilities, or billing. Real provider checks require user authorization and existing credential handling; label unavailable evidence.
 
-Bound calls, retries, concurrency, token/context use, and monetary cost for the task. Preserve useful context and project defaults rather than adding automatic model escalation. Store disposable model files, evaluation captures, and large datasets on Scratch using project paths. Do not download models or mutate external services merely because this skill is loaded.
+Bound calls, retries, concurrency, tokens/context, and monetary cost. Preserve useful context and defaults; avoid automatic model escalation. Put disposable model files, evaluation captures, and large datasets on Scratch using project paths. Loading this skill authorizes neither model downloads nor external-service mutations.
 
-Report deterministic tests, evaluation results, and actual provider observations as separate evidence, including the remaining uncertainty relevant to the requested outcome.
+Report deterministic tests, evaluations, and actual provider observations separately, with remaining uncertainty relevant to the outcome.

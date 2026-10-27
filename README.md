@@ -24,6 +24,7 @@ python3 scripts/dsstack.py preflight --project app --task parser-fix --expected-
 | [ds-tdd](skills/ds-tdd/SKILL.md) | Behavioral RED/GREEN with a focused, affordable feedback loop |
 | [ds-debug](skills/ds-debug/SKILL.md) | Reproducing a failure and testing a concrete root-cause hypothesis |
 | [ds-review](skills/ds-review/SKILL.md) | Independent review with scope, severity, and a three-round default budget |
+| [ds-consult](skills/ds-consult/SKILL.md) | Reciprocal Codex/Claude feedback and explicitly requested councils |
 | [ds-finish](skills/ds-finish/SKILL.md) | Owning requested work through its actual readiness gate |
 | [ds-resources](skills/ds-resources/SKILL.md) | Scratch routing, capacity admission, ownership, and artifact retirement |
 | [ds-rust](skills/ds-rust/SKILL.md) | Crate-level tests and efficient Rust verification |
@@ -34,6 +35,16 @@ python3 scripts/dsstack.py preflight --project app --task parser-fix --expected-
 | [ds-ai](skills/ds-ai/SKILL.md) | Deterministic tool contracts, bounded evals, and real provider boundaries |
 
 Skills use ordinary discovery with narrow descriptions. You can name one directly, for example `Use $ds-tdd and $ds-rust for this parser fix`. Only load the domains relevant to the changed behavior. There is no requirement to invoke every core skill for every task.
+
+## Cross-model review
+
+Use `$ds-consult` to ask Claude/Opus from Codex, or Codex from Claude. For example:
+
+- `Use $ds-consult to ask Opus 5.5 for a read-only review of this diff.`
+- `Use $ds-consult to get Codex feedback on this implementation plan.`
+- `Use $ds-consult for a Codex/Claude council on these two design options.`
+
+One peer reviewer is the default. An explicitly requested council uses the named roster, or one Codex and one Claude reviewer when unspecified. Reviewers work independently; the lead verifies and combines findings under the shared review-round budget. T3 uses its provider delegation tools; standalone sessions use permitted local CLIs. Requested unavailable models are reported without substitution. The skill does not install providers or change sharing/execution permissions.
 
 ## Efficient TDD
 
