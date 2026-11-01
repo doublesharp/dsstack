@@ -1,4 +1,4 @@
 interface:
   display_name: "DS Work"
-  short_description: "Deliver requested outcomes with clear scope"
-  default_prompt: "Use $ds-work to plan and complete the requested outcomes with proportionate evidence."
+  short_description: "Finish one item at a time with well-timed checks"
+  default_prompt: "Use $ds-work to deliver these items one at a time and hand off when they are done."

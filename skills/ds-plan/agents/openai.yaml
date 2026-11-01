@@ -1,4 +1,4 @@
 interface:
   display_name: "DS Plan"
-  short_description: "Executable plans tied to clear requirements and specs"
-  default_prompt: "Use $ds-plan to turn these requirements into a concise implementation plan with focused checks."
+  short_description: "Specs and plans sized to the work"
+  default_prompt: "Use $ds-plan to turn this request into a short plan with a done-when check for each item."

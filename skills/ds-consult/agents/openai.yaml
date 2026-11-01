@@ -1,4 +1,4 @@
 interface:
   display_name: "DS Consult"
-  short_description: "Reciprocal Codex/Claude reviews and scoped councils"
-  default_prompt: "Use $ds-consult to get a scoped independent review from the other model provider."
+  short_description: "Codex and Claude cross-reviews and requested councils"
+  default_prompt: "Use $ds-consult to get a scoped, read-only review from the other model provider."

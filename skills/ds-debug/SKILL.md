@@ -3,14 +3,13 @@ name: "ds-debug"
 description: "Use when a test fails unexpectedly, runtime behavior is wrong, or a flaky failure needs a reproducible cause."
 ---
 
-# Diagnose before patching
+# Find the cause, then fix it
 
-Capture the smallest reproduction: exact checkout, command or interaction, expected versus observed behavior, and relevant environment. Read the decisive error and context; separate setup/compiler faults from behavioral failures and source reasoning from runtime observations.
+1. Reproduce it. Write down the exact command or steps, what you expected, and what happened. Read the whole error.
+2. Pick one hypothesis and decide what you would see if it were true. Run the cheapest check that tells you, changing one thing at a time. Compare with a working case when you have one.
+3. After two wrong hypotheses, recheck inputs, versions, configuration, and what actually ran. After three, write down what you've ruled out and switch methods, for example by bisecting or comparing with a known-good build. If that fails too, mark the item blocked with your notes and move on. Ask only for a specific missing input or decision.
+4. Fix the cause, not the symptom. Add a regression test with ds-tdd and remove temporary logging.
 
-Trace the failing value or state across its nearest boundary, comparing a working case when useful. Form one causal hypothesis with a predicted observation; run the cheapest discriminating check, changing one meaningful variable. Record what it rules in or out. Retry only with a reason.
+A missing service, bad credentials, a full disk, or an overloaded host is an environment problem, not a code bug. Report it as a blocker the way ds-work describes instead of coding around it.
 
-Use project wrappers and focused targets; batch observations sharing an expensive build. Keep instrumentation scoped and remove task-only probes afterward. Expand scope only for an observed interaction or concrete risk, rather than replacing dependencies or redesigning adjacent code after a failed hypothesis.
-
-Once the cause is supported, add a behavioral regression, observe its expected failure, fix it, and verify the shared causal path. Preserve required browser, native, database, concurrency, and provider gates; mocks or copied source prove only their layer.
-
-Report unavailable prerequisites and continue independent work. After several failed hypotheses, reassess the evidence before stacking patches; architectural escalation needs observations material to the request.
+When a flaky test covers code you didn't touch, rerun it once. If it passes, note it as a follow-up and move on. When it covers code you changed, find the shared state, timing, or ordering behind it, and don't hide it with retries or sleeps.

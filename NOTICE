@@ -5,8 +5,8 @@ Workflow ideas adapted from:
 - obra/superpowers, MIT. Behavioral RED/GREEN, root-cause debugging, and resumable progress.
 
 Retained upstream license notices are in licenses/. Exact source revisions and
-file hashes are recorded in upstreams.lock.json. Adaptations change the behavior:
-TDD is proportional to the affected behavior, whole-workspace checks occur at
-required integration gates, and rare high-impact risks are not automatically nits.
-No upstream installer, hook, runtime, or downloaded code is executed by dsstack.
-Official tool documentation is linked in docs/provenance.md for domain guidance.
+file hashes are recorded in upstreams.lock.json. The 2026-10-31 revision also
+draws on published guidance from Anthropic, OpenAI, and individual practitioners.
+The skills copy no text from those sources; docs/provenance.md links them and
+quotes short excerpts. No upstream installer, hook, runtime, or downloaded code
+is executed by dsstack.

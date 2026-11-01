@@ -1,4 +1,4 @@
 interface:
   display_name: "DS Behavioral TDD"
   short_description: "Prove behavior with a focused fail-to-pass loop"
-  default_prompt: "Use $ds-tdd to demonstrate the requested behavior with a focused failing test and passing fix."
+  default_prompt: "Use $ds-tdd to demonstrate the requested behavior with a focused failing test and a passing fix."

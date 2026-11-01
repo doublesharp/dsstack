@@ -5,14 +5,11 @@ description: "Use when changing Solidity contracts, Foundry tests, upgrade layou
 
 # Solidity contract changes
 
-Use pinned compiler/dependencies, Foundry configuration, libraries, wrappers, and deployment conventions. Identify changed invariants, caller permissions, and affected state.
-
-Start with a focused failing behavioral Foundry test; compile failures or broken fork fixtures do not qualify as RED. Cover meaningful authorized/rejected paths, implement, and rerun the target. Route outputs/caches to Scratch and propagate those paths into downstream Forge invocations.
-
-Choose broader gates by risk: accounting, state-machine, and adversarial interactions may warrant fuzz/invariant tests; upgrades require storage-layout/upgrade checks. Run coverage when required or resolving concrete reachability questions. Avoid repeating expensive gates after each assertion edit.
-
-Fork evidence needs explicit chain, block number/hash, source identity, and suitable historical RPC. Preserve historical pins; unavailable archives or incomplete responses leave proof unresolved, never a successful zero. Distinguish mocks, forks, and live contracts.
-
-Assess severity by plausible impact and exploit conditions: rare paths that lose funds, seize authority, or prevent recovery remain serious. For explicitly requested audits/harnesses, use available user-selected tooling, such as Pashov or fizz, without duplicating their workflows.
-
-Tests grant no authority to move funds, upgrade, deploy, or publish verification. Report tested source and remaining live-operation gates.
+- Use the pinned compiler, dependencies, Foundry config, libraries, and wrappers. Route `out/` and caches to Scratch, and pass the same paths to every `forge` command.
+- Start with a failing Foundry test of the behavior that covers allowed and rejected callers. Compile errors and broken fork fixtures don't count as that failure.
+- Add fuzz or invariant tests for accounting and state-machine changes, and storage-layout checks for upgrades. Run coverage only when asked or to settle a specific reachability question.
+- Pin fork tests to a chain and block number. A missing archive node or an incomplete RPC response leaves the result unknown. It never counts as zero.
+- Treat any path that loses funds, takes over authority, or blocks recovery as must-fix, however rare.
+- Run expensive suites, such as long fuzz campaigns, invariants, and coverage, once at the end rather than after each assertion change.
+- Don't send transactions, deploy, upgrade, or publish verification on a live network unless the user tells you to.
+- For a requested audit, use the tooling the user picked, such as Pashov or fizz, without re-creating its workflow.

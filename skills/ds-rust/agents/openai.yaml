@@ -1,4 +1,4 @@
 interface:
   display_name: "DS Rust"
-  short_description: "Focused Rust changes with proportionate Cargo checks"
-  default_prompt: "Use $ds-rust to implement this Rust change with focused behavioral tests and the required integration gate."
+  short_description: "Focused crate tests and warm Cargo builds"
+  default_prompt: "Use $ds-rust to implement this Rust change with focused tests in the owning crate."

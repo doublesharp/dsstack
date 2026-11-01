@@ -1,4 +1,4 @@
 interface:
   display_name: "DS Native"
-  short_description: "Separate native source and packaged runtime proof"
-  default_prompt: "Use $ds-native to implement this native application change and verify the affected platform boundary."
+  short_description: "Check the native boundary a change touches"
+  default_prompt: "Use $ds-native to implement this native change and check the platform boundary it touches."

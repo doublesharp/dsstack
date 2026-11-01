@@ -1,16 +1,19 @@
 ---
 name: "ds-review"
-description: "Use when reviewing a scoped change or coordinating requested independent code review before handoff."
+description: "Use when reviewing a change, or when coordinating a requested independent review before handoff."
 ---
 
-# Bounded review
+# Review for what breaks
 
-Establish requested outcomes, exact checkout/diff, relevant contracts, and proof limits. Review correctness and material risk. Broaden only for a concrete affected behavior and failure path; optional improvements and style do not block delivery.
+Review the diff against the ask, reading the callers and dependencies you need to judge the changed behavior. Skip style and unrelated code. Sort each finding into one of two groups.
 
-Use one independent reviewer when requested, project-required, or justified by security, financial, recovery, or concurrency risk. Supply scope and raw evidence without seeding a verdict. Reviewers cannot launch reviewers. Follow the active harness protocol; use [ds-consult](../ds-consult/SKILL.md) for reciprocal Codex/Claude review or an explicitly requested council. Disclose unavailable models without substitution.
+- Must fix. It breaks the ask, regresses existing behavior, or opens a security, data-loss, or fund-loss path. Rarity doesn't lower it.
+- Follow-up. Everything else. List these in the handoff and leave them out of this change.
 
-Default to **three rounds total**: initial review plus at most two scoped re-reviews of material fixes and open findings. Nits and resolved findings do not restart review. At the cap, report unresolved issues honestly; the cap grants no acceptance. Explicit user direction may change the budget.
+For each finding, give the location, the scenario that triggers it, the impact, and a suggested fix.
 
-Findings need severity, location, triggering scenario, impact, evidence, and a minimal correction when clear. Rank by impact, reachability, and protections; rarity alone does not downgrade security, authority, financial, recovery, or concurrency failures.
+Bring in an independent reviewer only when the user asks, the project requires it, or the change moves funds or touches authentication. Review the finished diff once, not each step. Give the reviewer the ask, the diff, and what you ran, without hinting at a verdict. Reviewers don't start other reviewers. For a Codex and Claude cross-review, use ds-consult.
 
-The implementer verifies findings and records fixed, accepted-with-rationale, disproved, or unresolved dispositions. Recheck material edits and preserve mandatory gates. End with a verdict, actual evidence, and exact blockers; source acceptance does not qualify runtime or release.
+Run one review, then one re-check of the must-fix fixes, and stop. If the re-check finds a new must-fix inside a fix, fix it and note it in the handoff rather than opening another round, unless the user asks for more.
+
+Confirm each finding against the code before acting on it, because reviewers are sometimes wrong. Mark each one fixed, disputed with a reason, or follow-up.

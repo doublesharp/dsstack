@@ -1,22 +1,20 @@
 ---
 name: "ds-resources"
-description: "Use when planning work with material disk or concurrency costs, or diagnosing resource pressure."
+description: "Use when planning work with large disk or concurrency costs, or diagnosing resource pressure."
 ---
 
-# Resource-aware execution
+# Disk and build capacity
 
-Use project resource rules and wrappers first. Confirm `/Volumes/Scratch` is mounted; stop disposable-output work if missing, without falling back to Data.
+Follow project wrappers and resource rules first. If `/Volumes/Scratch` isn't mounted, stop any work that writes disposable output and say so. Don't fall back to the Data volume.
 
-Resolve the installed skill symlink to its repository, then run:
+Before a large build or capture, resolve this skill's installed symlink to its repository and run the preflight once for the task:
 
 ```sh
 python3 <repo>/scripts/dsstack.py preflight --project NAME --task ID --expected-gib N
 ```
 
-Use safe single-component names and estimate additional peak disk use. Check once per task/output namespace, repeating when capacity assumptions materially change. Override the reserve only under explicit user or project policy. Preflight checks mount, paths, and capacity without creating directories, reserving space, or scheduling jobs. Resolve a failed check before costly work.
+Names may use letters, digits, dots, hyphens, and underscores. The preflight checks the mount, the output paths, and free space against your estimated peak plus the reserve, and it creates nothing. Run it again only if your size estimate changes a lot, and use a different reserve only when the user or project sets one. If space is short, stop and tell the user what you need instead of reworking the build to fit.
 
-Use reported temporary/report paths for task-owned output. The build path is for new output: preserve warm Rust/Foundry directories across tasks through project wrappers. Without project rules, use `/Volumes/Scratch/<project>/cargo/<worktree>` for Cargo. Isolate concurrent writers; share caches only through supported mechanisms. Budget simultaneous peaks and batch tests sharing a build.
+When wrappers don't route output, put targets, captures, logs, clones, and bytecode under the Scratch paths the preflight prints. Keep Rust and Foundry targets warm per worktree across tasks. Without a project rule, Cargo uses `/Volumes/Scratch/<project>/cargo/<worktree>`. Give concurrent builds separate target directories, and don't start a second heavy build from the same task while one is running.
 
-Route targets, captures, raw receipts, logs, clones, and bytecode to Scratch explicitly when wrappers do not. Commit maintained source and short summaries only.
-
-Before authorized cleanup, check explicit paths, ownership, and open processes. Age alone does not prove disuse. Preserve shared caches and others' work; this skill grants no deletion or process-termination authority.
+Clean up only output this task created, after checking the paths and that no process has them open. Leave shared caches and other agents' work alone.

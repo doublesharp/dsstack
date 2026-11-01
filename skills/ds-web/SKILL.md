@@ -1,18 +1,12 @@
 ---
 name: "ds-web"
-description: "Use when changing an existing web interface, responsive layout, or browser interaction and deciding the affected visual or journey checks."
+description: "Use when changing an existing web interface, responsive layout, or browser interaction and deciding which visual or journey checks it needs."
 ---
 
 # Web interface changes
 
-Use existing framework, design system, routing, component ownership, scripts, and browser tools. Identify the affected user task and observable states; avoid adding frameworks or runners for local edits.
-
-Reproduce behavior failures with a focused component/journey test at the owning boundary. Preserve mounted state, pending requests, account context, and cleanup through navigation/visibility changes; screenshots cannot prove lifecycles.
-
-For CSS/layout, identify affected visual states. When browser verification is authorized, inspect the rendered UI; include dimensions, scrolling, clipping, focus, overlays, and nearby breakpoints only when affected. DOM assertions/builds cannot prove appearance.
-
-Use T3 preview only when the current request authorizes browser work under the active harness. Loading this skill grants no browser launch. State remaining visual/journey gaps when checks are unavailable or outside scope.
-
-Before opening pages, establish the authoritative server, ports, and authentication context; reuse it where appropriate. Respect cookies per context, accounts, waiters, and write-retry rules. Do not create service instances or issue external writes to simplify checks.
-
-Run affected journeys and required integration checks. Expand end-to-end coverage for shared routing, authentication, or cross-page changes. Report source, visual, browser, and provider evidence separately.
+- Work within the existing framework, design system, routing, and component ownership. Don't add frameworks or test runners for a local edit.
+- Reproduce behavior bugs with a component or journey test at the owning boundary. Cover state that has to survive navigation, pending requests, and account switches.
+- For CSS and layout, check only the states the change affects. When the request includes browser work, look at the rendered page. Check other breakpoints, focus, scrolling, or overlays only when the change touches them. DOM assertions and builds can't show what a page looks like.
+- Before opening pages, find the running dev server, its port, and the login to use, then reuse them. Don't start extra servers or write to external services just to make checking easier.
+- When a change touches shared routing, authentication, or several pages, run the affected end-to-end journeys once at the end.

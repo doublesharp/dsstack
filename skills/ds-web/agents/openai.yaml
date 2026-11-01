@@ -1,4 +1,4 @@
 interface:
   display_name: "DS Web"
-  short_description: "Verify affected web layouts and user journeys"
-  default_prompt: "Use $ds-web to implement this interface change and identify the affected visual and interaction checks."
+  short_description: "Check the layouts and journeys a change affects"
+  default_prompt: "Use $ds-web to implement this interface change and check the states and journeys it affects."

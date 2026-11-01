@@ -1,4 +1,4 @@
 interface:
   display_name: "DS Review"
-  short_description: "Review concrete risks within a bounded scope"
-  default_prompt: "Use $ds-review to review the scoped change and report actionable findings with evidence."
+  short_description: "Must-fix review with a round limit"
+  default_prompt: "Use $ds-review to review this change and sort the findings into must-fix and follow-up."

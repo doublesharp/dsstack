@@ -3,14 +3,11 @@ name: "ds-rust"
 description: "Use when changing Rust crate behavior, Cargo features, async lifecycles, or native dependency boundaries in an existing project."
 ---
 
-# Rust delivery
+# Rust changes
 
-Use pinned toolchains, Cargo configuration, lockfiles, wrappers, and runtime/dependency choices. Identify the owning crate, features, and smallest test target before compiling.
-
-Add and run a focused failing behavioral test, implement, then rerun the same target. Repair compiler, fixture, native-library, or command failures first. Batch related cases in existing unit modules or integration binaries; each new `tests/*.rs` adds compilation/linking. A minimal compilable API stub can expose behavioral RED.
-
-`cargo check` proves selected compilation, not test execution, all linking, or native/runtime behavior. Use integration tests across process, database, FFI, cancellation, or resource-lifetime boundaries. Copied/mapped checks prove only that source arrangement.
-
-Reuse compatible artifacts. Prefer the Scratch-routing wrapper; otherwise set a worktree-keyed Scratch `CARGO_TARGET_DIR` and keep it warm across tasks. Isolate writable targets for parallel builds. Keep profile, features, target triple, and `RUSTFLAGS` stable in the inner loop; reuse artifacts only for compatible source, compiler, and environment. Preserve incremental/cache settings; sccache need not cache linking or incremental workloads. Run `cargo clean` or `cargo update` only when required by the task.
-
-Run the broader required gate once at integration; expand workspace/feature coverage when the changed contract or repository policy requires it. Report tested crate/features and distinguish source, linked-artifact, native-service, and runtime evidence.
+- Use the project's toolchain pin, lockfile, wrappers, and runtime choices. Find the owning crate and its smallest test target before building anything.
+- Run that target in the inner loop, for example `cargo nextest run -p <crate> <filter>` through the project wrapper. Add cases to existing test modules. Each new `tests/*.rs` file is another binary to compile and link.
+- Keep builds warm. Use the wrapper's Scratch target directory, or `/Volumes/Scratch/<project>/cargo/<worktree>` when there is no wrapper. Keep the profile, features, target triple, and `RUSTFLAGS` the same between runs. Run `cargo clean` or `cargo update` only when the task needs it. Give parallel builds separate target directories.
+- `cargo check` compiles. It doesn't run tests or link everything.
+- Use integration tests when the change crosses a process, database, FFI, cancellation, or resource-lifetime boundary.
+- Run workspace-wide or all-features builds once at the end, and only when the change crosses crates or features or the project requires it.

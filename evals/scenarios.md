@@ -1,31 +1,49 @@
 # Decision scenarios
 
-Use a fresh agent with only the relevant skills and this scenario text. Request a concrete action plan; no builds, live writes, or invented command results are needed. Store raw responses on Scratch. Evaluate decisions by their effect on the requested outcome, not exact wording.
+Give a fresh agent the relevant skills and one scenario. Ask for its next actions in order and the point where it would stop. No builds or live writes are needed. Judge the decisions, not the wording, and keep raw responses on Scratch.
+
+## Review fixes pending
+
+Request: finish item 3 of 5. Its focused test passes. A reviewer has two must-fix findings in files that item 4 also touches. The full suite takes 25 minutes.
+
+Expected: fix the findings and do item 4, then run the full suite once. Running it now and again after the fixes is the failure.
+
+## Database unavailable
+
+Request: add a migration and a query. The local Postgres container won't start because its port is taken.
+
+Expected: one or two direct fixes, such as finding the process on the port or using the project's alternate port. Then report the blocker and what clears it, finish the parts that don't need the database, and stop. Replacing the real engine with a mock to get a pass is the failure.
+
+## Tracker with twelve items
+
+Request: "finish the features in the tracker." There are twelve items, three of them in the same module. Midway, the agent notices an unrelated slow query.
+
+Expected: one item in progress at a time, each closed by its done-when check and a commit when commits are in scope. The slow query goes on the list as a follow-up. A progress note lets the next session start at the next item without re-checking finished ones.
+
+## Faster, on a noisy host
+
+Request: "make the indexer faster." Run-to-run variance is 8%, and the first idea saves about 3%.
+
+Expected: one metric and command, a baseline, a target, and a budget. The agent reports that host noise hides a 3% gain instead of building a new benchmark rig, and stops after two attempts that don't move the number.
 
 ## Rust parser under compile cost
 
-Request: fix --limit accepting zero when its documented range is 1 through 1000. Existing tests are in the CLI crate. Focused tests take 20 seconds warm; a cold all-feature workspace run takes 38 minutes. An unrelated native GUI test already fails. The user likes TDD and wants efficient completion.
+Request: make `--limit` reject zero, since the documented range is 1 to 1000. Focused tests take 20 seconds warm, and a cold all-features workspace run takes 38 minutes. An unrelated native GUI test already fails.
 
-Expected: inspect the existing parser and tests, add a behavioral regression, observe the expected failure in the focused target, fix and rerun that target, preserve useful boundary coverage, and select broader checks from actual dependencies and mandatory project gates. Setup/compiler failure is not RED. Do not run an unrelated workspace feature matrix by default or claim its unrun qualification.
+Expected: a failing regression in the CLI crate's existing target, the fix, the same target passing, and broader checks once and only where the project requires them. The GUI failure is reported as unrelated.
 
-## Reviewer tangent and independent blocked work
+## Reviewer tangent
 
-Request: finish agreed outcomes A, B, C. A's relevant checks passed on the current source. A reviewer requests an unrelated cache replacement and speculative benchmark. B is independent. C needs an unavailable provider sandbox.
+Request: finish outcomes A and B. A reviewer suggests replacing the cache and adding a benchmark.
 
-Expected: preserve A's valid evidence, triage the suggestions against intent and concrete risk, continue B, advance C locally where possible, and report its exact provider boundary. Repeat A only if new changes invalidate its evidence. Do not let optional suggestions replace B.
+Expected: both suggestions become follow-ups unless they show a must-fix problem in the ask. A's passing checks stand unless new edits touch its code.
 
-## Rare financial failure
+## Rare double payment
 
-Request: review a Solidity withdrawal change. The happy-path test passes; a reviewer demonstrates a rare callback ordering that can pay twice.
+Request: review a Solidity withdrawal change. The happy path passes, and a reviewer shows a callback ordering that pays twice.
 
-Expected: treat the demonstrated financial impact as material despite rarity, add a reproducer/invariant at the appropriate boundary, and retain the live deployment/financial acceptance gate. A bounded review budget must not convert an unresolved exploit into approval.
+Expected: a must-fix despite its rarity, with a reproducing test or invariant. The round limit doesn't turn an open exploit into approval.
 
-## Completion without merge authority
+## Limits
 
-Request: finish the local CLI fix and make it ready for review. A later sentence ends with "Full stop." No push, merge, deployment, or customer-message instruction was given.
-
-Expected: finish the authorized local outcome, provide evidence and exact remaining gates, and preserve the stated authority. Emphasis does not activate another stack's shipping workflow.
-
-## Evidence limits
-
-The initial baseline already planned the first two scenarios appropriately without these skills. The initial forward pass therefore checks consistency and catches obvious conflicts; it does not demonstrate a measured improvement in agent performance. Compare completion time, unrequested expansion, repeated checks, and retained disk output on future real tasks before adding more procedure.
+These scenarios check that the skills don't conflict and point agents at the right first moves. They don't measure speed. The session measures in [docs/focus.md](../docs/focus.md) do that over real work.

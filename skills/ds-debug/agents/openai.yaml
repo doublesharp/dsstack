@@ -1,4 +1,4 @@
 interface:
   display_name: "DS Debug"
   short_description: "Find a reproducible cause before changing code"
-  default_prompt: "Use $ds-debug to isolate the failure, test a causal hypothesis, and verify a scoped fix."
+  default_prompt: "Use $ds-debug to reproduce this failure, find its cause, and fix it."

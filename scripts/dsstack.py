@@ -9,7 +9,7 @@ import re
 import shutil
 import sys
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 ROOT = Path(__file__).resolve().parents[1]
 NAME = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 TASK_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}\Z")
@@ -77,10 +77,26 @@ def _owned_link(path, source):
     return path.is_symlink() and path.resolve() == source.resolve()
 
 
+def _stale_links(root, destination, names):
+    """Links into this stack's skills directory for skills it no longer ships."""
+    base = Path(root).resolve() / "skills"
+    if not destination.is_dir():
+        return []
+    stale = []
+    for path in sorted(destination.iterdir()):
+        if path.name in names or not path.is_symlink():
+            continue
+        target = path.resolve()
+        if target.parent == base and target.name not in names:
+            stale.append({"name": path.name, "action": "prune", "path": str(path), "source": str(target)})
+    return stale
+
+
 def plan_install(root, destination):
     destination = Path(destination).expanduser().absolute()
     plan = []
-    for skill in catalog(root):
+    skills = catalog(root)
+    for skill in skills:
         source = Path(skill["path"])
         path = destination / skill["name"]
         if _owned_link(path, source):
@@ -90,7 +106,7 @@ def plan_install(root, destination):
         else:
             action = "add"
         plan.append({"name": skill["name"], "action": action, "path": str(path), "source": str(source)})
-    return plan
+    return plan + _stale_links(root, destination, {skill["name"] for skill in skills})
 
 
 def _reject_conflicts(plan):
@@ -116,25 +132,30 @@ def install(root, destination):
             if _owned_link(path, Path(item["source"])):
                 path.unlink()
         raise
+    _remove_owned(plan, "prune")
     return plan
+
+
+def _remove_owned(plan, action):
+    for item in plan:
+        if item["action"] == action:
+            path = Path(item["path"])
+            if not _owned_link(path, Path(item["source"])):
+                raise StackError(f"Installation changed; preserved {path}")
+            path.unlink()
 
 
 def plan_uninstall(root, destination):
     plan = plan_install(root, destination)
     for item in plan:
-        item["action"] = {"keep": "remove", "add": "absent", "conflict": "conflict"}[item["action"]]
+        item["action"] = {"keep": "remove", "add": "absent", "conflict": "conflict", "prune": "remove"}[item["action"]]
     return plan
 
 
 def uninstall(root, destination):
     plan = plan_uninstall(root, destination)
     _reject_conflicts(plan)
-    for item in plan:
-        if item["action"] == "remove":
-            path = Path(item["path"])
-            if not _owned_link(path, Path(item["source"])):
-                raise StackError(f"Installation changed; preserved {path}")
-            path.unlink()
+    _remove_owned(plan, "remove")
     return plan
 
 

@@ -1,21 +1,16 @@
 ---
 name: "ds-plan"
-description: "Use when turning an adequate spec or clear requirements into implementation tasks with meaningful dependencies or handoffs."
+description: "Use when the user asks for a spec or plan, or when a feature request is unclear enough that building the wrong thing is the main risk."
 ---
 
-# Executable implementation plan
+# Plan only as much as the work needs
 
-Read the spec, existing plan, project instructions, and affected code. Clear small fixes need no separate plan. Reuse adequate requirements; resolve material gaps rather than inventing decisions or forcing a new spec.
+Small, clear tasks need no plan. Start with the ds-work checklist instead.
 
-Decompose by independently deliverable behavior, not every file or coding action. For each task record:
+1. Read the relevant code, docs, and any existing spec or plan first. Reuse what is good enough.
+2. Ask only questions whose answers change what gets built and that the repo can't answer. For everything else, pick a reasonable default and label it an assumption.
+3. For a design choice that is expensive to reverse, give two or three options with their trade-offs and recommend one.
+4. Describe what to build: the behavior, the failure cases that matter, the interfaces and data other parts depend on, and what is out of scope. Leave routine implementation choices to whoever builds it.
+5. Break the work into deliverable items in dependency order. Each item names its files, its done-when check, and whether it can run in parallel. Schedule slow or broad checks once at the end instead of after every item.
 
-- Requirement and checkable result; owner/dependencies when shared.
-- Affected files and responsibility, plus exact interfaces or values already decided.
-- Focused verification and command: behavioral tests for behavior changes, direct artifact checks for mechanical edits, and decisive evidence.
-- Required integration, native, provider, or release gates at the appropriate boundary.
-
-Keep related setup, docs, and tests with their deliverable. Preserve project-wide constraints and consistent cross-task types/names. Sketch only algorithms or contracts needing explanation; do not prewrite routine code or speculative signatures.
-
-Budget expensive checks. Batch related Rust cases in existing targets, reuse warm worktree artifacts, and place broader required checks at integration rather than after every step. A task may contain one coherent RED/GREEN cycle; each checkbox needs no separate build or reviewer.
-
-Self-check requirement coverage, interfaces, command validity, and proportion. Save in the project's existing docs/task system and link its spec. Follow the authorized execution method without reopening approval or choosing a new tracker. A planning-only request ends at the reviewable plan.
+A small feature needs a few lines. A multi-week project needs a document. Save it where the project keeps plans or specs, or in its tracker. A plan-only request ends with the plan. Otherwise carry it out with ds-work without asking for approval again.

@@ -1,27 +1,52 @@
-# Sources and deliberate adaptations
+# Sources and adaptations
 
-Exact source revisions and file hashes are in [upstreams.lock.json](../upstreams.lock.json). Upstream MIT license notices are retained in [licenses](../licenses). No upstream executable or session hook is installed by this collection.
+Exact upstream revisions and file hashes are in [upstreams.lock.json](../upstreams.lock.json), and upstream MIT notices are in [licenses](../licenses). dsstack installs no upstream code or hooks.
 
-| Source | Borrowed idea | Deliberate adaptation |
+## Adapted workflows
+
+| Source | Idea | How dsstack differs |
 |---|---|---|
-| t3dotgg/tstack sol-loop | Bounded review, focused later rounds, one reviewer, explicit disagreement | Rare security/finance/concurrency failures retain their impact. No mandatory model brand or council. |
-| t3dotgg/tstack council | Independent named reviewers and synthesis | Explicit council only; two default seats, shared bounded rounds, no agreement loop or silent fallback. |
-| t3dotgg/tstack full-stop | Own preparation through a clear readiness gate | No emphasis-triggered activation. User authority and current harness policy remain binding. |
-| obra/superpowers | Behavioral RED/GREEN and root-cause hypotheses | No test-per-helper requirement, blanket workspace rerun, repeated revert cycle, or configuration approval ritual. |
-| obra/superpowers brainstorming/writing-plans | Intent discovery, buildable specs, requirement coverage, interfaces and task decomposition | Scaled notes/plans, existing trackers and authorization, no compulsory spec/plan/reviewer sequence or build per checkbox. |
-| Existing project contracts | Scratch ownership and domain proof boundaries | Preserve the project's commands, versions, tracker, and release gates. |
+| t3dotgg/tstack sol-loop and council | Bounded review, one reviewer by default, independent named reviewers on request | Two rounds by default, must-fix versus follow-up, no agreement loop or brand requirement |
+| t3dotgg/tstack full-stop | Owning work through to a clear finish | No activation by emphatic phrases, and the user's authority stays binding |
+| obra/superpowers TDD and debugging | Failing test first, root-cause hypotheses | No test per helper, no workspace rerun after every step, no revert-to-red cycle |
+| obra/superpowers brainstorming and writing-plans | Intent discovery, buildable specs, task decomposition | One planning skill sized to the work, no compulsory spec, plan, and review sequence |
+| Existing project contracts | Scratch routing and domain test boundaries | Project commands, versions, trackers, and required checks still win |
 
-Official references used for domain guidance:
+The consultation route also draws on the local `claude-code` skill's read-only handoff and completion rules. Its hash is under `local_sources` in the lock. Codex syntax was checked against the installed `codex exec --help`.
 
-- [Cargo profiles](https://doc.rust-lang.org/cargo/reference/profiles.html) and [configuration](https://doc.rust-lang.org/cargo/reference/config.html).
-- [sccache Rust limitations](https://github.com/mozilla/sccache/blob/main/docs/Rust.md).
-- [Fastify testing](https://fastify.dev/docs/latest/Guides/Testing/).
-- [Tauri testing boundaries](https://tauri.app/develop/tests/).
-- [Foundry guides](https://getfoundry.sh/guides).
-- [OpenAI skill guidance](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra).
+## Published guidance for the 2026-10-31 revision
 
-Other evaluated stacks were not bundled: chhoumann/t3-pstack has valuable T3 integration but broad routing; GitHub Spec Kit and GSD add planning/state workflows that are unnecessary for this initial collection.
+All pages were read on 2026-10-31. Quotes are short excerpts, and the skills paraphrase rather than copy.
 
-For an update, inspect the pinned source's new revision, compare the relevant files, keep or revise the adaptation intentionally, update license notices when needed, and run the focused tests plus relevant decision scenarios. Source activity and stars are not evidence of improved task completion. Do not automatically merge upstream or reintroduce obsolete model-specific instructions.
+Anthropic
 
-The reciprocal consultation route also uses the local `claude-code` skill’s scoped private-code handoff, read-only consultation, and completion requirements. Its checked hash is recorded under `local_sources` in the lock. The Codex command syntax was checked against installed `codex exec --help`; local CLI syntax does not establish remote model availability. Standalone references are conditional; T3 routing remains governed by the current harness. Pstack’s panel synthesis informed the comparison; none of its hooks, automatic routing, or executables were copied.
+- [Prompting Claude Opus 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5). Verification instructions "cause over-verification on Claude Opus 5, and removing them reduces wasted tokens with no loss in quality."
+- [Prompting Claude Opus 5.5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5). "Stop after two or three automatic continuations on the same task rather than repeating them indefinitely."
+- [Prompting Claude Sonnet 5.5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5-5). "Don't start extra rounds of review or hardening on your own."
+- [Prompting Claude Fable 5.1](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1). For work found mid-task, "don't fix, optimize or extend it in this change."
+- [Claude Code best practices](https://code.claude.com/docs/en/best-practices). "A reviewer that's asked to find problems will always find something." After two failed corrections, start fresh.
+- [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents), 2025-11-26. "Work on only one feature at a time."
+- [Building a C compiler](https://www.anthropic.com/engineering/building-c-compiler), 2026-02-05. Claude "will happily spend hours running tests instead of making progress."
+
+OpenAI
+
+- [Using GPT-6 Astra](https://developers.openai.com/api/docs/guides/latest-model/gpt-6-astra). "Broaden or repeat testing only when new changes, failures, or unresolved concerns justify it."
+- [Rethinking skills and prompts for GPT-6 Astra](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra), 2026-09-11. Instructions written for older models "can lead to unnecessary testing."
+- [GPT-5.6 prompt guidance](https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6). "Use ALWAYS, NEVER, must, and only for true invariants."
+- [Codex prompting guide](https://developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide), 2026-02-25. "If you find yourself re-reading or re-editing the same files without clear progress, stop."
+- [Harness engineering](https://openai.com/index/harness-engineering/), 2026-02-11. "Give Codex a map, not a 1,000-page instruction manual."
+
+Practitioners and research
+
+- Geoffrey Huntley, [Ralph](https://ghuntley.com/ralph/), 2025-07-14. "Ask Ralph to do one thing per loop."
+- Steve Yegge, [Beads](https://github.com/steveyegge/beads). Agents file newly discovered work as issues, and sessions end by "landing the plane."
+- Kent Beck, [Augmented coding: beyond the vibes](https://tidyfirst.substack.com/p/augmented-coding-beyond-the-vibes), 2025-06-25. He steps in on loops, unrequested functionality, and disabled or deleted tests.
+- HumanLayer, [12-factor agents, factor 9](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-09-compact-errors.md). About three attempts at a tool before escalating.
+- Mitchell Hashimoto, [My AI adoption journey](https://mitchellh.com/writing/my-ai-adoption-journey), 2026-02-05. Each AGENTS.md line answers a real agent failure.
+- Armin Ronacher, [Agentic coding recommendations](https://lucumr.pocoo.org/2025/6/12/agentic-coding/), 2025-06-12. "Crashes are tolerable; hangs are problematic."
+- Cemri et al., [Why do multi-agent LLM systems fail?](https://arxiv.org/abs/2503.13657). Step repetition and unawareness of termination conditions are among the most common failures.
+- [ImpossibleBench](https://arxiv.org/abs/2510.20270). Agents "may delete failing tests rather than fix the underlying bug."
+
+## Updating
+
+Compare a pinned source's new revision file by file, and keep or revise each adaptation on purpose. Stars and activity don't show that agents finish more work. Don't merge upstream automatically or bring back model-specific instructions that newer guidance retired.

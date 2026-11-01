@@ -3,14 +3,14 @@ name: "ds-tdd"
 description: "Use when implementing a testable change to observable program behavior or repairing a regression."
 ---
 
-# Behavioral TDD
+# Test first, then fix
 
-Before changing behavior, test the smallest useful public or integration boundary. One scenario may cover several helpers. Distinguish the fault from correct behavior; avoid assertions that merely repeat implementation. Validate formatting, documentation, generated metadata, and mechanical edits directly.
+1. Write the test at the smallest public boundary that shows the behavior, such as a public function, a CLI command, an HTTP route, or a component. One test can cover several helpers. Put it with the existing tests.
+2. Run it and watch it fail for the reason you expect. Compile errors, missing fixtures, and setup failures don't count, so fix those first. If the bug won't reproduce after two tries, say so and fix it with the best check you have.
+3. Make the smallest change that passes. Rerun that test, then the nearby tests for the code you touched.
 
-1. **Prepare.** Reuse the project runner and representative fixtures. Confirm copied source, dependencies, and mocks reach the claimed behavior. A model or mock cannot qualify an unexercised database, browser, native runtime, or provider.
-2. **Observe RED.** Run against unfixed behavior and inspect the expected failing assertion or observable fault. Compile, command, fixture, setup, and unrelated failures are prerequisites to repair, not RED. Record the command and decisive result; report an unreproduced fault honestly.
-3. **Make GREEN.** Implement the smallest coherent correction, rerun the focused check, and inspect its assertions and output. Refactor only when useful, keeping regression coverage.
+Group related cases in one test target and run them together. Keep the inner loop on that target and leave broad suites for the end, as ds-work describes. Once a fix passes, keep it. Don't revert it to watch the test fail again.
 
-For Rust, batch related cases in one crate/test target using project wrappers and warm Scratch artifacts. Establish a valid fail-to-pass observation, then retain proven code rather than repeatedly reverting it for related cases. Independent faults may need their own reproductions.
+Change a test only when the test itself is wrong, and say so in the handoff. Never delete or weaken an assertion to get a pass.
 
-Broaden checks for changed dependencies, contracts, or runtime boundaries. Preserve mandatory integration, native, security, and release gates where applicable; a workspace matrix is not an automatic inner-loop step. Report what each check proves and what remains untested.
+Docs, formatting, config, and generated files don't need new tests. Check them directly by rendering, parsing, or diffing them.

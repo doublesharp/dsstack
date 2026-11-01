@@ -91,6 +91,33 @@ class StackTests(unittest.TestCase):
         self.assertTrue((self.dest / "ds-one").is_symlink())
         self.assertEqual((self.dest / "ds-two").resolve(), self.base)
 
+    def retired_link(self):
+        retired = self.dest / "ds-retired"
+        retired.symlink_to(self.root / "skills" / "ds-retired", target_is_directory=True)
+        return retired
+
+    def test_install_prunes_only_stale_links_into_this_stack(self):
+        self.owned_links()
+        retired = self.retired_link()
+        foreign = self.dest / "ds-foreign"
+        foreign.symlink_to(self.base / "elsewhere" / "ds-foreign", target_is_directory=True)
+        plan = {x["name"]: x["action"] for x in ds.plan_install(self.root, self.dest)}
+        self.assertEqual(plan, {"ds-one": "keep", "ds-two": "keep", "ds-retired": "prune"})
+        self.assertTrue(retired.is_symlink())
+        ds.install(self.root, self.dest)
+        self.assertFalse(retired.is_symlink())
+        self.assertTrue(foreign.is_symlink())
+        self.assertEqual([x["action"] for x in ds.plan_install(self.root, self.dest)], ["keep", "keep"])
+
+    def test_stale_link_fails_doctor_and_uninstall_removes_it(self):
+        self.owned_links()
+        self.retired_link()
+        result = ds.doctor(self.root, self.dest)
+        self.assertFalse(result["ok"])
+        self.assertIn("ds-retired", " ".join(result["errors"]))
+        ds.uninstall(self.root, self.dest)
+        self.assertEqual(list(self.dest.iterdir()), [])
+
     def test_doctor_rejects_missing_reference(self):
         p = self.root / "skills/ds-one/SKILL.md"
         p.write_text(p.read_text() + "Read [details](references/missing.md).\n")

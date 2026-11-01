@@ -1,15 +1,16 @@
 # Task brief example
 
-Task: cli-limit-fix. Repository and head: record the actual path and Git revision.
+Task: cli-limit-fix in `<repo>` at `<sha>`.
 
-Requested outcome: --limit accepts 1 through 1000 and rejects zero. Preserve the other flags.
+Ask: `--limit` accepts 1 through 1000 and rejects 0. Other flags don't change.
 
-Scope: the parser and its existing test target. The new cache proposal is a follow-up.
+Items:
 
-Proof: observe the zero regression fail before the fix, then pass with the relevant boundary cases; run the required integration gate once at the end.
+1. Reject zero. Done when the new zero case fails before the fix and passes after it, along with the existing parser tests.
+2. Final check. Done when the project's required check passes once on the final diff.
 
-Resources: use the project's existing Scratch wrapper and namespace. Record the actual build/tmp/report directories, owner, current consumer, and retirement event.
+Follow-ups, not in this change: the cache proposal.
 
-Remaining work: keep each outcome pending, complete with evidence, or blocked by a specific prerequisite. Continue independent outcomes. Passing parser tests do not qualify an unrelated native GUI or provider flow.
+Blockers: none.
 
-This brief is a working view linked to the project's existing task record. It does not replace an existing source of truth.
+Keep this next to the project's own task record instead of replacing it.

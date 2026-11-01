@@ -1,94 +1,64 @@
 # dsstack
 
-A personal Codex and T3 Code skill collection for finishing scoped work with meaningful tests and bounded resource use. It supports Rust runtimes and CLIs, TypeScript/Fastify services, web and CSS work, Solidity, native desktop applications, and AI/MCP tools.
+Personal skills for Codex, Claude Code, and T3 Code that keep coding agents on the ask. They work one item at a time, run checks when a result can still change a decision, and end with a short handoff. Domain skills cover Rust, TypeScript and Fastify services, web and CSS, Solidity, native desktop apps, and AI/MCP features.
 
-This is a curated collection, not a new agent runtime. T3 owns execution, each project keeps its existing toolchain and task records, and dsstack supplies small reusable decision rules. There are no session-start hooks, automatic model panels, dependencies, or background services.
+This is a set of instructions, not an agent runtime. The host app runs the agents, each project keeps its own toolchain and tracker, and there are no session-start hooks, background services, or dependencies.
 
-## Start here
+## How the skills keep work moving
 
-Python 3.9 or later is sufficient; this checkout was tested with macOS `/usr/bin/python3` 3.9.6. These checks are read-only:
+These rules come from this machine's own session logs and from published guidance. [docs/focus.md](docs/focus.md) has the numbers and the sources.
 
-```sh
-python3 scripts/dsstack.py doctor
-python3 scripts/dsstack.py list
-python3 scripts/dsstack.py preflight --project app --task parser-fix --expected-gib 20
-```
-
-`preflight` verifies that Scratch is mounted, rejects unsafe output paths, checks expected peak growth plus the free-space reserve, and prints task-specific build, temporary, and report paths. It creates no directories and runs no build. Existing project wrappers remain responsible for routing the actual command. Preserve warm compiler targets keyed by worktree across tasks; the suggested task build path is for new task-owned output. Do not create a parallel output layout that violates a project's contract. Run preflight once per task or when capacity assumptions materially change.
+- One item in progress per agent. Each item has a done-when check and ends as done, blocked, or dropped. Discovered work becomes a follow-up.
+- Fast checks while editing. Slow checks run once, after the last edit they cover, and a pass holds until something it covers changes.
+- Counted limits instead of judgment calls. After two failed fixes, two wrong debugging hypotheses, or one or two tries at an environment problem, the agent changes approach or reports a blocker.
+- One review of the finished diff and one re-check of its must-fix fixes. Everything else is a follow-up.
+- Commits, the item list, and the final message are the record. Agents don't produce receipts, manifests, or evidence packets unless asked.
 
 ## Skills
 
 | Skill | Use it for |
 |---|---|
-| [ds-spec](skills/ds-spec/SKILL.md) | Clarifying requirements and recording consequential design decisions |
-| [ds-plan](skills/ds-plan/SKILL.md) | Turning clear requirements into deliverable tasks, interfaces, and checks |
-| [ds-work](skills/ds-work/SKILL.md) | Delivering agreed outcomes and recovering the remaining work after interruptions |
-| [ds-tdd](skills/ds-tdd/SKILL.md) | Behavioral RED/GREEN with a focused, affordable feedback loop |
-| [ds-debug](skills/ds-debug/SKILL.md) | Reproducing a failure and testing a concrete root-cause hypothesis |
-| [ds-review](skills/ds-review/SKILL.md) | Independent review with scope, severity, and a three-round default budget |
-| [ds-consult](skills/ds-consult/SKILL.md) | Reciprocal Codex/Claude feedback and explicitly requested councils |
-| [ds-finish](skills/ds-finish/SKILL.md) | Owning requested work through its actual readiness gate |
-| [ds-resources](skills/ds-resources/SKILL.md) | Scratch routing, capacity admission, ownership, and artifact retirement |
-| [ds-rust](skills/ds-rust/SKILL.md) | Crate-level tests and efficient Rust verification |
-| [ds-typescript](skills/ds-typescript/SKILL.md) | TypeScript, Fastify, databases, packaged CLIs and MCP |
-| [ds-web](skills/ds-web/SKILL.md) | Web and CSS changes, owned browser runs, and real interaction evidence |
-| [ds-solidity](skills/ds-solidity/SKILL.md) | Foundry, invariants, storage/layout, forks, and separate financial authority |
-| [ds-native](skills/ds-native/SKILL.md) | Packaged native behavior and OS lifecycle boundaries |
-| [ds-ai](skills/ds-ai/SKILL.md) | Deterministic tool contracts, bounded evals, and real provider boundaries |
+| [ds-work](skills/ds-work/SKILL.md) | Multi-part or long-running delivery, resuming, and handoff |
+| [ds-plan](skills/ds-plan/SKILL.md) | Specs and plans for unclear or large requests |
+| [ds-tdd](skills/ds-tdd/SKILL.md) | A failing test first for behavior changes and regressions |
+| [ds-debug](skills/ds-debug/SKILL.md) | Finding the cause of a failure before fixing it |
+| [ds-review](skills/ds-review/SKILL.md) | Reviews sorted into must-fix and follow-up, with a round limit |
+| [ds-consult](skills/ds-consult/SKILL.md) | Codex and Claude cross-reviews and requested councils |
+| [ds-resources](skills/ds-resources/SKILL.md) | Scratch capacity checks before large builds |
+| [ds-rust](skills/ds-rust/SKILL.md) | Crate-level Rust tests and warm builds |
+| [ds-typescript](skills/ds-typescript/SKILL.md) | TypeScript packages, Fastify, databases, CLIs, and MCP |
+| [ds-web](skills/ds-web/SKILL.md) | Web and CSS changes and the browser checks they need |
+| [ds-solidity](skills/ds-solidity/SKILL.md) | Foundry tests, invariants, upgrades, forks, and fund safety |
+| [ds-native](skills/ds-native/SKILL.md) | Packaging, OS permissions, and native lifecycles |
+| [ds-ai](skills/ds-ai/SKILL.md) | Model-backed features, evals, and provider boundaries |
 
-Skills use ordinary discovery with narrow descriptions. You can name one directly, for example `Use $ds-tdd and $ds-rust for this parser fix`. Only load the domains relevant to the changed behavior. There is no requirement to invoke every core skill for every task.
+Agents pick skills by their descriptions and load only the ones that fit. You can also name them, for example `Use $ds-work and $ds-rust for the parser items in the tracker`.
 
-## Planning that fits the work
+## Install and update
 
-Clear small fixes proceed directly. Use `ds-spec` for material uncertainty about what to build, `ds-plan` for implementation dependencies or handoffs, and `ds-work` to track delivery and remaining outcomes. Reuse existing specs, plans, and project task records. These are separate capabilities, not a required sequence; load only those the request needs. A short note can be enough, and existing authorization does not need another approval ceremony. The [bulk review](docs/bulk-review.md) records the current size, responsibility boundaries, and limits.
-
-## Cross-model review
-
-Use `$ds-consult` to ask Claude/Opus from Codex, or Codex from Claude. For example:
-
-- `Use $ds-consult to ask Opus 5.5 for a read-only review of this diff.`
-- `Use $ds-consult to get Codex feedback on this implementation plan.`
-- `Use $ds-consult for a Codex/Claude council on these two design options.`
-
-One peer reviewer is the default. An explicitly requested council uses the named roster, or one Codex and one Claude reviewer when unspecified. Reviewers work independently; the lead verifies and combines findings under the shared review-round budget. T3 uses its provider delegation tools; standalone sessions use permitted local CLIs. Requested unavailable models are reported without substitution. The skill does not install providers or change sharing/execution permissions.
-
-## Efficient TDD
-
-Write a failing test for observable behavior before changing that behavior. A compiler error, missing fixture, or unsupported runner option is setup failure, not behavioral RED. For a group of related Rust cases, add the cases together and run one focused crate/test target, observe the expected failures, implement the change, then run that same target green.
-
-Keep the target warm. Do not rebuild the entire workspace after every edit, repeatedly revert already-proven code, or add a test per private helper. Run affected dependents and mandatory project/CI gates once the change is ready for integration. If a gate cannot run, report the exact missing qualification; do not replace it with a cheaper check and call the result equivalent.
-
-A harmless wording, generated-data, or configuration change can use a direct check rather than inventing a behavioral test. Production behavior and high-impact security, financial, migration, or native-lifecycle changes still deserve meaningful regression coverage.
-
-## Install or recreate links
-
-The local trial is active; see [trial and rollback](docs/trial.md). Codex/T3 uses the shared user skill home below. The installer previews by default and never edits provider configuration:
+Python 3.9 or later is enough. Each command previews its changes until you add `--apply`.
 
 ```sh
 python3 scripts/dsstack.py install --dest ~/.agents/skills
 python3 scripts/dsstack.py install --dest ~/.agents/skills --apply
+python3 scripts/dsstack.py install --dest ~/.claude/skills --apply
 python3 scripts/dsstack.py doctor --dest ~/.agents/skills
+python3 scripts/dsstack.py doctor --dest ~/.claude/skills
 ```
 
-Claude Code uses `~/.claude/skills`. Both providers link to this checkout. Keep one dsstack entry per provider; avoid adding duplicate Codex links under `~/.codex/skills`. The installed entries are symlinks to this checkout, so keep the checkout available. Moving it requires reinstalling from the new location. Restart the provider or start a fresh thread after changing the active skill set. If Claude Code loads Superpowers through a plugin SessionStart hook, disable that plugin when choosing dsstack as its workflow; installing skills alone leaves the hook active. Doctor does not inspect provider plugins or hooks.
+`~/.agents/skills` serves Codex, including T3's Codex provider homes. `~/.claude/skills` serves Claude Code, including T3's Claude sessions. Installed skills are symlinks to this checkout, so a change goes live as soon as it lands here, and the checkout has to stay where it is. Install adds links for new skills and prunes links to skills this checkout no longer ships. It never replaces an existing directory or a link that points elsewhere, and any such conflict stops the whole install. Uninstall removes only links into this checkout. Start a fresh thread after the skill set changes.
 
-Existing directories and foreign symlinks are conflicts, never overwritten. If any conflict exists, installation changes nothing. Re-running an unchanged install is idempotent. Removal also previews first and only unlinks entries pointing to this checkout:
+[examples/codex-overrides.toml](examples/codex-overrides.toml) lists the Superpowers workflow skills this pack replaces. Two optional global changes are kept as examples and aren't applied by the installer: [an always-on block](examples/always-on.md) for the global AGENTS.md and CLAUDE.md, and [a Codex memory note](examples/codex-memory-note.md) that corrects the evidence-gate preferences Codex learned. [docs/trial.md](docs/trial.md) records the original activation and its archive.
+
+## Resource preflight
 
 ```sh
-python3 scripts/dsstack.py uninstall --dest ~/.agents/skills
-python3 scripts/dsstack.py uninstall --dest ~/.agents/skills --apply
+python3 scripts/dsstack.py preflight --project app --task parser-fix --expected-gib 20
 ```
 
-Installing dsstack does not disable another workflow pack. Review [examples/codex-overrides.toml](examples/codex-overrides.toml) when adopting it alongside Superpowers. Replace the matching existing entries rather than appending conflicting ones. Use full `SKILL.md` paths and your actual home paths. T3 provider homes may share the same config and skill directory through symlinks.
+Preflight checks that Scratch is mounted, that the task's output paths are safe, and that free space covers the expected peak plus the reserve in [profiles/default.json](profiles/default.json). It creates nothing and schedules nothing, and project wrappers still route the real builds.
 
-## Machine and project settings
-
-[profiles/default.json](profiles/default.json) contains a 150 GiB admission reserve, 300 GiB warning target, and suggested concurrency values. These are starting policies, not benchmarks. `preflight` enforces the capacity check only; this version does not schedule jobs or delete output. Use a different reserve only under an explicit user or project policy, or supply that reviewed JSON policy with `--profile`. An explicitly supplied missing profile is an error.
-
-
-[examples/projects.json](examples/projects.json) maps current repositories to their existing entry points. Treat those commands as orientation examples, re-read live project instructions, and preserve its Node/Rust/pnpm pins. [examples/task-brief.md](examples/task-brief.md) shows a compact task contract without creating a competing task tracker.
-
-## Verify and maintain
+## Maintain
 
 ```sh
 mkdir -p /Volumes/Scratch/dsstack/tmp/local-check
@@ -96,6 +66,4 @@ TMPDIR=/Volumes/Scratch/dsstack/tmp/local-check PYTHONDONTWRITEBYTECODE=1 python
 python3 scripts/dsstack.py doctor
 ```
 
-Tests use disposable Scratch fixtures and Python's standard library. They fail instead of falling back to internal temporary storage when Scratch is unavailable or unwritable. They cover installer conflicts/idempotency/removal, metadata/reference failures, and resource-admission behavior. [evals/scenarios.md](evals/scenarios.md) exercises agent decisions separately. Passing metadata or scripted tests does not prove an agent will follow a skill in every session.
-
-Read [docs/provenance.md](docs/provenance.md) before upstream updates. Sources are pinned and intentionally adapted, so review changes instead of blindly replacing these skills. [docs/validation.md](docs/validation.md) records the initial checks and their limits. Evidence stays on Scratch; source fixtures and short maintained summaries belong in Git.
+The tests use Scratch fixtures and the standard library. They cover installer conflicts, idempotency, pruning, owned removal, metadata and reference errors, and preflight decisions. Passing them says nothing about whether agents follow the skills. [evals/scenarios.md](evals/scenarios.md) and the session measures in [docs/focus.md](docs/focus.md) cover that. Read [docs/provenance.md](docs/provenance.md) before pulling in upstream changes, and [AGENTS.md](AGENTS.md) before editing a skill.
