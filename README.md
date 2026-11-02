@@ -48,7 +48,7 @@ python3 scripts/dsstack.py doctor --dest ~/.claude/skills
 
 `~/.agents/skills` serves Codex, including T3's Codex provider homes. `~/.claude/skills` serves Claude Code, including T3's Claude sessions. Installed skills are symlinks to this checkout, so a change goes live as soon as it lands here, and the checkout has to stay where it is. Install adds links for new skills and prunes links to skills this checkout no longer ships. It never replaces an existing directory or a link that points elsewhere, and any such conflict stops the whole install. Uninstall removes only links into this checkout. Start a fresh thread after the skill set changes.
 
-[examples/codex-overrides.toml](examples/codex-overrides.toml) lists the Superpowers workflow skills this pack replaces. Two optional global changes are kept as examples and aren't applied by the installer: [an always-on block](examples/always-on.md) for the global AGENTS.md and CLAUDE.md, and [a Codex memory note](examples/codex-memory-note.md) that corrects the evidence-gate preferences Codex learned. [examples/goals.md](examples/goals.md) shows how to write Claude and Codex goals that end. [docs/trial.md](docs/trial.md) records the original activation and its archive.
+[examples/codex-overrides.toml](examples/codex-overrides.toml) lists the Superpowers workflow skills this pack replaces. [examples/always-on.md](examples/always-on.md) is a block for the global AGENTS.md and CLAUDE.md, which the installer doesn't apply. [examples/goals.md](examples/goals.md) shows how to write Claude and Codex goals that end. [docs/trial.md](docs/trial.md) records the original activation and its archive.
 
 ## Resource preflight
 
