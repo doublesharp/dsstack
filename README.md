@@ -24,7 +24,7 @@ These rules come from this machine's own session logs and from published guidanc
 | [ds-debug](skills/ds-debug/SKILL.md) | Finding the cause of a failure before fixing it |
 | [ds-review](skills/ds-review/SKILL.md) | Reviews sorted into must-fix and follow-up, with a round limit |
 | [ds-consult](skills/ds-consult/SKILL.md) | Codex and Claude cross-reviews and requested councils |
-| [ds-resources](skills/ds-resources/SKILL.md) | Scratch capacity checks before large builds |
+| [ds-resources](skills/ds-resources/SKILL.md) | Where worktrees and build output go, and Scratch capacity checks |
 | [ds-rust](skills/ds-rust/SKILL.md) | Crate-level Rust tests and warm builds |
 | [ds-typescript](skills/ds-typescript/SKILL.md) | TypeScript packages, Fastify, databases, CLIs, and MCP |
 | [ds-web](skills/ds-web/SKILL.md) | Web and CSS changes and the browser checks they need |
