@@ -7,6 +7,7 @@ description: "Use when changing an existing web interface, responsive layout, or
 
 - Work within the existing framework, design system, routing, and component ownership. Don't add frameworks or test runners for a local edit.
 - Reproduce behavior bugs with a component or journey test at the owning boundary. Cover state that has to survive navigation, pending requests, and account switches.
-- For CSS and layout, check only the states the change affects. When the request includes browser work, look at the rendered page. Check other breakpoints, focus, scrolling, or overlays only when the change touches them. DOM assertions and builds can't show what a page looks like.
+- For CSS and layout, check only the states, breakpoints, focus, scrolling, or overlays the change touches. When the request includes browser work, look at the rendered page. DOM assertions and builds can't show what a page looks like.
+- Write visible text for the product's users. Keep internal status, test notes, hedges, and caveats about unfinished work out of labels, empty states, errors, and marketing copy unless the user asks for them, and put them in the handoff instead.
 - Before opening pages, find the running dev server, its port, and the login to use, then reuse them. Don't start extra servers or write to external services just to make checking easier.
 - When a change touches shared routing, authentication, or several pages, run the affected end-to-end journeys once at the end.
