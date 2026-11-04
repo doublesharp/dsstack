@@ -1,0 +1,4 @@
+interface:
+  display_name: "DS UX"
+  short_description: "Alternating Codex/Claude UX hill climb with council scoring"
+  default_prompt: "Use $ds-ux to score this interface from 0 to 10, alternate Codex and Claude implementation, and have their council score each update for up to six rounds, stopping at the target or two rounds without improvement."

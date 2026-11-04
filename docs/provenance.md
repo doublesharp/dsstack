@@ -49,4 +49,6 @@ Practitioners and research
 
 ## Updating
 
+The 2026-11-03 [UX skill proposal](ux-proposal.md) records its local Claude and Codex session sources and the incorporated Opus 5.5 review. Its rubric condenses the user's prompts; the later six-round council instruction sets the workflow. [Competition-loop research](ux-loop-research.md) records the primary papers, adapted ideas, and limits.
+
 Compare a pinned source's new revision file by file, and keep or revise each adaptation on purpose. Stars and activity don't show that agents finish more work. Don't merge upstream automatically or bring back model-specific instructions that newer guidance retired.

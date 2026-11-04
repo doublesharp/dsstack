@@ -28,6 +28,7 @@ These rules come from this machine's own session logs and from published guidanc
 | [ds-rust](skills/ds-rust/SKILL.md) | Crate-level Rust tests and warm builds |
 | [ds-typescript](skills/ds-typescript/SKILL.md) | TypeScript packages, Fastify, databases, CLIs, and MCP |
 | [ds-web](skills/ds-web/SKILL.md) | Web and CSS changes and the browser checks they need |
+| [ds-ux](skills/ds-ux/SKILL.md) | Six-round UX hill climbs with alternating Codex/Claude implementation and council scores |
 | [ds-solidity](skills/ds-solidity/SKILL.md) | Foundry tests, invariants, upgrades, forks, and fund safety |
 | [ds-native](skills/ds-native/SKILL.md) | Packaging, OS permissions, and native lifecycles |
 | [ds-ai](skills/ds-ai/SKILL.md) | Model-backed features, evals, and provider boundaries |
