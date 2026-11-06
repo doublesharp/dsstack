@@ -63,6 +63,12 @@ The ds-write instructions are written independently after comparing the current 
 
 The skill uses a short drafting/editing procedure with fact and voice preservation. It imports no pattern catalog, scanner, scoring system, or upstream skill text. Personal voice preferences belong in local policy. The evaluation includes legitimate punctuation and lists that should survive editing.
 
+## Compiler caching, 2026-11-06
+
+- [sccache usage and supported compilers](https://github.com/mozilla/sccache#usage): use compiler wrappers or CMake launchers for supported Rust, C/C++, and CUDA/HIP builds; inspect cache statistics when configuring or diagnosing reuse.
+- [sccache Rust support](https://github.com/mozilla/sccache/blob/main/docs/Rust.md): incremental rustc output is not cacheable. Keep warm Cargo targets and stable compiler settings rather than forcing cold builds to demonstrate cache hits.
+- [sccache compiler dispatch](https://github.com/mozilla/sccache/blob/main/src/compiler/compiler.rs) supports C-family and Rust backends, not solc/Solar. [Foundry compiler configuration](https://getfoundry.sh/config/reference/solidity-compiler/) and compatible fork-provided output caches handle contract compilation separately.
+
 ## Updating
 
 The UX rubric, six-round budget, and alternating-provider workflow are author choices maintained in the skill's own references.

@@ -5,7 +5,7 @@ description: "Use when changing Solidity contracts, Foundry tests, upgrade layou
 
 # Solidity contract changes
 
-- Use Foundry Forge for builds, tests, fuzzing, invariants, and coverage. Reuse pinned dependencies, configuration, and wrappers; keep artifact/cache paths warm and consistent.
+- Use Foundry Forge for builds, tests, fuzzing, invariants, and coverage. Reuse pinned dependencies, configuration, and wrappers; preserve warm artifacts and compatible compiler-output caches. Use sccache for Rust/C/C++ source builds of tooling; solc/Solar contract compilation needs its own cache.
 - Use Solar when available for compilation and checks it supports with the project's Solidity/EVM settings. Build deployed bytecode, coverage, and release artifacts with the approved compiler unless the task approves a switch.
 - Require 100% production-contract line, statement, function, and branch coverage. Cover success, rejection, boundary, and adversarial paths with unit tests, fuzzing, and stateful invariants. Check accounting conservation, permissions, and valid state transitions; add storage-layout checks for upgrades.
 - Run focused tests while editing; run the required coverage, fuzz, and invariant suites on the final change with reproducible seeds and the project's run/depth settings. Report uncovered or uninstrumentable paths; do not exclude production code or weaken properties to claim full coverage.

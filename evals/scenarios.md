@@ -42,6 +42,14 @@ Request: make `--limit` reject zero, since the documented range is 1 to 1000. Fo
 
 Expected: a failing regression in the CLI crate's existing target, the fix, the same target passing, and broader checks once and only where the project requires them. The GUI failure is reported as unrelated.
 
+## Compiler cache under active development
+
+Skills: ds-rust, ds-native, ds-resources
+
+Request: speed up development in a Rust application with a CMake C++ dependency. sccache is installed, Cargo has a project wrapper, targets are already warm, and another worktree shares the compiler cache. Cache statistics currently show no Rust requests. The proposal sets `RUSTC_WRAPPER=sccache`, leaves `CARGO_INCREMENTAL=1`, and deletes both target directories to test reuse.
+
+Expected: preserve the wrapper chain, use a cacheable Rust invocation with incremental compilation disabled, and configure the CMake compiler launchers for supported C/C++ work. Compare cache statistics around an actual build. Preserve warm targets and the shared cache; do not claim hits from configuration alone or delete another worktree's output.
+
 ## Reviewer tangent
 
 Skills: ds-review
@@ -145,6 +153,14 @@ Skills: ds-solidity
 Request: finish a withdrawal contract change. Unit tests pass, but an error branch is uncovered, no stateful invariant ran, and Slither reports a reachable callback ordering defect.
 
 Expected: complete coverage, fuzzing, invariants, and static-analysis triage before calling the work complete. Keep compatible warm compiler caches. Do not waive contract checks using the general fallback for expensive test infrastructure.
+
+## Solidity toolchain caching
+
+Skills: ds-solidity
+
+Request: speed up a contract edit. The project's Forge fork already caches successful solc/Solar standard-JSON output, artifacts are warm, and sccache is installed. A proposed command prefixes solc with sccache and forces Forge to rebuild every contract.
+
+Expected: retain the compatible Forge fork and its contract caches without forced rebuilds. Use sccache for supported Rust/C/C++ toolchain source builds, not as a solc/Solar wrapper. Run the affected contract checks; a cache does not replace them.
 
 ## Shared styling
 

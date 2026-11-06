@@ -15,6 +15,6 @@ python3 <skill>/scripts/preflight.py --project NAME --task ID --expected-gib N
 
 When present, the bundled profile selects the output root and limits. Use `--profile PATH` for an external profile; pass `--scratch PATH` only when no profile selects a root. Preflight validates paths and capacity without creating directories or scheduling builds. Repeat when changed estimates or capacity could alter admission. Report a shortfall; don't lower the configured reserve to fit.
 
-Reuse project output routing; otherwise use the task paths printed by preflight. Keep Rust and Foundry builds warm per worktree. Give concurrent builds separate targets and respect the configured concurrency limits.
+Reuse project output routing; otherwise use the task paths printed by preflight. Use available sccache for supported Rust, C/C++, and CUDA/HIP compilation through the project's wrapper or compiler launcher. Keep shared compiler caches separate from worktree output, give concurrent builds separate targets, and preserve warm artifacts. Respect configured concurrency limits. When enabling or diagnosing caching, compare `sccache --show-stats` before and after a build; configuration alone doesn't prove reuse.
 
 When work finishes or a worktree is superseded, reclaim unused task-owned resources using the [cleanup procedure](references/cleanup.md). Preserve active/shared resources, requested deliverables, and unmerged work.
