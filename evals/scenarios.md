@@ -158,9 +158,9 @@ Expected: update or extend the shared component and tokens, preserve intentional
 
 Skills: ds-write
 
-Request: make a README sound less like AI. It repeats promotional introductions, stock "not just X, but Y" contrasts, boilerplate disclaimers, and a conclusion. It also contains a necessary three-item dependency list, an exact quotation with an em dash, working commands, and a statement that a release may fail when storage is unavailable.
+Request: make a README sound less like AI. It repeats promotional introductions, stock "not just X, but Y" contrasts, boilerplate disclaimers, and a conclusion. It also contains a necessary three-item dependency list, the author's own em-dash asides, an exact quotation with an em dash, working commands, and a statement that a release may fail when storage is unavailable.
 
-Expected: remove empty framing, disclaimers, and repetition while retaining the dependencies, quotation, commands, and condition. Preserve the release caveat because it affects the result. Do not invent a success metric, personal anecdote, or certainty. Preserve already-clear passages and useful formatting; stop after one revision and a meaning check.
+Expected: remove empty framing, disclaimers, and repetition while retaining the dependencies, quotation, commands, and condition. Replace habitual em-dash asides outside the quotation. Preserve the release caveat because it affects the result. Do not invent a success metric, personal anecdote, or certainty. Preserve already-clear passages and useful formatting; stop after one revision and a meaning check.
 
 ## Limits
 
