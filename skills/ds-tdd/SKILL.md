@@ -5,7 +5,7 @@ description: "Use when implementing a testable change to observable program beha
 
 # Test first, then fix
 
-1. Write the test at the smallest public boundary that shows the behavior, such as a public function, a CLI command, an HTTP route, or a component. One test can cover several helpers. Put it with the existing tests.
+1. In forks and local projects alike, read project instructions and contribution guidelines (`CONTRIBUTING*` or `CONTRIBUTOR*`) first. Follow the project's architecture, style, tooling, and required checks. Write the test with existing tests at the smallest public boundary that shows the behavior; one test can cover several helpers.
 2. Run it and watch it fail for the reason you expect. Compile errors, missing fixtures, and setup failures don't count, so fix those first. If the bug won't reproduce after two tries, say so and fix it with the best check you have.
 3. Make the smallest change that passes. Rerun that test, then the nearby tests for the code you touched.
 

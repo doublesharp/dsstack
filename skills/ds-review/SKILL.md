@@ -5,9 +5,9 @@ description: "Use when reviewing a change, or when coordinating a requested inde
 
 # Review for what breaks
 
-Review the diff against the ask, reading the callers and dependencies you need to judge the changed behavior. Skip style and unrelated code. Sort each finding into one of two groups.
+Review the diff against the ask and the project's instructions and contribution guidelines (`CONTRIBUTING*` or `CONTRIBUTOR*`), including in forks and local projects. Read the callers and dependencies needed to judge behavior and conformity to project conventions. Skip personal style preferences and unrelated code. Sort each finding into one of two groups.
 
-- Must fix. It breaks the ask, regresses existing behavior, or opens a security, data-loss, or fund-loss path. Rarity doesn't lower it.
+- Must fix. It breaks the ask, violates explicit project requirements, regresses existing behavior, or opens a security, data-loss, or fund-loss path. Rarity doesn't lower it.
 - Follow-up. Everything else. List these in the handoff and leave them out of this change.
 
 For each finding, give the location, the scenario that triggers it, the impact, and a suggested fix.

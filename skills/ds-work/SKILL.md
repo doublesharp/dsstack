@@ -9,7 +9,7 @@ description: "Use when delivering multi-part or long-running work, like a tracke
 
 - List the ask as short items, in the project's tracker if it has one. Give each a done-when check you can observe, like a passing test or a command's output.
 - For open-ended asks like "make it faster", and under any goal or stop hook, follow [references/targets.md](references/targets.md).
-- Ask only when the answer changes what you build and the repo can't tell you. Otherwise pick the reasonable option, say which, and keep going.
+- In forks and local projects, read project instructions and contribution guidelines (`CONTRIBUTING*` or `CONTRIBUTOR*`) before editing. Follow project architecture, style, tooling, required checks, and conventions.
 
 ## Loop
 

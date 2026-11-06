@@ -9,3 +9,6 @@ coverage/
 *-evidence/
 node_modules/
 target/
+
+# Private machine policy, bundles, and recovery backups.
+/.local/
