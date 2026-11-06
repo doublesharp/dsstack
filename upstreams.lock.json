@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-27",
+  "sources": [
+    {
+      "name": "tstack",
+      "repository": "https://github.com/t3dotgg/tstack",
+      "revision": "92e38e2cf677a84a142e8df296861c588542135c",
+      "files": {
+        "LICENSE": {
+          "url": "https://raw.githubusercontent.com/t3dotgg/tstack/92e38e2cf677a84a142e8df296861c588542135c/LICENSE",
+          "sha256": "8095f9a9f97d074131f6a2ce09b952d12c18b36f09f4e5df0517c4e64e82c851"
+        },
+        "skills/sol-loop/SKILL.md": {
+          "url": "https://raw.githubusercontent.com/t3dotgg/tstack/92e38e2cf677a84a142e8df296861c588542135c/skills/sol-loop/SKILL.md",
+          "sha256": "1db1eb4c4a156ee666070e9a12623d520cd1bd9b19c3fc21003fe5a440ba0b10"
+        },
+        "skills/full-stop/SKILL.md": {
+          "url": "https://raw.githubusercontent.com/t3dotgg/tstack/92e38e2cf677a84a142e8df296861c588542135c/skills/full-stop/SKILL.md",
+          "sha256": "091dcabfcba73e009ddb8e32c498a993a6bb60f8c223d3e21e917f4e52ab9939"
+        },
+        "skills/council/SKILL.md": {
+          "url": "https://raw.githubusercontent.com/t3dotgg/tstack/92e38e2cf677a84a142e8df296861c588542135c/skills/council/SKILL.md",
+          "sha256": "da8b4166f19defb2b6916e8f8fe30fa93b8bd2eabaf870ba87e9accaa038e2b8"
+        }
+      },
+      "use": "Adapted ideas and workflow boundaries; no upstream code is executed by dsstack."
+    },
+    {
+      "name": "superpowers",
+      "repository": "https://github.com/obra/superpowers",
+      "revision": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+      "files": {
+        "LICENSE": {
+          "url": "https://raw.githubusercontent.com/obra/superpowers/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/LICENSE",
+          "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400"
+        },
+        "skills/systematic-debugging/SKILL.md": {
+          "url": "https://raw.githubusercontent.com/obra/superpowers/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/systematic-debugging/SKILL.md",
+          "sha256": "51c6435d98c83c42c96ba7c35725a0b2c376cd487fb1a4e6bd0ddbe7e33ef202"
+        },
+        "skills/test-driven-development/SKILL.md": {
+          "url": "https://raw.githubusercontent.com/obra/superpowers/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/test-driven-development/SKILL.md",
+          "sha256": "64b03fce4aee5a97a93160cea8111f3ba13a17b7c001db4bd5836d67fd10705d"
+        },
+        "skills/executing-plans/SKILL.md": {
+          "url": "https://raw.githubusercontent.com/obra/superpowers/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/executing-plans/SKILL.md",
+          "sha256": "e4649e59880ef2643d1da128e3d607e87e3f969410d72095a5bf65811b6036dc"
+        },
+        "skills/brainstorming/SKILL.md": {
+          "url": "https://raw.githubusercontent.com/obra/superpowers/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/brainstorming/SKILL.md",
+          "sha256": "61a7ef918652108c76a3fd01e02dd92d39996c6b46d4cb2819cbd03f6c45e46a"
+        },
+        "skills/writing-plans/SKILL.md": {
+          "url": "https://raw.githubusercontent.com/obra/superpowers/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/writing-plans/SKILL.md",
+          "sha256": "a6c67c1900064347c2a329990dd3c555657c51c3ec53b259a08aa01a2c26139a"
+        }
+      },
+      "use": "Adapted ideas and workflow boundaries; no upstream code is executed by dsstack."
+    }
+  ],
+  "local_sources": [
+    {
+      "name": "claude-code",
+      "sha256": "d5f6ebb92a06c0023c0b03ad2d8201901f64e69560f4655d92849a535107d146",
+      "checked_at": "2026-10-27",
+      "use": "Scoped consultation patterns; Codex standalone syntax independently checked against installed CLI help.",
+      "source": "Author-maintained private consultation skill; not distributed"
+    }
+  ]
+}
