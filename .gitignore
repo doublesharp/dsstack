@@ -10,5 +10,5 @@ coverage/
 node_modules/
 target/
 
-# Private policy and assembled installations belong outside the public tree.
-.local/
+# Private machine policy, tools, bundles, and recovery backups.
+/.local/

@@ -6,6 +6,7 @@ import math
 from pathlib import Path
 import re
 import shutil
+import subprocess
 import sys
 
 VERSION = "0.3.0"
@@ -232,14 +233,30 @@ def _local_policy(local, names):
     return additions, profile
 
 
+def _check_bundle_destination(root, destination):
+    resolved = destination.resolve()
+    if not (destination.is_relative_to(root) or resolved.is_relative_to(root)):
+        return
+    private = root / ".local"
+    if private.is_symlink() or not destination.is_relative_to(private) or not resolved.is_relative_to(private):
+        raise StackError("Within the source checkout, put private bundles under ignored .local/")
+    try:
+        ignored = subprocess.run(["git", "check-ignore", "--quiet", "--no-index", "--", str(destination)],
+                                 cwd=root, capture_output=True)
+        tracked = subprocess.run(["git", "ls-files", "-z", "--", ".local"], cwd=root, capture_output=True)
+    except OSError as exc:
+        raise StackError("Git must confirm .local/ is ignored and untracked before bundling inside the checkout") from exc
+    if ignored.returncode != 0 or tracked.returncode != 0 or tracked.stdout:
+        raise StackError("Add /.local/ to .gitignore and untrack any .local/ files before bundling there")
+
+
 def bundle(root, destination, local=None, apply=False):
     """Preview or create a new frozen stack, without touching installed skills."""
     root = Path(root).resolve()
     destination = Path(destination).expanduser().absolute()
     if destination.exists() or destination.is_symlink():
         raise StackError(f"Bundle destination already exists: {destination}")
-    if destination.resolve().is_relative_to(root):
-        raise StackError("Keep bundles outside the source checkout so private policy cannot be published with it")
+    _check_bundle_destination(root, destination)
     skills = catalog(root)
     inputs = _copy_inputs(root)
     additions, profile = _local_policy(local, {skill["name"] for skill in skills})

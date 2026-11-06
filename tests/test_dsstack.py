@@ -205,13 +205,53 @@ class StackTests(unittest.TestCase):
             self.assertEqual(self.dest.exists(), apply)
             self.assertEqual(json.loads(output.getvalue())["applied"], apply)
 
-    def test_bundle_keeps_private_output_outside_source_and_rejects_missing_policy(self):
+    def test_bundle_rejects_unignored_output_and_missing_policy(self):
         self.bundle_source()
         for dest, local in ((self.root / ".local/bundle", None),
                             (self.dest, self.base / "missing-policy")):
             with self.subTest(dest=dest), self.assertRaises(ds.StackError):
                 ds.bundle(self.root, dest, local, apply=True)
             self.assertFalse(dest.exists())
+
+    def test_bundle_supports_ignored_local_directory_without_copying_private_inputs(self):
+        self.bundle_source()
+        subprocess.run(["git", "init", "--quiet", str(self.root)], check=True)
+        (self.root / ".gitignore").write_text("/.local/\n")
+        local = self.root / ".local/policy"
+        local.parent.mkdir()
+        shutil.move(self.local, local)
+        dest = self.root / ".local/bundles/current"
+        ds.bundle(self.root, dest, local)
+        self.assertFalse(dest.exists())
+        ds.bundle(self.root, dest, local, apply=True)
+        self.assertIn("/private-builds", (dest / "skills/ds-one/SKILL.md").read_text())
+        self.assertFalse((dest / ".local").exists())
+        self.assertTrue(ds.doctor(dest)["ok"])
+        status = subprocess.check_output(["git", "status", "--short", "--untracked-files=all"], cwd=self.root, text=True)
+        self.assertNotIn(".local/", status)
+
+    def test_bundle_refuses_tracked_files_under_local(self):
+        self.bundle_source()
+        subprocess.run(["git", "init", "--quiet", str(self.root)], check=True)
+        (self.root / ".gitignore").write_text("/.local/\n")
+        (self.root / ".local").mkdir()
+        (self.root / ".local/tracked.md").write_text("already tracked")
+        subprocess.run(["git", "add", "--force", ".local/tracked.md"], cwd=self.root, check=True)
+        dest = self.root / ".local/bundles/current"
+        with self.assertRaises(ds.StackError):
+            ds.bundle(self.root, dest, self.local, apply=True)
+        self.assertFalse(dest.exists())
+
+    def test_bundle_refuses_local_destination_that_resolves_into_public_source(self):
+        self.bundle_source()
+        subprocess.run(["git", "init", "--quiet", str(self.root)], check=True)
+        (self.root / ".gitignore").write_text("/.local/\n")
+        (self.root / ".local").mkdir()
+        (self.root / ".local/bundles").symlink_to(self.root / "skills", target_is_directory=True)
+        dest = self.root / ".local/bundles/current"
+        with self.assertRaises(ds.StackError):
+            ds.bundle(self.root, dest, self.local, apply=True)
+        self.assertFalse(dest.exists())
 
     def test_other_bundle_install_cannot_retarget_existing_agent_links(self):
         self.bundle_source()

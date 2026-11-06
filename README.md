@@ -15,19 +15,19 @@ Install the complete bundle below; some skills use shared tooling or sibling ref
 
 ## Install a stable bundle
 
-Python 3.9 or later is enough. Bundle creation and installation preview changes until `--apply` is supplied.
+Use Python 3.9 or later and Git. Bundle creation and installation preview changes until `--apply` is supplied. The public source stays at the repository root; private settings, tools, and assembled bundles live under ignored `.local/`.
 
 ```sh
-python3 scripts/dsstack.py bundle --dest ~/agent-skills/dsstack-v1
-python3 scripts/dsstack.py bundle --dest ~/agent-skills/dsstack-v1 --apply
-python3 ~/agent-skills/dsstack-v1/scripts/dsstack.py install --dest ~/.agents/skills
-python3 ~/agent-skills/dsstack-v1/scripts/dsstack.py install --dest ~/.agents/skills --apply
-python3 ~/agent-skills/dsstack-v1/scripts/dsstack.py doctor --dest ~/.agents/skills
+python3 scripts/dsstack.py bundle --dest .local/bundles/v1
+python3 scripts/dsstack.py bundle --dest .local/bundles/v1 --apply
+python3 .local/bundles/v1/scripts/dsstack.py install --dest ~/.agents/skills
+python3 .local/bundles/v1/scripts/dsstack.py install --dest ~/.agents/skills --apply
+python3 .local/bundles/v1/scripts/dsstack.py doctor --dest ~/.agents/skills
 ```
 
 Use the skill directory your host supports; `~/.agents/skills` and `~/.claude/skills` are common destinations. Start a fresh agent session after installation.
 
-A bundle copies the skills and their tooling. Installed symlinks point into that bundle, so editing or updating this source checkout does not change active instructions. Keep the bundle in a durable location. The installer preserves existing directories and links owned by other installations; a conflict stops the install before changes.
+The tool accepts an in-checkout bundle only under ignored, untracked `.local/`; external destinations also work. A bundle copies the skills and their tooling. Installed symlinks point into that bundle, so editing or updating this source checkout does not change active instructions. Keep the bundle in a durable location. The installer preserves existing directories and links owned by other installations; a conflict stops the install before changes.
 
 For an update, build a new bundle at a new path, compare it with the active bundle, then preview uninstalling the old bundle and installing the new one. Apply those commands only when ready. Uninstall removes only that bundle's owned links; retain the old bundle for rollback. Direct installation from the source checkout is also supported for development, but makes edits live immediately.
 
