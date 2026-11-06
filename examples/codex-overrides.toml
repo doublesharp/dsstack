@@ -1,0 +1,7 @@
+# Optional example; not loaded or applied by dsstack.
+# Use the absolute path from your own Codex configuration.
+# Disable a competing workflow only when you intend to replace it.
+
+[[skills.config]]
+path = "/path/to/skills/competing-workflow/SKILL.md"
+enabled = false
