@@ -114,6 +114,14 @@ Request: a mutating tool appends a database row, but its response is lost. The m
 
 Expected: use a stable operation identifier to avoid a second row, and check replay after partial success with deterministic fixtures. A new model response is not proof that repeating the side effect is safe.
 
+## Shared application operations
+
+Skills: ds-plan, ds-typescript
+
+Request: add an API operation to update several records. Local policy also calls for CLI and MCP access. The application service already enforces permissions and returns separate updated and conflicted records; an API-only implementation exists, while the proposed CLI writes directly to the database.
+
+Expected: include all three requested interfaces, keep adapters around the existing application operation, and preserve permission checks and partial results. Check an allowed request, a denied request, and conflicting records through each transport. Direct database writes that bypass the operation or flattening partial results into success are failures.
+
 ## UX baseline already meets the target
 
 Skills: ds-ux

@@ -1,68 +1,141 @@
-# dsstack
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/doublesharp-dark.svg">
+    <img src="assets/brand/doublesharp-light.svg" width="420" height="90" alt="doublesharp">
+  </picture>
+</p>
 
-Small, opinionated skills for coding agents: finish the ask, check the changed behavior, and stop. The collection covers delivery, debugging, reviews, and common application domains. Skills are plain instructions; the host supplies models, tools, and permissions.
+<h1 align="center">dsstack</h1>
 
-## Start small
+<p align="center"><strong>Finish the ask. Check the result. Stop.</strong></p>
+<p align="center">14 focused skills · Self-contained folders · Python standard-library tooling · MIT</p>
 
-Start by reading [ds-work](skills/ds-work/SKILL.md), [ds-debug](skills/ds-debug/SKILL.md), [ds-tdd](skills/ds-tdd/SKILL.md), and [ds-review](skills/ds-review/SKILL.md). They define the core workflow:
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#the-skills">The skills</a> ·
+  <a href="#make-it-yours">Make it yours</a> ·
+  <a href="#maintain">Maintain</a>
+</p>
 
-- Work on one requested item at a time; record unrelated discoveries as follow-ups.
-- Use focused checks while editing and run broader required checks after the edits they cover.
-- Change approach after repeated failed fixes. Bound review rounds and open-ended work.
-- End with what changed, what passed, and anything blocking the result.
+---
 
-Each skill folder contains its own instructions, references, and any helper it needs. Install the bundle below for stable updates and private additions, or copy a complete skill folder to your host's skill directory. Agents select skills by their descriptions; explicit requests such as `Use $ds-debug to investigate this failure` also work. Project instructions and the user's task still control the work.
+Small, opinionated skills for coding agents. dsstack covers delivery, debugging, reviews, and application work, with short instructions and clear stopping points. Your host supplies the models, tools, and permissions.
 
-## Install a stable bundle
+Each skill folder contains its instructions, references, and any helper it needs. Use one on its own or install the collection. Agents select skills by their descriptions; you can also ask directly:
 
-Use Python 3.9 or later and Git. Bundle creation and installation preview changes until `--apply` is supplied. The public source stays at the repository root; private settings, tools, and assembled bundles live under ignored `.local/`.
+```text
+Use $ds-debug to investigate this failure.
+```
+
+## Quick start
+
+**Requires Python 3.9+ and Git.** Create a stable bundle, preview its installation, then apply it:
 
 ```sh
+# Preview and build a bundle.
 python3 scripts/dsstack.py bundle --dest .local/bundles/v1
 python3 scripts/dsstack.py bundle --dest .local/bundles/v1 --apply
+
+# Preview, install, and check the links.
 python3 .local/bundles/v1/scripts/dsstack.py install --dest ~/.agents/skills
 python3 .local/bundles/v1/scripts/dsstack.py install --dest ~/.agents/skills --apply
 python3 .local/bundles/v1/scripts/dsstack.py doctor --dest ~/.agents/skills
 ```
 
-Use the skill directory your host supports; `~/.agents/skills` and `~/.claude/skills` are common destinations. Start a fresh agent session after installation.
+Use the skill directory supported by your host. `~/.agents/skills` and `~/.claude/skills` are common destinations. **Start a fresh agent session after installation.**
 
-The tool accepts an in-checkout bundle only under ignored, untracked `.local/`; external destinations also work. A bundle copies the skills and their tooling. Installed symlinks point into that bundle, so editing or updating this source checkout does not change active instructions. Keep the bundle in a durable location. The installer preserves existing directories and links owned by other installations; a conflict stops the install before changes.
+Installed links point into the bundle, so source edits do not change active instructions. Existing directories and foreign links are preserved; a conflict stops installation before changes. Keep bundles in a durable location.
 
-For an update, build a new bundle at a new path, compare it with the active bundle, then preview uninstalling the old bundle and installing the new one. Apply those commands only when ready. Uninstall removes only that bundle's owned links; retain the old bundle for rollback. Direct installation from the source checkout is also supported for development, but makes edits live immediately.
+## The skills
 
-[Customization](docs/customization.md) explains how to include private rules without publishing them. The installer does not change global instructions, model settings, plugins, or permissions.
+Start with **ds-work**, **ds-debug**, **ds-tdd**, and **ds-review**. Add domain skills for the work at hand.
 
-`SKILL.md` is the portable instruction format. The optional `agents/openai.yaml` files supply OpenAI interface metadata; Claude reads `SKILL.md` without a matching provider YAML file. See the [OpenAI](https://developers.openai.com/codex/skills#optional-metadata) and [Claude](https://code.claude.com/docs/en/skills) documentation.
+| Area | Skills | What they help with |
+| :--- | :--- | :--- |
+| **Delivery** | [ds-work](skills/ds-work/SKILL.md) · [ds-plan](skills/ds-plan/SKILL.md) | Finish one item, plan the right scope, resume and hand off. |
+| **Correctness** | [ds-debug](skills/ds-debug/SKILL.md) · [ds-tdd](skills/ds-tdd/SKILL.md) · [ds-review](skills/ds-review/SKILL.md) | Reproduce failures, check behavior, substantiate findings. |
+| **Consultation** | [ds-consult](skills/ds-consult/SKILL.md) | Independent Codex/Claude opinions and requested councils. |
+| **Resources** | [ds-resources](skills/ds-resources/SKILL.md) | Check capacity, route output, reclaim unused task resources. |
+| **Languages & services** | [ds-rust](skills/ds-rust/SKILL.md) · [ds-typescript](skills/ds-typescript/SKILL.md) · [ds-solidity](skills/ds-solidity/SKILL.md) | Work within toolchains, databases, APIs, and contract checks. |
+| **Interfaces** | [ds-web](skills/ds-web/SKILL.md) · [ds-native](skills/ds-native/SKILL.md) | Browser journeys, responsive layouts, native boundaries. |
+| **Models & design** | [ds-ai](skills/ds-ai/SKILL.md) · [ds-ux](skills/ds-ux/SKILL.md) | Model-backed behavior and requested, measured UX improvement. |
 
-## Skills
+The skills keep work focused:
 
-| Purpose | Skills |
-|---|---|
-| Delivery | [ds-work](skills/ds-work/SKILL.md), [ds-plan](skills/ds-plan/SKILL.md) |
-| Correctness | [ds-tdd](skills/ds-tdd/SKILL.md), [ds-debug](skills/ds-debug/SKILL.md), [ds-review](skills/ds-review/SKILL.md) |
-| Consultation | [ds-consult](skills/ds-consult/SKILL.md) |
-| Resource use | [ds-resources](skills/ds-resources/SKILL.md) |
-| Application work | [ds-rust](skills/ds-rust/SKILL.md), [ds-typescript](skills/ds-typescript/SKILL.md), [ds-web](skills/ds-web/SKILL.md), [ds-native](skills/ds-native/SKILL.md) |
-| Specialized work | [ds-solidity](skills/ds-solidity/SKILL.md), [ds-ai](skills/ds-ai/SKILL.md), [ds-ux](skills/ds-ux/SKILL.md) |
+- **One requested item at a time.** Record unrelated discoveries as follow-ups.
+- **Checks that cover the change.** Use fast checks while editing; run slow required checks after the edits they cover.
+- **Counted limits.** Change approach after repeated failed fixes; bound reviews and open-ended work.
+- **A clear finish.** Report what changed, what passed, and what blocks the result.
 
-Domain skills follow project toolchains and build policies. Cross-provider consultation needs the requested providers to be available. The measured UX workflow is opt-in through its task description; ordinary interface changes use ds-web.
+Project instructions and the user's task control the work. Cross-provider consultation needs the requested providers to be available. `ds-ux` owns the opt-in scoring workflow; routine interface changes use `ds-web`.
 
-## Resource checks
+## Make it yours
+
+Keep reusable skills at the repository root and personal setup beside them in ignored `.local/`:
+
+```text
+dsstack/
+├── skills/                 Public, portable skill folders
+├── scripts/                Bundle and installation tools
+├── docs/                   Design, validation, and customization
+└── .local/                 Private and ignored by Git
+    ├── policy/             Shared rules and per-skill additions
+    ├── bundles/            Stable assembled installations
+    ├── tools/              Private helpers
+    └── backups/            Recovery material
+```
+
+Put shared additions in `.local/policy/policy.md`, domain additions in `.local/policy/skills/<skill-name>.md`, and optional capacity settings in `.local/policy/resource-profile.json`. Then assemble them into a new private bundle:
+
+```sh
+python3 scripts/dsstack.py bundle --dest .local/bundles/personal-v1 --local .local/policy
+python3 scripts/dsstack.py bundle --dest .local/bundles/personal-v1 --local .local/policy --apply
+```
+
+Private rules are included in the relevant skill, so agents receive them without loading a separate preferences skill. Use global or project instructions for rules that must apply even when no skill loads.
+
+**[Read the customization guide →](docs/customization.md)**
+
+<details>
+<summary><strong>Updating an installation</strong></summary>
+
+Build at a new bundle path and compare it with the active bundle. Preview uninstalling the old bundle and installing the new one, then apply the switch. Uninstall removes only that bundle's owned links; retain the previous bundle for rollback.
+
+An in-checkout bundle must be under ignored, untracked `.local/`; external destinations also work. Direct installation from source is supported for development and makes source edits live immediately.
+
+The installer does not change global instructions, model settings, plugins, or permissions.
+
+</details>
+
+<details>
+<summary><strong>Codex, Claude, and provider metadata</strong></summary>
+
+`SKILL.md` holds the portable instructions. Optional `agents/openai.yaml` files supply OpenAI interface metadata; Claude reads `SKILL.md` without a matching provider YAML file. See the [OpenAI](https://developers.openai.com/codex/skills#optional-metadata) and [Claude](https://code.claude.com/docs/en/skills) documentation.
+
+</details>
+
+<details>
+<summary><strong>Checking disk capacity</strong></summary>
 
 ```sh
 python3 skills/ds-resources/scripts/preflight.py --scratch /path/to/build-volume --project app --task parser-fix --expected-gib 20
 ```
 
-Preflight checks the selected output directory, safe task paths, and capacity. It creates nothing and does not schedule builds. A [resource profile](examples/resource-profile.json) can set the output location and headroom; mounting is required unless the profile explicitly allows an ordinary directory. See [customization](docs/customization.md).
+Preflight checks the output directory, safe task paths, and capacity. It creates nothing and does not schedule builds. A [resource profile](examples/resource-profile.json) can select the location and headroom; pass `--scratch` only when no profile selects a root. Mounting is required unless the profile explicitly allows an ordinary directory. A command-line reserve cannot lower the profile's reserve.
+
+</details>
 
 ## Maintain
 
-Read [AGENTS.md](AGENTS.md) for this repository's working rules. Set `TMPDIR` to a task-owned output directory under the project's build policy, then run:
+Read [AGENTS.md](AGENTS.md). Set `TMPDIR` to an existing task-owned output directory under the project's build policy, then run:
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 python3 scripts/dsstack.py doctor
 ```
 
-Tests check tooling behavior. [Decision scenarios](evals/scenarios.md) check the choices agents make; neither establishes broad productivity gains. [Design rationale](docs/focus.md) explains the failure patterns behind the rules. [Provenance](docs/provenance.md), the [source lock](upstreams.lock.json), and [license notices](licenses) document borrowed ideas.
+Tests check tooling behavior. [Decision scenarios](evals/scenarios.md) check agent choices; neither establishes broad productivity gains. Keep behavioral trials selective and budgeted, as described in [validation](docs/validation.md).
+
+---
+
+[Design rationale](docs/focus.md) · [Sources and adaptations](docs/provenance.md) · [Source lock](upstreams.lock.json) · [License notices](licenses) · [MIT license](LICENSE)
