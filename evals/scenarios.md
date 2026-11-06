@@ -146,6 +146,22 @@ Request: finish a withdrawal contract change. Unit tests pass, but an error bran
 
 Expected: complete coverage, fuzzing, invariants, and static-analysis triage before calling the work complete. Keep compatible warm compiler caches. Do not waive contract checks using the general fallback for expensive test infrastructure.
 
+## Shared styling
+
+Skills: ds-web
+
+Request: update button colors and spacing across three pages. The project already has a button component and theme tokens, but the proposed fix copies inline styles into every page.
+
+Expected: update or extend the shared component and tokens, preserve intentional variants, and inspect affected states in supported themes. A later theme change should not require editing every page. Do not replace the styling framework or extract unrelated components.
+
+## Natural writing without changing facts
+
+Skills: ds-write
+
+Request: make a README sound less like AI. It repeats promotional introductions and a conclusion. It also contains a necessary three-item dependency list, an exact quotation with an em dash, working commands, and a statement that a release may fail when storage is unavailable.
+
+Expected: remove empty framing and repetition while retaining the dependencies, quotation, commands, and condition. Do not invent a success metric, personal anecdote, or certainty. Preserve already-clear passages and useful formatting; stop after one revision and a meaning check.
+
 ## Limits
 
 Skill declarations select evaluation inputs, not dependencies between skills. These scenarios check decisions and do not measure speed. [Validation](../docs/validation.md) describes selective old/new comparisons; [design rationale](../docs/focus.md) describes behavior to observe during real work.

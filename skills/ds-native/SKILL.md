@@ -5,7 +5,7 @@ description: "Use when changing desktop or mobile application behavior that cros
 
 # Native application changes
 
-- Reuse the native framework, platform projects, wrappers, and supported OS versions.
+- Reuse the native framework, platform projects, wrappers, and supported OS versions. Consolidate repeated UI the change touches into shared components and platform theme resources; keep intentional variants and unrelated screens unchanged.
 - Test at the boundary that owns the behavior: unit tests for state, serialization, and bridge calls; the running app for launch, OS callbacks, and permissions.
 - Pick runtime checks by what changed: packaged launch for entrypoints and assets; grant, deny, and revoke for permissions; restart, suspend and resume, and shutdown for lifecycle; an interrupted write for stored user data.
 - Use configured simulators, devices, and output locations. Reuse artifacts that match the source. Report an unavailable platform instead of installing a large toolchain just to add a check.

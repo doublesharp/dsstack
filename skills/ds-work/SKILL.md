@@ -5,7 +5,7 @@ description: "Use when coordinating multi-part or long-running delivery, resumin
 
 # Finish one item at a time
 
-- Read project instructions and contribution guidelines. Locate owning files with `rg --files` in the current checkout before path-specific reads; use its tools, tracker, and required checks.
+- Read project instructions and contribution guidelines. Locate owning files and existing shared code with `rg --files` before path-specific reads; reuse it instead of adding parallel copies. Use the project's tools, tracker, and required checks.
 - Turn the ask into deliverables with observable done-when checks. Keep one item in progress; record discoveries as follow-ups unless the current item depends on them. When the user changes priorities, update the list and finish or park the current item.
 - For open-ended improvement or host goals, set a metric, target, and budget using [targets and budgets](references/targets.md).
 - On resume, read the handoff and Git state. Reuse passing results that still cover the same files and environment. If an inherited completion claim lacks a supporting result, check only what the next item relies on.

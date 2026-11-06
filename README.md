@@ -7,7 +7,7 @@
 
 <h1 align="center">dsstack</h1>
 
-<p align="center">14 skills for Codex and Claude, with a Python standard-library installer.</p>
+<p align="center">15 skills for Codex and Claude, with a Python standard-library installer.</p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
@@ -56,6 +56,7 @@ Start with `ds-work`, `ds-debug`, `ds-tdd`, and `ds-review`. Choose domain skill
 | Languages & services | [ds-rust](skills/ds-rust/SKILL.md) · [ds-typescript](skills/ds-typescript/SKILL.md) · [ds-solidity](skills/ds-solidity/SKILL.md) | Rust tests, TypeScript services, and Solidity contracts. |
 | Interfaces | [ds-web](skills/ds-web/SKILL.md) · [ds-native](skills/ds-native/SKILL.md) | Web layouts, interaction checks, and native app lifecycle. |
 | Models & design | [ds-ai](skills/ds-ai/SKILL.md) · [ds-ux](skills/ds-ux/SKILL.md) | Test model-backed features and score UX changes. |
+| Writing | [ds-write](skills/ds-write/SKILL.md) | Draft and edit prose while preserving facts and the writer's voice. |
 
 Project instructions and the user's task control the work. Consultation requires access to the requested providers. Use `ds-ux` for a requested scoring process and `ds-web` for routine interface changes.
 

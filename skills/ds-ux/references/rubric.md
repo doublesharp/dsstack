@@ -10,7 +10,7 @@ Cover the primary journey's applicable initial and scrolled views, navigation, f
 | Hierarchy | Primary action, order, grouping, emphasis, scanning |
 | Spacing & density | Alignment, rhythm, useful space, target separation |
 | Color & contrast | Readable text/controls and syntax, semantic color, visible states, non-color cues |
-| Iconography | Recognizable meaning, labels, size, alignment, coherent style; consider custom sets when they improve clarity or visual identity |
+| Iconography | Recognizable meaning, labels, size, alignment, coherent style |
 | Consistency & polish | Coherent labels, radii, borders, indicators, responsive states, absence of visual defects |
 | Clarity | Labels, discoverability, feedback, recovery, next step |
 

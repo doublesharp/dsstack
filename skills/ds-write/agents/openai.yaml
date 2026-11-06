@@ -1,0 +1,4 @@
+interface:
+  display_name: "DS Write"
+  short_description: "Draft and edit prose without losing facts or voice"
+  default_prompt: "Use $ds-write to revise this text for its reader."

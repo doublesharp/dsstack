@@ -17,7 +17,7 @@ Use this workflow for a requested measured UX improvement. An evaluator-only tas
 ## Improve and score
 
 - Alternate Codex and Claude implementers unless the user chooses another order. Keep one writer at a time. Report unavailable requested providers without substituting a solo run.
-- Give each writer the retained best, last feedback, one priority, and remaining rounds. Consider a coherent custom icon set when existing iconography weakens clarity or visual identity; use the project's SVG/icon pipeline. Preserve a recoverable previous best and unrelated edits.
+- Give each writer the retained best, last feedback, one priority, and remaining rounds. Build on shared components, styles, and theme tokens. Preserve a recoverable previous best and unrelated edits.
 - Use fresh independent Codex and Claude evaluators for each pair. Give both the same scope, matched captures, rubric, diff, and checks. Hide desired scores, implementer identity, and the other judge's answer.
 - Apply the [paired scoring acceptance rule](references/scoring.md#acceptance); missing evidence leaves the decision pending.
 - A rejection keeps the best unchanged. Try a different candidate within the remaining budget; do not resubmit unchanged work. At finish, restore only your unaccepted changes.

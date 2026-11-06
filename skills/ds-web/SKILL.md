@@ -5,7 +5,7 @@ description: "Use when changing an existing web interface, responsive layout, or
 
 # Web interface changes
 
-- Reuse the framework, design system, routing, components, and test harness. A local edit doesn't need new frameworks or runners.
+- Reuse the framework, design system, routing, components, and test harness; a local edit needs no new framework or runner. Use CSS or the project's styling system with theme tokens and variants instead of repeated style literals or copied inline styles. Move UI repeated across call sites in scope into shared components; keep intentional variants and unrelated code unchanged. Check shared style changes in each affected component and supported theme.
 - Cover state that must survive navigation, pending requests, and account switches at the owning component or journey boundary.
 - For CSS and layout, inspect affected states, breakpoints, focus, scrolling, and overlays. When browser work is requested, inspect the rendered page; DOM assertions and builds don't show appearance.
 - Write visible text for product users. Put internal status, test notes, and unfinished-work caveats in the handoff, not labels, errors, or marketing copy, unless requested.

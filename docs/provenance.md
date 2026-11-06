@@ -57,6 +57,12 @@ The source lock pins the compared files; instructions are paraphrased and upstre
 
 General councils belong to ds-consult; UX scoring and round accounting belong to ds-ux. Each skill keeps its own references and essential procedure. A fuzzy checker for repeated prose was declined: self-contained skills can use different wording, and scenario declarations test a useful structural boundary instead.
 
+## Writing guidance, 2026-11-06
+
+The ds-write instructions are written independently after comparing the current [pstack unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md), [Humanizer 3.1.0](https://github.com/blader/humanizer/blob/main/SKILL.md), [theclaymethod unslop 2.3.0](https://github.com/theclaymethod/unslop/blob/main/references/core-contract.md), [ccf humanize](https://github.com/ccf/humanize/blob/main/skills/humanize/references/principles.md), and [mshumer unslop](https://github.com/mshumer/unslop). These links record the consulted sources; version labels were read from the served files, not verified against commit hashes.
+
+The skill uses a short drafting/editing procedure with fact and voice preservation. It imports no pattern catalog, scanner, scoring system, or upstream skill text. Personal voice preferences belong in local policy. The evaluation includes legitimate punctuation and lists that should survive editing.
+
 ## Updating
 
 The UX rubric, six-round budget, and alternating-provider workflow are author choices maintained in the skill's own references.
