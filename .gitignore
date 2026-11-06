@@ -10,5 +10,5 @@ coverage/
 node_modules/
 target/
 
-# Private machine policy, bundles, and recovery backups.
+# Private machine policy, tools, bundles, and recovery backups.
 /.local/

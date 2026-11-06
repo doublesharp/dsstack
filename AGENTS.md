@@ -9,7 +9,7 @@ Build a small, portable set of skills that keep agents on the ask and finishing 
 - Review feedback on a skill tends to add caveats. Accept an addition only when it names the failure it prevents.
 - Favor behavioral TDD for code changes. Use focused tests in the inner loop and broader checks once at the end. Don't add tests that only mirror skill wording.
 - Use Python standard-library tooling so maintaining this stack needs no compiler, package download, or build cache.
-- Create worktrees for this repo under ~/Workspaces/worktrees/dsstack/<name>, not on Scratch. Put generated fixtures, logs, bytecode, and test output under /Volumes/Scratch/dsstack. Set TMPDIR and PYTHONDONTWRITEBYTECODE=1 for tests.
+- Follow the user or host worktree and output policy. Keep worktrees in durable storage and generated fixtures, logs, bytecode, and test output in a task-owned disposable directory. Set TMPDIR to that existing directory and PYTHONDONTWRITEBYTECODE=1 for tests.
 - Skills don't grant permission to merge, deploy, delete data, send messages, or bypass harness policy.
 - Preserve unrelated projects and global skills. Global migrations need explicit user authorization and a verified archive, and the installer stays dry-run-first.
 - Document borrowed ideas and exact sources. Keep license notices for adapted material.

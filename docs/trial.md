@@ -1,7 +1,11 @@
 # Trying the skills safely
 
-Private installation, archive, and rollback records are maintained outside this repository.
+Build a bundle at a new path and install it into an empty, task-specific skill directory first. Run doctor against that destination and try a small request with the appropriate host configuration.
 
-Preview the installer before applying changes. It preserves foreign links and existing skill directories. Use an empty task-specific destination to inspect a new installation, run doctor, and try a small request before changing active skills.
+Observe whether the agent finishes the requested outcome, chooses checks that cover its edits, respects project instructions, and stops at completion. [Decision scenarios](../evals/scenarios.md) offer bounded requests that require no live services.
 
-Keep the previous skill sources and local configuration available for rollback. Start fresh agent sessions after changing installed skills. Global instructions, plugins, model settings, and permissions are separate choices.
+Before switching an existing installation, record its skill sources and preserve the configuration needed to restore them. The installer reports conflicting directories and foreign links instead of replacing them. Disabling other workflow packs or editing global instructions is a separate, explicit choice.
+
+After switching, start a fresh session. To roll back a bundle installation, uninstall its owned links and reinstall the previous bundle. Keep private configuration, archives, and session records outside the public repository.
+
+See [customization](customization.md) for local policy and [validation](validation.md) for tooling checks.

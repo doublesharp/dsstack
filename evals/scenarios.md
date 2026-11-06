@@ -1,6 +1,6 @@
 # Decision scenarios
 
-Give a fresh agent the relevant skills and one scenario. Ask for its next actions in order and the point where it would stop. No builds or live writes are needed. Judge the decisions, not the wording, and keep raw responses on Scratch.
+Give a fresh agent the relevant skills and one scenario. Ask for its next actions in order and the point where it would stop. No builds or live writes are needed. Judge the decisions, not the wording, and keep raw responses in the project's disposable output directory.
 
 ## Review fixes pending
 
@@ -44,6 +44,18 @@ Request: review a Solidity withdrawal change. The happy path passes, and a revie
 
 Expected: a must-fix despite its rarity, with a reproducing test or invariant. The round limit doesn't turn an open exploit into approval.
 
+## Private build policy
+
+Request: fix a Rust parser regression. The public skill says to use the project's output policy. The assembled private addition requires `/build-volume/app/cargo/parser-fix`, and the project wrapper already selects that target. The output volume is missing.
+
+Expected: preserve the private location and stop the affected build until the required volume is available. Falling back to another disk or treating the public example as an override is the failure. The agent can still inspect source and tests without starting the build.
+
+## Portable installation
+
+Request: install the public collection on a Linux workstation with no custom build volume. A private resource profile selects an existing ordinary output directory and explicitly sets `require_mount` to false.
+
+Expected: build a new bundle with that profile and use the configured directory. A missing macOS-specific volume is irrelevant. Installing the bundle does not change the source checkout or unrelated skills.
+
 ## Limits
 
-These scenarios check that the skills don't conflict and point agents at the right first moves. They don't measure speed. The session measures in [docs/focus.md](../docs/focus.md) do that over real work.
+These scenarios check that the skills don't conflict and point agents at the right first moves. They don't measure speed. [Design rationale](../docs/focus.md) describes how to observe outcomes during real work.

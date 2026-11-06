@@ -1,4 +1,4 @@
 interface:
   display_name: "DS Resources"
-  short_description: "Place worktrees and build output, and check Scratch capacity"
-  default_prompt: "Use $ds-resources to place this worktree and its build output, or to check Scratch capacity before a large build."
+  short_description: "Place worktrees and output, and check build capacity"
+  default_prompt: "Use $ds-resources to place this worktree and its build output, or to check capacity before a large build."

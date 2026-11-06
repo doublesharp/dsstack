@@ -10,9 +10,9 @@ Exact upstream revisions and file hashes are in [upstreams.lock.json](../upstrea
 | t3dotgg/tstack full-stop | Owning work through to a clear finish | No activation by emphatic phrases, and the user's authority stays binding |
 | obra/superpowers TDD and debugging | Failing test first, root-cause hypotheses | No test per helper, no workspace rerun after every step, no revert-to-red cycle |
 | obra/superpowers brainstorming and writing-plans | Intent discovery, buildable specs, task decomposition | One planning skill sized to the work, no compulsory spec, plan, and review sequence |
-| Existing project contracts | Scratch routing and domain test boundaries | Project commands, versions, trackers, and required checks still win |
+| Existing project contracts | Output routing and domain test boundaries | Project commands, versions, trackers, and required checks still win |
 
-The consultation route also draws on the local `claude-code` skill's read-only handoff and completion rules. Its hash is under `local_sources` in the lock. Codex syntax was checked against the installed `codex exec --help`.
+The consultation route also draws on an author-maintained `claude-code` skill's read-only handoff and completion rules. Its content hash is under `local_sources` in the lock; that private source is not distributed. Codex syntax was checked against the installed `codex exec --help` at the recorded revision.
 
 ## Published guidance for the 2026-10-31 revision
 
@@ -49,6 +49,6 @@ Practitioners and research
 
 ## Updating
 
-The 2026-11-03 [UX skill proposal](ux-proposal.md) records its local Claude and Codex session sources and the incorporated Opus 5.5 review. Its rubric condenses the user's prompts; the later six-round council instruction sets the workflow. [Competition-loop research](ux-loop-research.md) records the primary papers, adapted ideas, and limits.
+The [UX design note](ux-proposal.md) records the failure patterns observed in private application sessions and the choices they informed. Private transcripts and host-specific thread links are not distributed. The six-round council and rubric are author choices. [Competition-loop research](ux-loop-research.md) records the primary papers, adapted ideas, and limits.
 
 Compare a pinned source's new revision file by file, and keep or revise each adaptation on purpose. Stars and activity don't show that agents finish more work. Don't merge upstream automatically or bring back model-specific instructions that newer guidance retired.

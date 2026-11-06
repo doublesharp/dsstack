@@ -20,3 +20,7 @@ Check timing and stop rules live in ds-work, test-first guidance in ds-tdd, and 
 Local session observations motivated these rules. They are not a controlled benchmark: projects, models, instructions, and task difficulty changed between periods. The public collection makes no numerical claim about time saved or completion rates.
 
 To evaluate an installation, use [decision scenarios](../evals/scenarios.md) before normal work, then inspect a small sample of completed tasks. Look for required outcomes finished, relevant checks passed, repeated review chains, and time spent on unrelated work. Compare similar tasks and retain failures as examples. Keep raw session records private.
+
+## Custom policy belongs outside the defaults
+
+A build volume, hardware reserve, hosting contract, or personal reporting preference can be useful without being universal. [Private customization](customization.md) places those details in the assembled installation while the public skills remain portable. Changing the public source does not activate a new bundle.
