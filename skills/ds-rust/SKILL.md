@@ -5,8 +5,11 @@ description: "Use when changing Rust crate behavior, Cargo features, async lifec
 
 # Rust changes
 
-- Use the project's toolchain pin, lockfile, wrappers, and runtime. Find the owning crate and smallest test target before building.
-- Run that target through the project wrapper, for example `cargo nextest run -p <crate> <filter>` when nextest is installed. Add cases to existing modules: each new `tests/*.rs` file creates another binary to compile and link.
+- Reuse the toolchain pin, lockfile, wrappers, and runtime. Find the owning crate and smallest existing test target before building.
+- Run that target through the wrapper, for example `cargo nextest run -p <crate> <filter>` when installed. Add cases to existing modules: each new `tests/*.rs` file creates another binary to compile and link.
 - Keep the configured target directory, profile, features, target triple, and `RUSTFLAGS` stable to reuse builds. Give concurrent builds separate targets. Use `cargo clean` or `cargo update` only when the task needs it.
-- `cargo check` compiles; it doesn't run tests or link everything.
+- Use all available logical CPU cores for compilation and tests. Detect the host/container CPU count and set `CARGO_BUILD_JOBS` and `RUST_TEST_THREADS` to that count, or use nextest's `--test-threads` setting. Keep tests serial only where the project explicitly requires isolation.
+- `cargo check` compiles; it does not run tests or link everything.
 - Use integration tests for process, database, FFI, cancellation, or resource-lifetime boundaries. Include affected dependents or feature combinations when changes cross crate or feature boundaries.
+
+When a task/worktree is complete or superseded, remove its unused targets and temporary output after checking active processes. Preserve shared caches, required artifacts, and unmerged work.

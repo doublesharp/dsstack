@@ -5,11 +5,11 @@ description: "Use when a test fails unexpectedly, runtime behavior is wrong, or 
 
 # Find the cause, then fix it
 
-1. Reproduce it. Write down the exact command or steps, what you expected, and what happened. Read the whole error.
-2. Pick one hypothesis and decide what you would see if it were true. Run the cheapest check that tells you, changing one thing at a time. Compare with a working case when you have one.
-3. After two wrong hypotheses, recheck inputs, versions, configuration, and what actually ran. After three, write down what you've ruled out and switch methods, for example by bisecting or comparing with a known-good build. If that fails too, mark the item blocked with your notes and move on. Ask only for a specific missing input or decision.
-4. Fix the cause, not the symptom. Add a regression test with ds-tdd and remove temporary logging.
+1. Reproduce the failure with the exact command or steps, expected result, and actual result. Read the full error and compare a working case when available.
+2. Choose one hypothesis and the cheapest observation that could disprove it. Change one variable at a time.
+3. After two wrong hypotheses, recheck inputs, versions, configuration, and what actually ran. After a third, record what you ruled out and switch methods, such as bisecting or comparing a known-good build. If that also fails, report the specific missing input or decision and stop the affected work.
+4. Fix the cause and lock it down with a focused regression check. Prefer a failing test before the fix; if the reproduction is impractical, explain the gap and use the closest executable check. Remove temporary logging.
 
-A missing service, bad credentials, a full disk, or an overloaded host is an environment problem, not a code bug. Report it as a blocker the way ds-work describes instead of coding around it.
+Missing services, credentials, disk, and overloaded hosts need one or two direct environment fixes, then a blocker report. Do not change product behavior to hide the environment failure.
 
-When a flaky test covers code you didn't touch, rerun it once. If it passes, note it as a follow-up and move on. When it covers code you changed, find the shared state, timing, or ordering behind it, and don't hide it with retries or sleeps.
+For a flaky test outside changed code, rerun once and report a follow-up if it passes. For changed code, investigate shared state, timing, or ordering; do not hide failures with retries or sleeps.

@@ -1,4 +1,4 @@
 interface:
   display_name: "DS Consult"
   short_description: "Codex and Claude cross-reviews and requested councils"
-  default_prompt: "Use $ds-consult to get a scoped, read-only review from the other model provider."
+  default_prompt: "Use $ds-consult for an independent opinion or a bounded model council on this task."

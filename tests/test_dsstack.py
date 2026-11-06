@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("dsstack_cli", ROOT / "scripts/dsstack.py")
 ds = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ds)
+resources = ds._resources
 
 
 class StackTests(unittest.TestCase):
@@ -132,9 +133,39 @@ class StackTests(unittest.TestCase):
         p.write_text(p.read_text().replace('"ds-one"', '"ds-elsewhere"'))
         self.assertFalse(ds.doctor(self.root)["ok"])
 
+    def scenarios(self, text):
+        path = self.root / "evals/scenarios.md"
+        path.parent.mkdir()
+        path.write_text(text)
+
+    def test_doctor_accepts_scenarios_using_catalog_skills(self):
+        self.scenarios("# Scenarios\n\n## Shared task\n\nSkills: ds-one, ds-two\n\nRequest: finish the task.\n")
+        self.assertTrue(ds.doctor(self.root)["ok"])
+
+    def test_doctor_rejects_unknown_scenario_skill(self):
+        self.scenarios("## Wrong skill\n\nSkills: ds-missing\n\nRequest: finish the task.\n")
+        result = ds.doctor(self.root)
+        self.assertFalse(result["ok"])
+        self.assertIn("ds-missing", " ".join(result["errors"]))
+
+    def test_doctor_requires_scenario_skill_declarations_on_each_request(self):
+        self.scenarios("## Declared\n\nSkills: ds-one\n\nRequest: first task.\n\n## Missing\n\nRequest: second task.\n")
+        result = ds.doctor(self.root)
+        self.assertFalse(result["ok"])
+        self.assertIn("Missing", " ".join(result["errors"]))
+
+    def test_doctor_rejects_empty_or_ambiguous_scenario_declarations(self):
+        for declarations in ("Skills:\n", "Skills: ds-one\nSkills: ds-two\n"):
+            with self.subTest(declarations=declarations):
+                path = self.root / "evals/scenarios.md"
+                path.parent.mkdir(exist_ok=True)
+                path.write_text("## Broken\n\n" + declarations + "\nRequest: finish the task.\n")
+                self.assertFalse(ds.doctor(self.root)["ok"])
+
     def bundle_source(self):
         (self.root / "scripts").mkdir()
         shutil.copy2(ROOT / "scripts/dsstack.py", self.root / "scripts/dsstack.py")
+        shutil.copytree(ROOT / "skills/ds-resources", self.root / "skills/ds-resources")
         for name in ("VERSION", "LICENSE", "NOTICE"):
             (self.root / name).write_text("fixture\n")
         refs = self.root / "skills/ds-one/references"
@@ -154,7 +185,7 @@ class StackTests(unittest.TestCase):
         result = ds.bundle(self.root, self.dest, self.local)
         self.assertFalse(self.dest.exists())
         self.assertNotIn("/private-builds", json.dumps(result))
-        self.assertEqual(result["skills"], 2)
+        self.assertEqual(result["skills"], 3)
 
     def test_bundle_freezes_sources_and_inlines_private_instructions(self):
         self.bundle_source()
@@ -170,29 +201,75 @@ class StackTests(unittest.TestCase):
         (self.local / "policy.md").write_text("private policy changed")
         self.assertIn("backed-up storage", installed.read_text())
         self.assertNotIn("upstream changed", installed.read_text())
-        profile = ds._profile(self.dest)
+        profile = resources.load_profile(self.dest / "skills/ds-resources")
         self.assertEqual(profile["reserve_gib"], 12)
         self.assertFalse(profile["require_mount"])
+        self.assertFalse((self.dest / "profiles").exists())
         self.assertTrue(ds.doctor(self.dest)["ok"])
         ds.install(self.dest, self.base / "agent-skills")
         self.assertEqual((self.base / "agent-skills/ds-one").resolve(), installed.parent)
 
-    def test_bundled_cli_uses_its_private_profile_after_source_is_removed(self):
+    def test_bundled_resource_cli_uses_its_private_profile_after_source_is_removed(self):
         self.bundle_source()
         ds.bundle(self.root, self.dest, self.local, apply=True)
         shutil.rmtree(self.root)
         command = [sys.executable, str(self.dest / "scripts/dsstack.py")]
         checked = subprocess.run(command + ["doctor"], capture_output=True, text=True, check=True)
         self.assertTrue(json.loads(checked.stdout)["ok"])
-        checked = subprocess.run(command + ["preflight", "--project", "app", "--task", "fix"],
+        command = [sys.executable, str(self.dest / "skills/ds-resources/scripts/preflight.py")]
+        checked = subprocess.run(command + ["--project", "app", "--task", "fix"],
                                  capture_output=True, text=True, check=True)
         result = json.loads(checked.stdout)
         self.assertEqual(result["scratch"], str(self.base))
         self.assertEqual(result["required_gib"], 12)
         self.assertFalse(result["creates_directories"])
-        overridden = subprocess.run(command + ["preflight", "--project", "app", "--task", "fix",
-                                               "--scratch", str(self.dest)], capture_output=True, text=True, check=True)
-        self.assertEqual(json.loads(overridden.stdout)["scratch"], str(self.dest))
+        overridden = subprocess.run(command + ["--project", "app", "--task", "fix",
+                                               "--scratch", str(self.dest)], capture_output=True, text=True)
+        self.assertEqual(overridden.returncode, 2)
+        self.assertIn("profile", json.loads(overridden.stderr)["error"].lower())
+
+    def test_bundle_requires_resource_skill_for_private_resource_policy(self):
+        self.bundle_source()
+        shutil.rmtree(self.root / "skills/ds-resources")
+        with self.assertRaises(ds.StackError):
+            ds.bundle(self.root, self.dest, self.local)
+        self.assertFalse(self.dest.exists())
+
+    def test_bundle_omits_unrelated_root_resource_files(self):
+        self.bundle_source()
+        (self.root / "profiles").mkdir()
+        (self.root / "profiles/unrelated.json").write_text('{"scratch": "/unrelated"}')
+        ds.bundle(self.root, self.dest, self.local, apply=True)
+        self.assertFalse((self.dest / "profiles").exists())
+
+    def test_read_only_cli_does_not_create_bytecode_without_environment_override(self):
+        self.bundle_source()
+        for cache in self.root.rglob("__pycache__"):
+            shutil.rmtree(cache)
+        env = os.environ.copy()
+        env.pop("PYTHONDONTWRITEBYTECODE", None)
+        env.pop("PYTHONPYCACHEPREFIX", None)
+        before = {str(path.relative_to(self.root)) for path in self.root.rglob("*")}
+        checked = subprocess.run([sys.executable, str(self.root / "scripts/dsstack.py"), "doctor"],
+                                 capture_output=True, text=True, env=env)
+        self.assertEqual(checked.returncode, 0, checked.stderr)
+        self.assertEqual({str(path.relative_to(self.root)) for path in self.root.rglob("*")}, before)
+
+    def test_copied_resource_skill_runs_without_stack_and_uses_private_profile(self):
+        self.bundle_source()
+        ds.bundle(self.root, self.dest, self.local, apply=True)
+        isolated = self.base / "resource-only"
+        shutil.copytree(self.dest / "skills/ds-resources", isolated)
+        shutil.rmtree(self.root)
+        shutil.rmtree(self.dest)
+        command = [sys.executable, str(isolated / "scripts/preflight.py"),
+                   "--project", "app", "--task", "fix"]
+        checked = subprocess.run(command, capture_output=True, text=True)
+        self.assertEqual(checked.returncode, 0, checked.stderr)
+        result = json.loads(checked.stdout)
+        self.assertEqual(result["scratch"], str(self.base))
+        self.assertEqual(result["required_gib"], 12)
+        self.assertFalse((self.base / "app").exists())
 
     def test_bundle_cli_preview_and_apply(self):
         self.bundle_source()
@@ -294,15 +371,50 @@ class StackTests(unittest.TestCase):
         self.assertEqual((self.base / "agent-skills/ds-one").resolve(), self.root / "skills/ds-one")
 
     def test_preflight_accepts_explicit_non_mount_directory(self):
-        result = ds.preflight(self.base, "app", "task", reserve_gib=0, require_mount=False)
+        result = resources.preflight(self.base, "app", "task", reserve_gib=0, require_mount=False)
         self.assertEqual(result["scratch"], str(self.base))
+
+    def test_stack_cli_does_not_dispatch_resource_commands(self):
+        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as stopped:
+            ds.main(["preflight", "--project", "app", "--task", "fix"])
+        self.assertEqual(stopped.exception.code, 2)
 
     def test_cli_requires_storage_instead_of_assuming_a_machine_path(self):
         output, errors = io.StringIO(), io.StringIO()
-        with redirect_stdout(output), redirect_stderr(errors):
-            status = ds.main(["--stack-root", str(self.root), "preflight", "--project", "app", "--task", "fix"])
+        with patch.object(resources, "ROOT", self.root), redirect_stdout(output), redirect_stderr(errors):
+            status = resources.main(["--project", "app", "--task", "fix"])
         self.assertEqual(status, 2)
         self.assertIn("--scratch", json.loads(errors.getvalue())["error"])
+
+    def test_resource_cli_reports_profile_guidance_without_enforcing_scheduling(self):
+        profile = self.base / "policy.json"
+        profile.write_text(json.dumps({"scratch": str(self.base), "require_mount": False,
+                                       "recommendations": {"heavy_build_slots": 1}, "notes": ["Use configured output"]}))
+        output = io.StringIO()
+        with redirect_stdout(output):
+            status = resources.main(["--profile", str(profile), "--project", "app", "--task", "fix"])
+        self.assertEqual(status, 0)
+        result = json.loads(output.getvalue())
+        self.assertEqual(result["recommendations"], {"heavy_build_slots": 1})
+        self.assertEqual(result["notes"], ["Use configured output"])
+        self.assertFalse(result["scheduling_enforced"])
+
+    def test_resource_cli_preserves_profile_reserve_and_allows_larger_reserves(self):
+        profile = self.base / "policy.json"
+        profile.write_text(json.dumps({"scratch": str(self.base), "require_mount": False,
+                                       "reserve_gib": 12}))
+        usage = shutil._ntuple_diskusage(100 * 2**30, 80 * 2**30, 20 * 2**30)
+        for reserve, expected_status in ((0, 2), (12, 0), (16, 0)):
+            with self.subTest(reserve=reserve):
+                output, errors = io.StringIO(), io.StringIO()
+                with patch.object(resources.shutil, "disk_usage", return_value=usage), redirect_stdout(output), redirect_stderr(errors):
+                    status = resources.main(["--profile", str(profile), "--project", "app", "--task", "fix",
+                                             "--reserve-gib", str(reserve)])
+                self.assertEqual(status, expected_status)
+                if status:
+                    self.assertIn("reserve", json.loads(errors.getvalue())["error"].lower())
+                else:
+                    self.assertEqual(json.loads(output.getvalue())["required_gib"], reserve)
 
     def test_profile_validation_rejects_silent_typo_and_invalid_values(self):
         profile = self.base / "profile.json"
@@ -310,25 +422,25 @@ class StackTests(unittest.TestCase):
                         {"reseve_gib": 10}, [], {"scratch": "relative/path"}):
             profile.write_text(json.dumps(invalid))
             with self.subTest(invalid=invalid), self.assertRaises(ds.StackError):
-                ds._profile(self.root, profile)
+                resources.load_profile(self.root, profile)
 
     def test_preflight_reserves_peak_plus_headroom_and_creates_nothing(self):
         scratch = self.base / "Scratch"
         scratch.mkdir()
         usage = shutil._ntuple_diskusage(1000 * 2**30, 800 * 2**30, 200 * 2**30)
-        with patch.object(Path, "is_mount", return_value=True), patch.object(ds.shutil, "disk_usage", return_value=usage):
+        with patch.object(Path, "is_mount", return_value=True), patch.object(resources.shutil, "disk_usage", return_value=usage):
             with self.assertRaises(ds.StackError):
-                ds.preflight(scratch, "app", "task-one", expected_gib=60, reserve_gib=150)
-            result = ds.preflight(scratch, "app", "task-one", expected_gib=40, reserve_gib=150)
+                resources.preflight(scratch, "app", "task-one", expected_gib=60, reserve_gib=150)
+            result = resources.preflight(scratch, "app", "task-one", expected_gib=40, reserve_gib=150)
         self.assertEqual(result["paths"]["build"], str(scratch / "app/build/task-one"))
         self.assertEqual(list(scratch.iterdir()), [])
 
     def test_explicit_missing_profile_is_rejected_instead_of_using_defaults(self):
         output, errors = io.StringIO(), io.StringIO()
         missing = self.base / "misspelled-profile.json"
-        with patch.object(ds, "preflight", return_value={"ok": True}) as admit:
+        with patch.object(resources, "preflight", return_value={"ok": True}) as admit:
             with redirect_stdout(output), redirect_stderr(errors):
-                status = ds.main(["--stack-root", str(self.root), "preflight", "--project", "app", "--task", "fix", "--profile", str(missing)])
+                status = resources.main(["--project", "app", "--task", "fix", "--profile", str(missing)])
         self.assertEqual(status, 2)
         self.assertIn(str(missing), json.loads(errors.getvalue())["error"])
         admit.assert_not_called()
@@ -337,28 +449,28 @@ class StackTests(unittest.TestCase):
         scratch = self.base / "Scratch"
         scratch.mkdir()
         with self.assertRaises(ds.StackError):
-            ds.preflight(scratch, "app", "task-one")
+            resources.preflight(scratch, "app", "task-one")
 
     def test_preflight_rejects_unsafe_names(self):
         with patch.object(Path, "is_mount", return_value=True):
             for project, task in [("../app", "ok"), ("app", "../../source"), (".", "ok")]:
                 with self.subTest(project=project, task=task), self.assertRaises(ds.StackError):
-                    ds.preflight(self.base, project, task)
+                    resources.preflight(self.base, project, task)
 
     def test_preflight_rejects_output_symlink_escape(self):
         scratch = self.base / "Scratch"
         (scratch / "app").mkdir(parents=True)
         (scratch / "app/build").symlink_to(self.base, target_is_directory=True)
         usage = shutil._ntuple_diskusage(1000 * 2**30, 100 * 2**30, 900 * 2**30)
-        with patch.object(Path, "is_mount", return_value=True), patch.object(ds.shutil, "disk_usage", return_value=usage):
+        with patch.object(Path, "is_mount", return_value=True), patch.object(resources.shutil, "disk_usage", return_value=usage):
             with self.assertRaises(ds.StackError):
-                ds.preflight(scratch, "app", "task-one")
+                resources.preflight(scratch, "app", "task-one")
 
     def test_preflight_rejects_non_finite_or_negative_budgets(self):
         with patch.object(Path, "is_mount", return_value=True):
             for expected in [-1, float("nan"), float("inf")]:
                 with self.subTest(expected=expected), self.assertRaises(ds.StackError):
-                    ds.preflight(self.base, "app", "task-one", expected_gib=expected)
+                    resources.preflight(self.base, "app", "task-one", expected_gib=expected)
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ Start by reading [ds-work](skills/ds-work/SKILL.md), [ds-debug](skills/ds-debug/
 - Change approach after repeated failed fixes. Bound review rounds and open-ended work.
 - End with what changed, what passed, and anything blocking the result.
 
-Install the complete bundle below; some skills use shared tooling or sibling references. Agents select skills by their descriptions; explicit requests such as `Use $ds-debug to investigate this failure` also work. Project instructions and the user's task still control the work.
+Each skill folder contains its own instructions, references, and any helper it needs. Install the bundle below for stable updates and private additions, or copy a complete skill folder to your host's skill directory. Agents select skills by their descriptions; explicit requests such as `Use $ds-debug to investigate this failure` also work. Project instructions and the user's task still control the work.
 
 ## Install a stable bundle
 
@@ -33,6 +33,8 @@ For an update, build a new bundle at a new path, compare it with the active bund
 
 [Customization](docs/customization.md) explains how to include private rules without publishing them. The installer does not change global instructions, model settings, plugins, or permissions.
 
+`SKILL.md` is the portable instruction format. The optional `agents/openai.yaml` files supply OpenAI interface metadata; Claude reads `SKILL.md` without a matching provider YAML file. See the [OpenAI](https://developers.openai.com/codex/skills#optional-metadata) and [Claude](https://code.claude.com/docs/en/skills) documentation.
+
 ## Skills
 
 | Purpose | Skills |
@@ -49,7 +51,7 @@ Domain skills follow project toolchains and build policies. Cross-provider consu
 ## Resource checks
 
 ```sh
-python3 scripts/dsstack.py preflight --scratch /path/to/build-volume --project app --task parser-fix --expected-gib 20
+python3 skills/ds-resources/scripts/preflight.py --scratch /path/to/build-volume --project app --task parser-fix --expected-gib 20
 ```
 
 Preflight checks the selected output directory, safe task paths, and capacity. It creates nothing and does not schedule builds. A [resource profile](examples/resource-profile.json) can set the output location and headroom; mounting is required unless the profile explicitly allows an ordinary directory. See [customization](docs/customization.md).

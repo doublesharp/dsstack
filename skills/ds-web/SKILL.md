@@ -5,9 +5,9 @@ description: "Use when changing an existing web interface, responsive layout, or
 
 # Web interface changes
 
-- Work within the existing framework, design system, routing, and component ownership. Don't add frameworks or test runners for a local edit.
+- Reuse the framework, design system, routing, components, and test harness. A local edit doesn't need new frameworks or runners.
 - Cover state that must survive navigation, pending requests, and account switches at the owning component or journey boundary.
-- For CSS and layout, check only the states, breakpoints, focus, scrolling, or overlays the change touches. When the request includes browser work, look at the rendered page. DOM assertions and builds can't show what a page looks like.
-- Write visible text for the product's users. Keep internal status, test notes, hedges, and caveats about unfinished work out of labels, empty states, errors, and marketing copy unless the user asks for them, and put them in the handoff instead.
-- Before opening pages, find the running dev server, its port, and the login to use, then reuse them. Don't start extra servers or write to external services just to make checking easier.
+- For CSS and layout, inspect affected states, breakpoints, focus, scrolling, and overlays. When browser work is requested, inspect the rendered page; DOM assertions and builds don't show appearance.
+- Write visible text for product users. Put internal status, test notes, and unfinished-work caveats in the handoff, not labels, errors, or marketing copy, unless requested.
+- Reuse the running dev server, port, and login. Don't start extra servers or write to external services just to simplify checking.
 - Include affected end-to-end journeys when a change touches shared routing, authentication, or several pages.

@@ -9,7 +9,7 @@ The repository root holds public skills and tooling. Keep machine paths, resourc
     skills/
       ds-resources.md          # Added only to this skill
       ds-rust.md               # Optional domain-specific rule
-    resource-profile.json      # Installed as profiles/default.json
+    resource-profile.json      # Installed in ds-resources/profiles/default.json
   bundles/                     # Separate versioned installations
   tools/                       # Optional private helpers
   backups/                     # Private recovery material
@@ -40,7 +40,7 @@ python3 .local/bundles/v1/scripts/dsstack.py doctor
 
 An in-checkout destination must be under `.local/`, ignored by Git, and untracked. The tool checks those conditions before assembly. You may also keep inputs and bundles outside the checkout.
 
-Review the assembled `SKILL.md` files before activating the bundle. Its preflight uses the bundled default resource profile; an explicit `--profile` selects another profile and `--scratch` overrides the location.
+Review the assembled `SKILL.md` files before activating the bundle. Its preflight uses the bundled default resource profile; an explicit `--profile` selects another profile and `--scratch` supplies a root only when the profile has none.
 
 Bundle creation leaves public source and existing installations alone. Destinations must be new; an update is another bundle followed by an explicit installation switch. Existing links into a different bundle are conflicts, so uninstall the previous bundle's owned links before installing its replacement. Keep the previous bundle for rollback and start a fresh agent session after switching.
 

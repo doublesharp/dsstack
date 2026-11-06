@@ -12,8 +12,6 @@ Exact upstream revisions and file hashes are in [upstreams.lock.json](../upstrea
 | obra/superpowers brainstorming and writing-plans | Intent discovery, buildable specs, task decomposition | One planning skill sized to the work, no compulsory spec, plan, and review sequence |
 | Existing project contracts | Output routing and domain test boundaries | Project commands, versions, trackers, and required checks still win |
 
-The consultation route also draws on an author-maintained `claude-code` skill's read-only handoff and completion rules. Its content hash is under `local_sources` in the lock; that private source is not distributed. Codex syntax was checked against the installed `codex exec --help` at the recorded revision.
-
 ## Published guidance for the 2026-10-31 revision
 
 All pages were read on 2026-10-31. Quotes are short excerpts, and the skills paraphrase rather than copy.
@@ -47,8 +45,20 @@ Practitioners and research
 - Cemri et al., [Why do multi-agent LLM systems fail?](https://arxiv.org/abs/2503.13657). Step repetition and unawareness of termination conditions are among the most common failures.
 - [ImpossibleBench](https://arxiv.org/abs/2510.20270). Agents "may delete failing tests rather than fix the underlying bug."
 
+## Compact, independent skills, 2026-11-06
+
+The source lock pins the compared files; instructions are paraphrased and upstream code is not executed.
+
+- [pstack TDD](https://github.com/cursor/plugins/blob/2776ddd2355d6d6c8747d3964600f28daf62f049/pstack/skills/tdd/SKILL.md): choose a useful executable regression check when a new harness would outgrow the change; project-required checks remain binding.
+- [pstack interrogate](https://github.com/cursor/plugins/blob/2776ddd2355d6d6c8747d3964600f28daf62f049/pstack/skills/interrogate/SKILL.md): substantiate findings. Here, a complete source trace can establish a defect when running it is impractical; no adversary fan-out is required.
+- [pstack idempotency](https://github.com/cursor/plugins/blob/2776ddd2355d6d6c8747d3964600f28daf62f049/pstack/skills/principle-make-operations-idempotent/SKILL.md): cover repeated delivery and interrupted side effects where the same operation can be retried.
+- [Anthropic skill creator](https://github.com/anthropics/skills/blob/ca45fc496a3436251f191354091d557da31c15b5/skills/skill-creator/SKILL.md) and [Superpowers writing-skills](https://github.com/obra/superpowers/blob/22f0b463e7a5e579904dd6211a520321035526f7/skills/writing-skills/SKILL.md): compare affected behavior with the prior skill. Trials stay selective and budgeted, without a mandatory viewer or benchmark pipeline.
+- [tstack takeover](https://github.com/t3dotgg/tstack/tree/main/skills/takeover): treat inherited completion claims as context. Reuse valid results and check only an unsupported dependency the next item needs.
+
+General councils belong to ds-consult; UX scoring and round accounting belong to ds-ux. Each skill keeps its own references and essential procedure. A fuzzy checker for repeated prose was declined: self-contained skills can use different wording, and scenario declarations test a useful structural boundary instead.
+
 ## Updating
 
-The [UX design note](ux-proposal.md) records the failure patterns observed in private application sessions and the choices they informed. Private transcripts and host-specific thread links are not distributed. The six-round council and rubric are author choices. [Competition-loop research](ux-loop-research.md) records the primary papers, adapted ideas, and limits.
+The UX rubric, six-round budget, and alternating-provider workflow are author choices maintained in the skill's own references.
 
 Compare a pinned source's new revision file by file, and keep or revise each adaptation on purpose. Stars and activity don't show that agents finish more work. Don't merge upstream automatically or bring back model-specific instructions that newer guidance retired.

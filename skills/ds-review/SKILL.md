@@ -5,13 +5,15 @@ description: "Use when reviewing a change, or when coordinating a requested inde
 
 # Review for what breaks
 
-Read the finished diff against the ask, project instructions, and contribution guidelines (`CONTRIBUTING*` or `CONTRIBUTOR*`), in forks and local projects alike. Inspect callers and dependencies needed to judge behavior and project conventions. Skip unrelated code and personal style preferences.
+Read the finished diff against the ask, project instructions, and contribution guidelines. Inspect the callers and dependencies needed to judge behavior. Skip unrelated code and personal style preferences.
 
-- **Must fix:** breaks the ask or explicit project requirements, regresses behavior, or opens a security, data-loss, or fund-loss path. Rarity doesn't lower the severity.
-- **Follow-up:** improvements outside that boundary. List them in the handoff and leave them out of this change.
+- **Must fix:** a demonstrated violation of the ask or project requirements, regression, or security, data-loss, or fund-loss path. Rarity does not lower severity.
+- **Follow-up:** improvements outside that boundary.
 
-Each finding needs a location, triggering scenario, impact, and suggested fix. Confirm it against the code before acting; mark it fixed, disputed with a reason, or follow-up.
+For each finding, give its location, triggering input, impact, and suggested fix. Use a focused reproduction when practical; otherwise trace the complete code path from input to failure, including its preconditions. Keep unverified concerns separate from confirmed defects. Mark findings fixed, disputed with a reason, or follow-up.
 
-Use an independent reviewer when requested, required by the project, or when changes move funds or affect authentication. Give the ask, diff, and completed checks without hinting at a verdict. Reviewers start no other reviewers. For Codex/Claude cross-review, use ds-consult.
+When fixes are requested, search the changed code once for the same root cause and reuse reproductions as regression checks. Do not expand that search into unrelated cleanup.
 
-Review once, then recheck must-fix corrections once. Fix a new must-fix inside a correction and mention it in the handoff; don't start another review round unless requested.
+Use an independent reviewer when requested or required by the project. Give the ask, diff, and completed checks without suggesting a verdict. Honor the requested provider; report unavailability. Reviewers inspect only and start no nested reviews.
+
+Review once and recheck must-fix corrections once. Fix any new defect inside a correction without another review round unless requested. Finish with findings and remaining gaps; a review alone does not authorize edits or release.

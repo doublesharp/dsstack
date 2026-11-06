@@ -12,8 +12,9 @@ The collection makes a few deliberate choices:
 | Repeated fixes obscure the cause | A counted attempt limit, then diagnosis or a clear blocker |
 | An open-ended goal has no finish | A metric, target, and budget before iteration |
 | Reporting becomes its own project | A short handoff unless the task needs more |
+| Guessed file paths or wrong package roots fail repeatedly | Locate files in the current checkout and run imports from the owning package |
 
-Check timing and stop rules live in ds-work, test-first guidance in ds-tdd, and domain facts in the domain skills. Narrow descriptions keep ordinary tasks from activating specialized workflows.
+Each skill includes enough guidance to run alone. General delivery belongs to ds-work, model councils to ds-consult, and UX scoring and round budgets to ds-ux. Narrow descriptions keep ordinary tasks from activating specialized workflows.
 
 ## What has been measured
 

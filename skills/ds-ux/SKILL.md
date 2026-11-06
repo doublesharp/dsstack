@@ -5,24 +5,21 @@ description: "Use when asked for a measured UX/design hill climb with alternatin
 
 # Improve against the previous best
 
-## Frame the comparison
-
-- Infer the app, users, journey, and role. Turn user criticism and taste into concrete priorities, including supplied competitor references. Evaluators inspect only, using the rubric directly; delegated agents perform their assigned role and start no agents.
-- State the target and budget using [ds-work targets](../ds-work/references/targets.md). Use [ds-web](../ds-web/SKILL.md) for browser checks, [the rubric](references/rubric.md) for scoring, and [the council procedure](references/council.md) for handoffs, reference comparisons, and score calibration. Keep product identity, essential content, and functionality intact.
-- Verify the preview serves the intended checkout and journey using existing seeds or fixtures; report missing journey data before expanding setup. Keep live-site, local-fixture, and error-page findings separate. Environment repair follows ds-work's attempt limit.
+Use this workflow for a requested measured UX improvement. An evaluator-only task ends after scoring. Keep product identity, essential content, and working journeys intact.
 
 ## Establish the baseline
 
-- Inspect actual screenshots and exercise the journey. Capture 390×844, 768×1024, and 1440×900 CSS viewports; check 360px width and real desktop 200% zoom as stress cases. Verify actual viewport dimensions. A smaller viewport or CSS zoom is not browser zoom.
-- Use matched [capture conditions](references/council.md#capture-conditions) and the project's disposable-output location.
-- Exercise applicable journey states, supported themes, and touch, pointer, keyboard, and focus behavior. Mark inaccessible coverage “Not evaluated.” Have the council score the baseline and rank three priorities, each with a screenshot reference, task impact, and observable acceptance criterion.
+- Identify users, primary journey, supplied references, and the requested target. Read [targets and rounds](references/targets.md), [the rubric](references/rubric.md), and [paired scoring](references/scoring.md).
+- Reuse the project's running app, login, seeds, and browser tools. Verify the checkout and journey before scoring. Follow the repair limit in the round budget.
+- Capture 390×844, 768×1024, and 1440×900 CSS viewports. Check 360px width and actual browser 200% zoom as stress cases; a resized viewport is not zoom. Use matched capture conditions and the project's disposable-output location.
+- Exercise relevant initial, loading, empty, error, success, navigation, and keyboard/focus states in supported themes. Inspect [branding and sharing details](references/finishing.md), including logos, favicons, and Open Graph previews. Mark inaccessible coverage unevaluated.
 
-## Improve and evaluate
+## Improve and score
 
-- Alternate implementation: Codex in odd rounds, Claude in even rounds, unless the user chooses the starting provider. Keep one writer at a time. Use host delegation for implementation handoffs and [ds-consult](../ds-consult/SKILL.md) for read-only council scoring. Use the requested models; report unavailable providers rather than substituting a solo pass.
-- Give each implementer the retained best, latest council feedback, next priority, and remaining rounds. Implement one coherent priority, stating the expected user benefit and affected categories. Preserve a recoverable previous best without overwriting unrelated edits. Use ds-tdd for behavior changes and ds-work for check timing.
-- Submit matched previous-best and candidate screenshots, scope/gaps, diff, and check results to fresh Codex and Claude evaluators. Keep target scores and implementer identity out of their briefs. Each scores both versions independently and recommends ACCEPT or REVISE; the coordinator applies the acceptance rule. Neither evaluator is the implementation agent.
-- Apply the [council acceptance rule](references/council.md#acceptance). Missing evidence leaves the decision pending; a regression means REVISE unless the user approves that specific tradeoff.
-- Start the next round from the accepted best using the council's highest-impact feedback. A tie or rejection keeps the best unchanged; revise or replace the candidate, never resubmit it unchanged. At finish, restore only your unaccepted changes, including pending candidates, without disturbing unrelated edits.
+- Alternate Codex and Claude implementers unless the user chooses another order. Keep one writer at a time. Report unavailable requested providers without substituting a solo run.
+- Give each writer the retained best, last feedback, one priority, and remaining rounds. Consider a coherent custom icon set when existing iconography weakens clarity or visual identity; use the project's SVG/icon pipeline. Preserve a recoverable previous best and unrelated edits.
+- Use fresh independent Codex and Claude evaluators for each pair. Give both the same scope, matched captures, rubric, diff, and checks. Hide desired scores, implementer identity, and the other judge's answer.
+- Apply the [paired scoring acceptance rule](references/scoring.md#acceptance); missing evidence leaves the decision pending.
+- A rejection keeps the best unchanged. Try a different candidate within the remaining budget; do not resubmit unchanged work. At finish, restore only your unaccepted changes.
 
-After baseline scoring and each verdict, show the scorecard and [round record](references/council.md#reporting). End with the retained version, observed task gains, checks, gaps, and stop reason.
+Test changed behavior at its smallest existing boundary. Run fast covering checks per candidate and slow required checks once on the final retained version. A failed required check blocks completion. Show the scorecard after baseline and each verdict; hand off the retained version, observed gains, checks, gaps, and stop reason.

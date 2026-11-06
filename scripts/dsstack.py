@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Build and install portable skill bundles; check resource capacity without mutation."""
+"""Build, inspect, and install portable skill bundles."""
 import argparse
+import importlib.util
 import json
-import math
 from pathlib import Path
 import re
 import shutil
@@ -12,11 +12,16 @@ import sys
 VERSION = "0.3.0"
 ROOT = Path(__file__).resolve().parents[1]
 NAME = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
-TASK_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}\Z")
-
-
-class StackError(Exception):
-    """An actionable validation or filesystem conflict."""
+_resource_spec = importlib.util.spec_from_file_location(
+    "dsstack_resources", ROOT / "skills/ds-resources/scripts/preflight.py")
+_resources = importlib.util.module_from_spec(_resource_spec)
+_write_bytecode = sys.dont_write_bytecode
+try:
+    sys.dont_write_bytecode = True
+    _resource_spec.loader.exec_module(_resources)
+finally:
+    sys.dont_write_bytecode = _write_bytecode
+StackError = _resources.StackError
 
 
 def _scalar(value):
@@ -159,6 +164,25 @@ def uninstall(root, destination):
     return plan
 
 
+def _scenario_errors(root, names):
+    path = Path(root) / "evals/scenarios.md"
+    if not path.exists():
+        return []
+    errors = []
+    for section in re.split(r"(?m)^##[ \t]+", path.read_text(encoding="utf-8")):
+        if not re.search(r"(?m)^Request:", section):
+            continue
+        title = section.splitlines()[0]
+        declarations = re.findall(r"(?m)^Skills:[ \t]*(.*)$", section)
+        if len(declarations) != 1 or not declarations[0].strip():
+            errors.append(f"scenarios: {title}: provide one nonempty Skills: declaration")
+            continue
+        for name in re.split(r"[, \t]+", declarations[0].strip()):
+            if name not in names:
+                errors.append(f"scenarios: {title}: unknown skill {name}")
+    return errors
+
+
 def doctor(root, destination=None):
     errors, warnings = [], []
     try:
@@ -180,6 +204,7 @@ def doctor(root, destination=None):
             ui_text = ui.read_text(encoding="utf-8")
             if "$" + skill["name"] not in ui_text:
                 errors.append(f"{skill['name']}: UI prompt must name the skill")
+    errors.extend(_scenario_errors(root, {skill["name"] for skill in skills}))
     if destination is not None:
         for item in plan_install(root, destination):
             if item["action"] != "keep":
@@ -192,7 +217,7 @@ def doctor(root, destination=None):
 def _copy_inputs(root):
     """Only runtime instructions, tooling, and attribution belong in a bundle."""
     inputs = ["skills", "scripts/dsstack.py", "VERSION", "LICENSE", "NOTICE"]
-    inputs += [name for name in ("licenses", "upstreams.lock.json", "profiles")
+    inputs += [name for name in ("licenses", "upstreams.lock.json")
                if (root / name).exists()]
     for name in inputs:
         path = root / name
@@ -229,7 +254,7 @@ def _local_policy(local, names):
         text = "\n\n".join(part for part in (common, additions.get(name, "")) if part)
         if text:
             additions[name] = text
-    profile = _profile(local, local / "resource-profile.json") if (local / "resource-profile.json").exists() else None
+    profile = _resources.load_profile(local, local / "resource-profile.json") if (local / "resource-profile.json").exists() else None
     return additions, profile
 
 
@@ -259,7 +284,10 @@ def bundle(root, destination, local=None, apply=False):
     _check_bundle_destination(root, destination)
     skills = catalog(root)
     inputs = _copy_inputs(root)
-    additions, profile = _local_policy(local, {skill["name"] for skill in skills})
+    names = {skill["name"] for skill in skills}
+    additions, profile = _local_policy(local, names)
+    if profile is not None and "ds-resources" not in names:
+        raise StackError("Private resource profile requires ds-resources in the bundle")
     check = doctor(root)
     if not check["ok"]:
         raise StackError("; ".join(check["errors"]))
@@ -283,7 +311,7 @@ def bundle(root, destination, local=None, apply=False):
             with path.open("a", encoding="utf-8") as stream:
                 stream.write("\n## Local policy\n\n" + text + "\n")
         if profile is not None:
-            path = destination / "profiles/default.json"
+            path = destination / "skills/ds-resources/profiles/default.json"
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(json.dumps(profile, indent=2) + "\n", encoding="utf-8")
         check = doctor(destination)
@@ -294,53 +322,6 @@ def bundle(root, destination, local=None, apply=False):
         raise
     result["warnings"] = check["warnings"]
     return result
-
-
-def preflight(scratch, project, task, expected_gib=0, reserve_gib=0, warning_gib=0, require_mount=True):
-    for label, value in (("project", project), ("task", task)):
-        if not TASK_NAME.fullmatch(value):
-            raise StackError(f"Unsafe {label} name: use 1-64 letters, digits, dots, underscores, or hyphens, beginning with a letter or digit")
-    for label, value in (("expected", expected_gib), ("reserve", reserve_gib), ("warning", warning_gib)):
-        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
-            raise StackError(f"{label} GiB must be finite and non-negative")
-    scratch = Path(scratch).expanduser().absolute()
-    if scratch.is_symlink() or not scratch.is_dir() or (require_mount and not scratch.is_mount()):
-        kind = "mount" if require_mount else "directory"
-        raise StackError(f"Output root must be an existing, non-symlink {kind}: {scratch}")
-    paths = {kind: str(scratch / project / directory / task) for kind, directory in (("build", "build"), ("tmp", "tmp"), ("reports", "reports"))}
-    for output in paths.values():
-        current = scratch
-        for part in Path(output).relative_to(scratch).parts:
-            current = current / part
-            if current.is_symlink() or (current.exists() and not current.is_dir()):
-                raise StackError(f"Output namespace is not an owned directory path: {current}")
-    free_gib = shutil.disk_usage(scratch).free / 2**30
-    required = expected_gib + reserve_gib
-    if free_gib < required:
-        raise StackError(f"Insufficient output/container space: {free_gib:.1f} GiB free; need {expected_gib:.1f} GiB peak plus {reserve_gib:.1f} GiB reserve")
-    warnings = []
-    if free_gib < warning_gib:
-        warnings.append(f"Free capacity is below the {warning_gib:g} GiB target")
-    return {"ok": True, "scratch": str(scratch), "project": project, "task": task, "free_gib": round(free_gib, 2), "required_gib": required, "paths": paths, "warnings": warnings, "creates_directories": False, "scheduling_enforced": False}
-
-
-def _profile(root, override=None):
-    path = Path(override).expanduser() if override is not None else Path(root) / "profiles/default.json"
-    profile = json.loads(path.read_text(encoding="utf-8")) if override is not None or path.exists() else {}
-    allowed = {"name", "scratch", "reserve_gib", "warning_gib", "require_mount", "recommendations", "notes"}
-    if not isinstance(profile, dict) or profile.keys() - allowed:
-        raise StackError(f"Invalid resource profile fields: {path}")
-    for key in ("reserve_gib", "warning_gib"):
-        value = profile.get(key, 0)
-        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
-            raise StackError(f"{key} must be finite and non-negative: {path}")
-    if not isinstance(profile.get("require_mount", True), bool):
-        raise StackError(f"require_mount must be true or false: {path}")
-    if "scratch" in profile:
-        value = profile["scratch"]
-        if not isinstance(value, str) or not Path(value).expanduser().is_absolute():
-            raise StackError(f"scratch must be an absolute path: {path}")
-    return {"reserve_gib": 0, "warning_gib": 0, "require_mount": True, **profile}
 
 
 def main(argv=None):
@@ -359,13 +340,6 @@ def main(argv=None):
     frozen.add_argument("--dest", type=Path, required=True)
     frozen.add_argument("--local", type=Path)
     frozen.add_argument("--apply", action="store_true")
-    resource = sub.add_parser("preflight", help="Read-only mount, capacity, and task namespace check")
-    resource.add_argument("--scratch", type=Path)
-    resource.add_argument("--project", required=True)
-    resource.add_argument("--task", required=True)
-    resource.add_argument("--expected-gib", type=float, default=0)
-    resource.add_argument("--reserve-gib", type=float)
-    resource.add_argument("--profile", type=Path)
     args = parser.parse_args(argv)
     try:
         root = args.stack_root.resolve()
@@ -379,14 +353,6 @@ def main(argv=None):
             result = install(root, args.dest) if args.apply else plan_install(root, args.dest)
         elif args.command == "uninstall":
             result = uninstall(root, args.dest) if args.apply else plan_uninstall(root, args.dest)
-        else:
-            profile = _profile(root, args.profile)
-            scratch = args.scratch if args.scratch is not None else profile.get("scratch")
-            if scratch is None:
-                raise StackError("Set --scratch PATH or a resource profile with scratch; no machine path is assumed")
-            result = preflight(scratch, args.project, args.task, args.expected_gib,
-                               profile["reserve_gib"] if args.reserve_gib is None else args.reserve_gib,
-                               profile["warning_gib"], profile["require_mount"])
         print(json.dumps(result, indent=2))
         if isinstance(result, dict) and not result.get("ok", True):
             return 1

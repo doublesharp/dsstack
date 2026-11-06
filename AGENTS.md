@@ -5,7 +5,7 @@ Build a small, portable set of skills that keep agents on the ask and finishing 
 - Keep skill descriptions narrow. No automatic session-start router or mandatory agent fan-out.
 - Write skills as short, plain instructions an agent can act on. Each rule should trace to a failure seen in real sessions or to published guidance. When you add a rule, find one to cut. Doctor warns when an entrypoint passes 600 words.
 - Prefer counted limits, such as "after two failed fixes", to hedges such as "where material". Save always and never for true invariants.
-- Check timing and stop rules live in ds-work, and test-first rules in ds-tdd. Domain skills hold domain facts. Don't add evidence-type lists or repeated permission disclaimers. A domain skill may state one safety rule for live funds or systems.
+- Keep each skill usable without loading sibling skills. ds-work owns general delivery; domain budgets, scoring, and procedures stay with their domain. Include only the few check and stop rules needed to run that skill alone. Don't add evidence-type lists or repeated permission disclaimers.
 - Review feedback on a skill tends to add caveats. Accept an addition only when it names the failure it prevents.
 - Favor behavioral TDD for code changes. Use focused tests in the inner loop and broader checks once at the end. Don't add tests that only mirror skill wording.
 - Use Python standard-library tooling so maintaining this stack needs no compiler, package download, or build cache.

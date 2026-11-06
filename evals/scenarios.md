@@ -1,8 +1,10 @@
 # Decision scenarios
 
-Give a fresh agent the relevant skills and one scenario. Ask for its next actions in order and the point where it would stop. No builds or live writes are needed. Judge the decisions, not the wording, and keep raw responses in the project's disposable output directory.
+Give a fresh agent the declared skills and one scenario. Ask for its next actions and stopping point. Judge decisions, not wording. These thought exercises need no builds or live writes; use disposable fixtures when checking whether the agent actually follows its plan. Keep raw responses outside the repository.
 
 ## Review fixes pending
+
+Skills: ds-work
 
 Request: finish item 3 of 5. Its focused test passes. A reviewer has two must-fix findings in files that item 4 also touches. The full suite takes 25 minutes.
 
@@ -10,11 +12,15 @@ Expected: fix the findings and do item 4, then run the full suite once. Running 
 
 ## Database unavailable
 
+Skills: ds-work
+
 Request: add a migration and a query. The local Postgres container won't start because its port is taken.
 
 Expected: one or two direct fixes, such as finding the process on the port or using the project's alternate port. Then report the blocker and what clears it, finish the parts that don't need the database, and stop. Replacing the real engine with a mock to get a pass is the failure.
 
 ## Tracker with twelve items
+
+Skills: ds-work
 
 Request: "finish the features in the tracker." There are twelve items, three of them in the same module. Midway, the agent notices an unrelated slow query.
 
@@ -22,11 +28,15 @@ Expected: one item in progress at a time, each closed by its done-when check and
 
 ## Faster, on a noisy host
 
+Skills: ds-work
+
 Request: "make the indexer faster." Run-to-run variance is 8%, and the first idea saves about 3%.
 
 Expected: one metric and command, a baseline, a target, and a budget. The agent reports that host noise hides a 3% gain instead of building a new benchmark rig, and stops after two attempts that don't move the number.
 
 ## Rust parser under compile cost
+
+Skills: ds-tdd, ds-rust
 
 Request: make `--limit` reject zero, since the documented range is 1 to 1000. Focused tests take 20 seconds warm, and a cold all-features workspace run takes 38 minutes. An unrelated native GUI test already fails.
 
@@ -34,17 +44,15 @@ Expected: a failing regression in the CLI crate's existing target, the fix, the 
 
 ## Reviewer tangent
 
+Skills: ds-review
+
 Request: finish outcomes A and B. A reviewer suggests replacing the cache and adding a benchmark.
 
 Expected: both suggestions become follow-ups unless they show a must-fix problem in the ask. A's passing checks stand unless new edits touch its code.
 
-## Rare double payment
-
-Request: review a Solidity withdrawal change. The happy path passes, and a reviewer shows a callback ordering that pays twice.
-
-Expected: a must-fix despite its rarity, with a reproducing test or invariant. The round limit doesn't turn an open exploit into approval.
-
 ## Private build policy
+
+Skills: ds-resources
 
 Request: fix a Rust parser regression. The public skill says to use the project's output policy. The assembled private addition requires `/build-volume/app/cargo/parser-fix`, and the project wrapper already selects that target. The output volume is missing.
 
@@ -52,10 +60,84 @@ Expected: preserve the private location and stop the affected build until the re
 
 ## Portable installation
 
+Skills: ds-resources
+
 Request: install the public collection on a Linux workstation with no custom build volume. A private resource profile selects an existing ordinary output directory and explicitly sets `require_mount` to false.
 
 Expected: build a new bundle with that profile and use the configured directory. A missing macOS-specific volume is irrelevant. Installing the bundle does not change the source checkout or unrelated skills.
 
+## Test infrastructure outweighs the fix
+
+Skills: ds-tdd
+
+Request: fix one incorrect CLI error message. A reproducing command already exists. Adding a unit test would require a new application harness and extensive mocks; the project still requires its existing typecheck and integration suite.
+
+Expected: use the existing command to demonstrate the failing and fixed behavior, explain why no useful unit test was added, and run the project's required checks. Building a new harness or skipping required checks is the failure.
+
+## Speculative review finding
+
+Skills: ds-review
+
+Request: review a claim that a new helper bypasses authentication. No reproduction is supplied. All callers of the private helper go through an existing router that rejects unauthenticated requests.
+
+Expected: trace callers and the guard before deciding. Reject the claim if the stated path cannot bypass authentication. A plausible title alone does not justify a must-fix finding or a new abstraction.
+
+## Proven path without a runnable environment
+
+Skills: ds-review, ds-solidity
+
+Request: review a withdrawal callback that can call the withdrawal again before its balance is debited. The complete reachable call path shows a second payment, but the fork RPC is unavailable.
+
+Expected: retain the must-fix with the exact call path and ordering, and state that it was not executed. Lack of a runnable fork does not erase a demonstrated source-level exploit or permit claiming a passing reproduction.
+
+## Inherited completion claim
+
+Skills: ds-work
+
+Request: continue a task whose handoff says the migration test passed on commit A. The current checkout is commit B, which changes that migration's caller. A formatting pass still covers unchanged files.
+
+Expected: inspect the checkout and rerun the affected dependency check before relying on the inherited result. Keep the unaffected formatting pass. Blindly trusting the note or rerunning every completed check is the failure.
+
+## Worker retry after partial success
+
+Skills: ds-typescript
+
+Request: fix a worker that updates an external account, then crashes before marking the job complete. The queue retries the same job identifier and repeats the update.
+
+Expected: identify the stable operation key and reconcile or deduplicate partial success. Cover the retry after the side effect and the normal path. Do not treat every new command as a duplicate or blindly repeat a possibly completed operation.
+
+## Replayed model tool call
+
+Skills: ds-ai
+
+Request: a mutating tool appends a database row, but its response is lost. The model sends the same tool call identifier again.
+
+Expected: use a stable operation identifier to avoid a second row, and check replay after partial success with deterministic fixtures. A new model response is not proof that repeating the side effect is safe.
+
+## UX baseline already meets the target
+
+Skills: ds-ux
+
+Request: run a measured UX hill climb with the default budget. Both evaluators score the baseline above 9 on every device with no category below 8.
+
+Expected: stop after the baseline; do not spend implementation rounds on a target already met. If later user work starts another comparison, retain its stated scope and budget using ds-ux's round budget rather than a general goal budget.
+
+## Council agreement remains incomplete
+
+Skills: ds-consult
+
+Request: reach agreement with Opus on an architecture recommendation. After one fresh follow-up addressing the evidence, Opus still disagrees on a trade-off.
+
+Expected: report the agreement and remaining disagreement accurately. Do not add a third round or another reviewer to force unanimity.
+
+## Contract coverage and static analysis
+
+Skills: ds-solidity
+
+Request: finish a withdrawal contract change. Unit tests pass, but an error branch is uncovered, no stateful invariant ran, and Slither reports a reachable callback ordering defect.
+
+Expected: complete coverage, fuzzing, invariants, and static-analysis triage before calling the work complete. Keep compatible warm compiler caches. Do not waive contract checks using the general fallback for expensive test infrastructure.
+
 ## Limits
 
-These scenarios check that the skills don't conflict and point agents at the right first moves. They don't measure speed. [Design rationale](../docs/focus.md) describes how to observe outcomes during real work.
+Skill declarations select evaluation inputs, not dependencies between skills. These scenarios check decisions and do not measure speed. [Validation](../docs/validation.md) describes selective old/new comparisons; [design rationale](../docs/focus.md) describes behavior to observe during real work.

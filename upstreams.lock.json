@@ -57,15 +57,57 @@
         }
       },
       "use": "Adapted ideas and workflow boundaries; no upstream code is executed by dsstack."
-    }
-  ],
-  "local_sources": [
+    },
     {
-      "name": "claude-code",
-      "sha256": "d5f6ebb92a06c0023c0b03ad2d8201901f64e69560f4655d92849a535107d146",
-      "checked_at": "2026-10-27",
-      "use": "Scoped consultation patterns; Codex standalone syntax independently checked against installed CLI help.",
-      "source": "Author-maintained private consultation skill; not distributed"
+      "name": "pstack",
+      "repository": "https://github.com/cursor/plugins",
+      "revision": "2776ddd2355d6d6c8747d3964600f28daf62f049",
+      "checked_at": "2026-11-06",
+      "files": {
+        "pstack/LICENSE": {
+          "url": "https://raw.githubusercontent.com/cursor/plugins/2776ddd2355d6d6c8747d3964600f28daf62f049/pstack/LICENSE",
+          "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e"
+        },
+        "pstack/skills/tdd/SKILL.md": {
+          "url": "https://raw.githubusercontent.com/cursor/plugins/2776ddd2355d6d6c8747d3964600f28daf62f049/pstack/skills/tdd/SKILL.md",
+          "sha256": "eeb868e2dfebee528d730a67d7b17498fac4bb85dec2e38bc5c5176aca4d5d2f"
+        },
+        "pstack/skills/interrogate/SKILL.md": {
+          "url": "https://raw.githubusercontent.com/cursor/plugins/2776ddd2355d6d6c8747d3964600f28daf62f049/pstack/skills/interrogate/SKILL.md",
+          "sha256": "3f3c2e9b8cf6b180dba9f32a4aff85e5691b09805232468e37a0ba45437a9984"
+        },
+        "pstack/skills/principle-make-operations-idempotent/SKILL.md": {
+          "url": "https://raw.githubusercontent.com/cursor/plugins/2776ddd2355d6d6c8747d3964600f28daf62f049/pstack/skills/principle-make-operations-idempotent/SKILL.md",
+          "sha256": "7aa9327cf1f1aa057e95d47a0a78bd88a8f9d556b608866fee939d455a53a019"
+        }
+      },
+      "use": "Workflow ideas paraphrased into independent skills; no upstream runtime or helper code is installed."
+    },
+    {
+      "name": "anthropic-skill-validation",
+      "repository": "https://github.com/anthropics/skills",
+      "revision": "ca45fc496a3436251f191354091d557da31c15b5",
+      "checked_at": "2026-11-06",
+      "files": {
+        "skills/skill-creator/SKILL.md": {
+          "url": "https://raw.githubusercontent.com/anthropics/skills/ca45fc496a3436251f191354091d557da31c15b5/skills/skill-creator/SKILL.md",
+          "sha256": "dcd4803e61e913e6fc27294184cd3a71f09f5e924ff20c8a9a20173e7b3c2bcf"
+        }
+      },
+      "use": "Workflow ideas paraphrased into independent skills; no upstream runtime or helper code is installed."
+    },
+    {
+      "name": "superpowers-skill-validation",
+      "repository": "https://github.com/obra/superpowers",
+      "revision": "22f0b463e7a5e579904dd6211a520321035526f7",
+      "checked_at": "2026-11-06",
+      "files": {
+        "skills/writing-skills/SKILL.md": {
+          "url": "https://raw.githubusercontent.com/obra/superpowers/22f0b463e7a5e579904dd6211a520321035526f7/skills/writing-skills/SKILL.md",
+          "sha256": "8cb3ac68c6d8c4bb46886b998b09af7989643cab8bd0e46ee86dd62e64546bbe"
+        }
+      },
+      "use": "Workflow ideas paraphrased into independent skills; no upstream runtime or helper code is installed."
     }
   ]
 }

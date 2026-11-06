@@ -1,0 +1,5 @@
+# UX targets and round accounting
+
+Use [the paired scorecard](scoring.md) as the metric. Unless the user specifies otherwise, target every scored device reaching 9 with no category below 8, with six implementation-and-council-scoring rounds total. Stop at the first of: the retained best meets the target, six rounds finish, or two consecutive rounds produce no accepted score improvement. Check the target after the baseline too. An implemented candidate and complete scores from both evaluators form one round; a revised implementation uses a new round, while baseline capture does not. A tie or rejection increments the no-progress count; an accepted gain resets it. Missing evidence or an unavailable evaluator keeps the same round open within two direct repair attempts, then becomes a blocker; it advances neither counter. A page added mid-run gets its own baseline and shares remaining rounds. Provider handoffs do not reset counters; explicit user changes apply to remaining work.
+
+The round budget includes the independent UX verdicts. Each round has one independent verdict per council member; add no debate, tie-break, or final review unless asked.

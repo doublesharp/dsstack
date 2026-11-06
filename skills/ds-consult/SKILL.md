@@ -3,14 +3,14 @@ name: "ds-consult"
 description: "Use when asking Codex or Claude for an independent opinion, or when the user asks for a model council."
 ---
 
-# Cross-model consult
+# Independent opinions and councils
 
-Codex can consult Claude, and Claude can consult Codex. Default to one reviewer from the other provider. Use the model the user named. If it isn't available, say so instead of substituting another.
+Use one reviewer from the other provider for a normal consult. For a requested council, follow [the council procedure](references/council.md). Honor the user's providers and models; report unavailable choices without substitutions.
 
-Write a fresh brief with the goal, the repository path and exact files or diff, constraints, what you've already run, the question, and when to stop. Leave out secrets and unrelated material.
+Write a fresh brief: goal, exact repository/files or diff, constraints, completed checks, question, and stop boundary. Omit secrets, unrelated context, and your preferred verdict.
 
-Consults are read-only. You keep the decisions, the edits, and the checks. Inside T3, follow [T3 delegation](references/t3.md). Elsewhere, use [the standalone CLIs](references/standalone.md). If a route fails, report it. A failed route is not permission to get around harness policy another way.
+Reviewers inspect only; the coordinator owns edits and checks. Inside T3, use [host delegation](references/t3.md). Elsewhere, use [standalone CLIs](references/standalone.md). A failed route does not authorize a different route or a permission bypass.
 
-Hold a council only when the user asks for one. Use their roster, or one Codex and one Claude reviewer. Reviewers work independently on the same material, with no nested reviews and no agreement loop. The ds-review round limit covers the whole council unless the user sets another.
+Accept only a completed, substantive answer. Timeouts, empty replies, and partial streams leave the consult incomplete. Verify claims against the source before acting. Use one review and one recheck of corrections unless the user requests another process; do not manufacture agreement by adding reviewers or rounds.
 
-A consult counts only when it completes with a substantive answer. Partial output, timeouts, and empty replies don't count. Check each claim against the code before acting on it, and keep working on other items while you wait.
+Report the recommendation, supporting reasons, and unresolved disagreements. Consulting does not authorize implementation, messages, merges, or deployment.
