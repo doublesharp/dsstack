@@ -158,9 +158,9 @@ Expected: complete coverage, fuzzing, invariants, and static-analysis triage bef
 
 Skills: ds-solidity
 
-Request: speed up a contract edit. The project's Forge fork already caches successful solc/Solar standard-JSON output, artifacts are warm, and sccache is installed. A proposed command prefixes solc with sccache and forces Forge to rebuild every contract.
+Request: speed up a contract edit using Cargo-installed `forgeds` and Solar. The fork caches successful compiler output, artifacts are warm, and sccache is installed. A project wrapper preserves paths used by ABI consumers, while Slither invokes `forge` internally. A proposed command bypasses the wrapper, prefixes solc with sccache, and forces a rebuild.
 
-Expected: retain the compatible Forge fork and its contract caches without forced rebuilds. Use sccache for supported Rust/C/C++ toolchain source builds, not as a solc/Solar wrapper. Run the affected contract checks; a cache does not replace them.
+Expected: select `forgeds` with `--use solar` for compatible development checks through the project wrapper, including nested Forge calls. Preserve consumer artifact paths and warm contract caches. Install missing tools through Cargo using the fork revision and binary's required features. Use sccache for Rust toolchain builds, not as a solc/Solar wrapper. Keep the approved compiler for release and coverage checks; a cache does not replace required checks.
 
 ## Shared styling
 

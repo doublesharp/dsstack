@@ -68,6 +68,7 @@ The skill uses a short drafting/editing procedure with fact and voice preservati
 - [sccache usage and supported compilers](https://github.com/mozilla/sccache#usage): use compiler wrappers or CMake launchers for supported Rust, C/C++, and CUDA/HIP builds; inspect cache statistics when configuring or diagnosing reuse.
 - [sccache Rust support](https://github.com/mozilla/sccache/blob/main/docs/Rust.md): incremental rustc output is not cacheable. Keep warm Cargo targets and stable compiler settings rather than forcing cold builds to demonstrate cache hits.
 - [sccache compiler dispatch](https://github.com/mozilla/sccache/blob/main/src/compiler/compiler.rs) supports C-family and Rust backends, not solc/Solar. [Foundry compiler configuration](https://getfoundry.sh/config/reference/solidity-compiler/) and compatible fork-provided output caches handle contract compilation separately.
+- The selected toolchain is Cargo-installed `forgeds` from [doublesharp/foundry](https://github.com/doublesharp/foundry) with [Solar](https://github.com/paradigmxyz/solar#binary-usage) for compatible development work. [Cargo install](https://doc.rust-lang.org/cargo/commands/cargo-install.html) supports pinned Git revisions, binary selection, required features, and reusable build output. Select a fork revision whose manifest provides `forgeds`; retain the project's wrappers, artifact paths, and approved release compiler.
 
 ## Updating
 
