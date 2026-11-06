@@ -7,21 +7,18 @@
 
 <h1 align="center">dsstack</h1>
 
-<p align="center"><strong>Finish the ask. Check the result. Stop.</strong></p>
-<p align="center">14 focused skills · Self-contained folders · Python standard-library tooling · MIT</p>
+<p align="center">14 skills for Codex and Claude, with a Python standard-library installer.</p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="#the-skills">The skills</a> ·
-  <a href="#make-it-yours">Make it yours</a> ·
-  <a href="#maintain">Maintain</a>
+  <a href="#skills">Skills</a> ·
+  <a href="#private-configuration">Private configuration</a> ·
+  <a href="#development">Development</a>
 </p>
 
 ---
 
-Small, opinionated skills for coding agents. dsstack covers delivery, debugging, reviews, and application work, with short instructions and clear stopping points. Your host supplies the models, tools, and permissions.
-
-Each skill folder contains its instructions, references, and any helper it needs. Use one on its own or install the collection. Agents select skills by their descriptions; you can also ask directly:
+Each dsstack skill is a folder with a `SKILL.md` file, optional references, and any helper scripts it needs. Copy one folder or install the collection. Your agent selects skills by their descriptions, or you can name one in a request:
 
 ```text
 Use $ds-debug to investigate this failure.
@@ -29,7 +26,7 @@ Use $ds-debug to investigate this failure.
 
 ## Quick start
 
-**Requires Python 3.9+ and Git.** Create a stable bundle, preview its installation, then apply it:
+Requires Python 3.9+ and Git. Preview each operation before adding `--apply`:
 
 ```sh
 # Preview and build a bundle.
@@ -42,36 +39,29 @@ python3 .local/bundles/v1/scripts/dsstack.py install --dest ~/.agents/skills --a
 python3 .local/bundles/v1/scripts/dsstack.py doctor --dest ~/.agents/skills
 ```
 
-Use the skill directory supported by your host. `~/.agents/skills` and `~/.claude/skills` are common destinations. **Start a fresh agent session after installation.**
+Use your host's skill directory, such as `~/.agents/skills` or `~/.claude/skills`. Start a fresh agent session after installation.
 
-Installed links point into the bundle, so source edits do not change active instructions. Existing directories and foreign links are preserved; a conflict stops installation before changes. Keep bundles in a durable location.
+The installer creates symlinks into the bundle. Editing this checkout leaves the installed copy unchanged. If an existing skill conflicts, the installer stops before changing any links. Keep the bundle in a durable location.
 
-## The skills
+## Skills
 
-Start with **ds-work**, **ds-debug**, **ds-tdd**, and **ds-review**. Add domain skills for the work at hand.
+Start with `ds-work`, `ds-debug`, `ds-tdd`, and `ds-review`. Choose domain skills for the code you're changing.
 
 | Area | Skills | What they help with |
 | :--- | :--- | :--- |
-| **Delivery** | [ds-work](skills/ds-work/SKILL.md) · [ds-plan](skills/ds-plan/SKILL.md) | Finish one item, plan the right scope, resume and hand off. |
-| **Correctness** | [ds-debug](skills/ds-debug/SKILL.md) · [ds-tdd](skills/ds-tdd/SKILL.md) · [ds-review](skills/ds-review/SKILL.md) | Reproduce failures, check behavior, substantiate findings. |
-| **Consultation** | [ds-consult](skills/ds-consult/SKILL.md) | Independent Codex/Claude opinions and requested councils. |
-| **Resources** | [ds-resources](skills/ds-resources/SKILL.md) | Check capacity, route output, reclaim unused task resources. |
-| **Languages & services** | [ds-rust](skills/ds-rust/SKILL.md) · [ds-typescript](skills/ds-typescript/SKILL.md) · [ds-solidity](skills/ds-solidity/SKILL.md) | Work within toolchains, databases, APIs, and contract checks. |
-| **Interfaces** | [ds-web](skills/ds-web/SKILL.md) · [ds-native](skills/ds-native/SKILL.md) | Browser journeys, responsive layouts, native boundaries. |
-| **Models & design** | [ds-ai](skills/ds-ai/SKILL.md) · [ds-ux](skills/ds-ux/SKILL.md) | Model-backed behavior and requested, measured UX improvement. |
+| Delivery | [ds-work](skills/ds-work/SKILL.md) · [ds-plan](skills/ds-plan/SKILL.md) | Task lists, plans, blockers, and handoffs. |
+| Correctness | [ds-debug](skills/ds-debug/SKILL.md) · [ds-tdd](skills/ds-tdd/SKILL.md) · [ds-review](skills/ds-review/SKILL.md) | Reproduce failures, test fixes, and review concrete defects. |
+| Consultation | [ds-consult](skills/ds-consult/SKILL.md) | Get independent opinions and run a requested model council. |
+| Resources | [ds-resources](skills/ds-resources/SKILL.md) | Check disk capacity and clean up task-owned output. |
+| Languages & services | [ds-rust](skills/ds-rust/SKILL.md) · [ds-typescript](skills/ds-typescript/SKILL.md) · [ds-solidity](skills/ds-solidity/SKILL.md) | Rust tests, TypeScript services, and Solidity contracts. |
+| Interfaces | [ds-web](skills/ds-web/SKILL.md) · [ds-native](skills/ds-native/SKILL.md) | Web layouts, interaction checks, and native app lifecycle. |
+| Models & design | [ds-ai](skills/ds-ai/SKILL.md) · [ds-ux](skills/ds-ux/SKILL.md) | Test model-backed features and score UX changes. |
 
-The skills keep work focused:
+Project instructions and the user's task control the work. Consultation requires access to the requested providers. Use `ds-ux` for a requested scoring process and `ds-web` for routine interface changes.
 
-- **One requested item at a time.** Record unrelated discoveries as follow-ups.
-- **Checks that cover the change.** Use fast checks while editing; run slow required checks after the edits they cover.
-- **Counted limits.** Change approach after repeated failed fixes; bound reviews and open-ended work.
-- **A clear finish.** Report what changed, what passed, and what blocks the result.
+## Private configuration
 
-Project instructions and the user's task control the work. Cross-provider consultation needs the requested providers to be available. `ds-ux` owns the opt-in scoring workflow; routine interface changes use `ds-web`.
-
-## Make it yours
-
-Keep reusable skills at the repository root and personal setup beside them in ignored `.local/`:
+Public skills live at the repository root. Keep machine settings and personal additions in ignored `.local/`:
 
 ```text
 dsstack/
@@ -92,9 +82,9 @@ python3 scripts/dsstack.py bundle --dest .local/bundles/personal-v1 --local .loc
 python3 scripts/dsstack.py bundle --dest .local/bundles/personal-v1 --local .local/policy --apply
 ```
 
-Private rules are included in the relevant skill, so agents receive them without loading a separate preferences skill. Use global or project instructions for rules that must apply even when no skill loads.
+The bundler appends private rules to the relevant `SKILL.md` files. Use global or project instructions for rules that must apply even when no skill loads.
 
-**[Read the customization guide →](docs/customization.md)**
+[Customization guide](docs/customization.md)
 
 <details>
 <summary><strong>Updating an installation</strong></summary>
@@ -125,7 +115,7 @@ Preflight checks the output directory, safe task paths, and capacity. It creates
 
 </details>
 
-## Maintain
+## Development
 
 Read [AGENTS.md](AGENTS.md). Set `TMPDIR` to an existing task-owned output directory under the project's build policy, then run:
 
@@ -134,7 +124,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 python3 scripts/dsstack.py doctor
 ```
 
-Tests check tooling behavior. [Decision scenarios](evals/scenarios.md) check agent choices; neither establishes broad productivity gains. Keep behavioral trials selective and budgeted, as described in [validation](docs/validation.md).
+The tests cover bundling, link ownership, conflicts, and resource preflight. [Decision scenarios](evals/scenarios.md) cover agent choices. See [validation](docs/validation.md) for running a comparison against the previous skill text.
 
 ---
 
