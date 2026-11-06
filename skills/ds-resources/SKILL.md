@@ -5,18 +5,16 @@ description: "Use when creating a worktree, planning work with large disk or con
 
 # Disk and build capacity
 
-New worktrees hold work in progress, so create them on the Data volume, where Time Machine backs them up. Use the location the project or harness sets, or else `~/Workspaces/worktrees/<project>/<name>`. Build output, temp files, caches, logs, and captures go to Scratch, which isn't backed up.
+Use the user's, project's, or host's worktree and output locations. Keep work in progress in durable storage and disposable builds, caches, logs, and captures in the configured output area. A clone you will edit is work in progress. If a required volume is unavailable, stop the affected writes instead of choosing another disk.
 
-Follow project wrappers and resource rules first. If `/Volumes/Scratch` isn't mounted, stop any work that writes disposable output and say so. Don't fall back to the Data volume.
-
-Before a large build or capture, resolve this skill's installed symlink to its repository and run the preflight once for the task:
+Before a large build or capture, estimate peak space and check capacity with the project's wrapper. If none exists, resolve this skill's installed link to its stack or bundle root and run:
 
 ```sh
-python3 <repo>/scripts/dsstack.py preflight --project NAME --task ID --expected-gib N
+python3 <root>/scripts/dsstack.py preflight --scratch OUTPUT_ROOT --project NAME --task ID --expected-gib N
 ```
 
-Names may use letters, digits, dots, hyphens, and underscores. The preflight checks the mount, the output paths, and free space against your estimated peak plus the reserve, and it creates nothing. Run it again only if your size estimate changes a lot, and use a different reserve only when the user or project sets one. If space is short, stop and tell the user what you need instead of reworking the build to fit.
+Use `--profile PATH` for configured limits and output settings; an assembled bundle can provide `profiles/default.json`. Use the configured reserve rather than inventing a lower one to fit. The check validates paths and capacity without creating directories or scheduling builds. Repeat only when the estimate or available capacity changes enough to affect admission. Stop and report a shortfall.
 
-When wrappers don't route output, put targets, captures, logs, reference clones, and bytecode under the Scratch paths the preflight prints. A clone you edit is a worktree and stays on the Data volume. Keep Rust and Foundry targets warm per worktree across tasks. Without a project rule, Cargo uses `/Volumes/Scratch/<project>/cargo/<worktree>`. Give concurrent builds separate target directories, and don't start a second heavy build from the same task while one is running.
+Reuse project output routing; otherwise use the task paths printed by preflight. Keep Rust and Foundry builds warm per worktree. Give concurrent builds separate targets and respect the configured concurrency limits.
 
-Clean up only output this task created, after checking the paths and that no process has them open. Leave shared caches and other agents' work alone.
+Clean only output this task owns, after checking paths and open processes. Leave shared caches and other agents' work alone.

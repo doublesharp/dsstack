@@ -9,3 +9,6 @@ coverage/
 *-evidence/
 node_modules/
 target/
+
+# Private policy and assembled installations belong outside the public tree.
+.local/

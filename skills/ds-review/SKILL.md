@@ -5,15 +5,13 @@ description: "Use when reviewing a change, or when coordinating a requested inde
 
 # Review for what breaks
 
-Review the diff against the ask, reading the callers and dependencies you need to judge the changed behavior. Skip style and unrelated code. Sort each finding into one of two groups.
+Read the finished diff against the ask, project instructions, and contribution guidelines (`CONTRIBUTING*` or `CONTRIBUTOR*`), in forks and local projects alike. Inspect callers and dependencies needed to judge behavior and project conventions. Skip unrelated code and personal style preferences.
 
-- Must fix. It breaks the ask, regresses existing behavior, or opens a security, data-loss, or fund-loss path. Rarity doesn't lower it.
-- Follow-up. Everything else. List these in the handoff and leave them out of this change.
+- **Must fix:** breaks the ask or explicit project requirements, regresses behavior, or opens a security, data-loss, or fund-loss path. Rarity doesn't lower the severity.
+- **Follow-up:** improvements outside that boundary. List them in the handoff and leave them out of this change.
 
-For each finding, give the location, the scenario that triggers it, the impact, and a suggested fix.
+Each finding needs a location, triggering scenario, impact, and suggested fix. Confirm it against the code before acting; mark it fixed, disputed with a reason, or follow-up.
 
-Bring in an independent reviewer only when the user asks, the project requires it, or the change moves funds or touches authentication. Review the finished diff once, not each step. Give the reviewer the ask, the diff, and what you ran, without hinting at a verdict. Reviewers don't start other reviewers. For a Codex and Claude cross-review, use ds-consult.
+Use an independent reviewer when requested, required by the project, or when changes move funds or affect authentication. Give the ask, diff, and completed checks without hinting at a verdict. Reviewers start no other reviewers. For Codex/Claude cross-review, use ds-consult.
 
-Run one review, then one re-check of the must-fix fixes, and stop. If the re-check finds a new must-fix inside a fix, fix it and note it in the handoff rather than opening another round, unless the user asks for more.
-
-Confirm each finding against the code before acting on it, because reviewers are sometimes wrong. Mark each one fixed, disputed with a reason, or follow-up.
+Review once, then recheck must-fix corrections once. Fix a new must-fix inside a correction and mention it in the handoff; don't start another review round unless requested.

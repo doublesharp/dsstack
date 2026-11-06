@@ -1,0 +1,6 @@
+{
+  "scratch": "/path/to/build-volume",
+  "reserve_gib": 20,
+  "warning_gib": 40,
+  "require_mount": true
+}

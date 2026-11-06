@@ -5,6 +5,8 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -18,10 +20,10 @@ spec.loader.exec_module(ds)
 class StackTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        scratch = Path("/Volumes/Scratch")
-        cls.tmpdir = Path(os.environ.get("TMPDIR", "")).expanduser().resolve()
-        if not scratch.is_mount() or not cls.tmpdir.is_relative_to(scratch.resolve()):
-            raise RuntimeError("Set TMPDIR to a writable task directory under mounted /Volumes/Scratch")
+        configured = os.environ.get("TMPDIR")
+        if not configured or not Path(configured).is_dir():
+            raise RuntimeError("Set TMPDIR to an existing task-owned output directory")
+        cls.tmpdir = Path(configured).resolve()
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix="dsstack-test-", dir=self.tmpdir)
@@ -129,6 +131,146 @@ class StackTests(unittest.TestCase):
         p = self.root / "skills/ds-one/SKILL.md"
         p.write_text(p.read_text().replace('"ds-one"', '"ds-elsewhere"'))
         self.assertFalse(ds.doctor(self.root)["ok"])
+
+    def bundle_source(self):
+        (self.root / "scripts").mkdir()
+        shutil.copy2(ROOT / "scripts/dsstack.py", self.root / "scripts/dsstack.py")
+        for name in ("VERSION", "LICENSE", "NOTICE"):
+            (self.root / name).write_text("fixture\n")
+        refs = self.root / "skills/ds-one/references"
+        refs.mkdir()
+        (refs / "detail.md").write_text("original reference\n")
+        self.local = self.base / "private"
+        (self.local / "skills").mkdir(parents=True)
+        (self.local / "policy.md").write_text("Keep worktrees on backed-up storage.\n")
+        (self.local / "skills/ds-one.md").write_text("Use /private-builds for this machine.\n")
+        (self.local / "resource-profile.json").write_text(json.dumps({
+            "scratch": str(self.base), "reserve_gib": 12,
+            "warning_gib": 24, "require_mount": False,
+        }))
+
+    def test_bundle_preview_creates_nothing_and_does_not_expose_policy(self):
+        self.bundle_source()
+        result = ds.bundle(self.root, self.dest, self.local)
+        self.assertFalse(self.dest.exists())
+        self.assertNotIn("/private-builds", json.dumps(result))
+        self.assertEqual(result["skills"], 2)
+
+    def test_bundle_freezes_sources_and_inlines_private_instructions(self):
+        self.bundle_source()
+        original = (self.root / "skills/ds-one/SKILL.md").read_text()
+        ds.bundle(self.root, self.dest, self.local, apply=True)
+        installed = self.dest / "skills/ds-one/SKILL.md"
+        self.assertIn("backed-up storage", installed.read_text())
+        self.assertIn("/private-builds", installed.read_text())
+        self.assertIn("backed-up storage", (self.dest / "skills/ds-two/SKILL.md").read_text())
+        self.assertNotIn("/private-builds", (self.dest / "skills/ds-two/SKILL.md").read_text())
+        self.assertEqual((self.root / "skills/ds-one/SKILL.md").read_text(), original)
+        (self.root / "skills/ds-one/SKILL.md").write_text("upstream changed")
+        (self.local / "policy.md").write_text("private policy changed")
+        self.assertIn("backed-up storage", installed.read_text())
+        self.assertNotIn("upstream changed", installed.read_text())
+        profile = ds._profile(self.dest)
+        self.assertEqual(profile["reserve_gib"], 12)
+        self.assertFalse(profile["require_mount"])
+        self.assertTrue(ds.doctor(self.dest)["ok"])
+        ds.install(self.dest, self.base / "agent-skills")
+        self.assertEqual((self.base / "agent-skills/ds-one").resolve(), installed.parent)
+
+    def test_bundled_cli_uses_its_private_profile_after_source_is_removed(self):
+        self.bundle_source()
+        ds.bundle(self.root, self.dest, self.local, apply=True)
+        shutil.rmtree(self.root)
+        command = [sys.executable, str(self.dest / "scripts/dsstack.py")]
+        checked = subprocess.run(command + ["doctor"], capture_output=True, text=True, check=True)
+        self.assertTrue(json.loads(checked.stdout)["ok"])
+        checked = subprocess.run(command + ["preflight", "--project", "app", "--task", "fix"],
+                                 capture_output=True, text=True, check=True)
+        result = json.loads(checked.stdout)
+        self.assertEqual(result["scratch"], str(self.base))
+        self.assertEqual(result["required_gib"], 12)
+        self.assertFalse(result["creates_directories"])
+        overridden = subprocess.run(command + ["preflight", "--project", "app", "--task", "fix",
+                                               "--scratch", str(self.dest)], capture_output=True, text=True, check=True)
+        self.assertEqual(json.loads(overridden.stdout)["scratch"], str(self.dest))
+
+    def test_bundle_cli_preview_and_apply(self):
+        self.bundle_source()
+        args = ["--stack-root", str(self.root), "bundle", "--dest", str(self.dest), "--local", str(self.local)]
+        for apply in (False, True):
+            output = io.StringIO()
+            with redirect_stdout(output):
+                status = ds.main(args + (["--apply"] if apply else []))
+            self.assertEqual(status, 0)
+            self.assertEqual(self.dest.exists(), apply)
+            self.assertEqual(json.loads(output.getvalue())["applied"], apply)
+
+    def test_bundle_keeps_private_output_outside_source_and_rejects_missing_policy(self):
+        self.bundle_source()
+        for dest, local in ((self.root / ".local/bundle", None),
+                            (self.dest, self.base / "missing-policy")):
+            with self.subTest(dest=dest), self.assertRaises(ds.StackError):
+                ds.bundle(self.root, dest, local, apply=True)
+            self.assertFalse(dest.exists())
+
+    def test_other_bundle_install_cannot_retarget_existing_agent_links(self):
+        self.bundle_source()
+        ds.bundle(self.root, self.dest, apply=True)
+        agents = self.base / "agent-skills"
+        ds.install(self.root, agents)
+        with self.assertRaises(ds.StackError):
+            ds.install(self.dest, agents)
+        self.assertEqual((agents / "ds-one").resolve(), self.root / "skills/ds-one")
+        ds.uninstall(self.root, agents)
+        ds.install(self.dest, agents)
+        self.assertTrue(ds.doctor(self.dest, agents)["ok"])
+
+    def test_bundle_refuses_overwrite_even_during_preview(self):
+        self.bundle_source()
+        ds.bundle(self.root, self.dest, apply=True)
+        with self.assertRaises(ds.StackError):
+            ds.bundle(self.root, self.dest, self.local, apply=True)
+        self.assertNotIn("/private-builds", (self.dest / "skills/ds-one/SKILL.md").read_text())
+
+    def test_bundle_rejects_unknown_overlay_and_escaping_source_links(self):
+        self.bundle_source()
+        (self.local / "skills/ds-typo.md").write_text("important rule")
+        with self.assertRaises(ds.StackError):
+            ds.bundle(self.root, self.dest, self.local, apply=True)
+        self.assertFalse(self.dest.exists())
+        (self.local / "skills/ds-typo.md").unlink()
+        (self.root / "skills/ds-one/leak").symlink_to(self.local / "policy.md")
+        with self.assertRaises(ds.StackError):
+            ds.bundle(self.root, self.dest, apply=True)
+        self.assertFalse(self.dest.exists())
+
+    def test_bundle_cleans_failed_assembly_without_changing_installed_skills(self):
+        self.bundle_source()
+        ds.install(self.root, self.base / "agent-skills")
+        (self.local / "skills/ds-one.md").write_text("See [missing](missing.md).")
+        with self.assertRaises(ds.StackError):
+            ds.bundle(self.root, self.dest, self.local, apply=True)
+        self.assertFalse(self.dest.exists())
+        self.assertEqual((self.base / "agent-skills/ds-one").resolve(), self.root / "skills/ds-one")
+
+    def test_preflight_accepts_explicit_non_mount_directory(self):
+        result = ds.preflight(self.base, "app", "task", reserve_gib=0, require_mount=False)
+        self.assertEqual(result["scratch"], str(self.base))
+
+    def test_cli_requires_storage_instead_of_assuming_a_machine_path(self):
+        output, errors = io.StringIO(), io.StringIO()
+        with redirect_stdout(output), redirect_stderr(errors):
+            status = ds.main(["--stack-root", str(self.root), "preflight", "--project", "app", "--task", "fix"])
+        self.assertEqual(status, 2)
+        self.assertIn("--scratch", json.loads(errors.getvalue())["error"])
+
+    def test_profile_validation_rejects_silent_typo_and_invalid_values(self):
+        profile = self.base / "profile.json"
+        for invalid in ({"reserve_gib": -1}, {"require_mount": "false"}, {"reserve_gib": True},
+                        {"reseve_gib": 10}, [], {"scratch": "relative/path"}):
+            profile.write_text(json.dumps(invalid))
+            with self.subTest(invalid=invalid), self.assertRaises(ds.StackError):
+                ds._profile(self.root, profile)
 
     def test_preflight_reserves_peak_plus_headroom_and_creates_nothing(self):
         scratch = self.base / "Scratch"

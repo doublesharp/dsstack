@@ -12,9 +12,9 @@ The hill-climb round budget replaces ds-review's round limit for UX verdicts. Ea
 
 ## Under a goal or stop hook
 
-Claude's `/goal` and Codex goals start a new turn whenever one ends, until the goal's condition holds. Ending a turn doesn't stop the work.
+A host goal or stop hook may continue after the current turn. Use its actual completion, budget, and blocker rules; ending a turn alone may not stop it.
 
 - If the goal has no number, state your metric, target, and budget in the first goal turn, and work to them.
 - If you create a goal, put the target and budget in its objective.
 - A checker's "not met" verdict describes what it couldn't see in the conversation. Show the measurement if you have it, and don't treat the verdict as a new requirement.
-- To stop at the target, at the budget, or at a blocker only the user can clear, say so in one message and stop calling tools. Claude ends the loop after a few turns without tool use. In Codex, mark the goal complete when its objective is met, or blocked once its rule allows.
+- At the target, budget, or a blocker only the user can clear, report the result and use the host's supported stop mechanism. Mark a goal complete only when its objective is met; mark it blocked only when the host's rule allows. Don't keep running checks to satisfy an automatic continuation.

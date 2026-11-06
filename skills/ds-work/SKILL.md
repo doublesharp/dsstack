@@ -1,47 +1,40 @@
 ---
 name: "ds-work"
-description: "Use when delivering multi-part or long-running work, like a tracker, a goal, a speed or coverage target, or a multi-session task; when resuming it; or when handing off a change."
+description: "Use when delivering multi-part or long-running work, resuming it, or handing off a change. Covers trackers, goals, and speed or coverage targets."
 ---
 
-# One item at a time
+# Finish one item at a time
 
 ## Start
 
-- List the ask as short items, in the project's tracker if it has one. Give each a done-when check you can observe, like a passing test or a command's output.
-- For open-ended asks like "make it faster", and under any goal or stop hook, follow [references/targets.md](references/targets.md).
-- Ask only when the answer changes what you build and the repo can't tell you. Otherwise pick the reasonable option, say which, and keep going.
+- Read project instructions and contribution guidelines (`CONTRIBUTING*` or `CONTRIBUTOR*`) before editing, in forks and local projects alike. Follow the project's architecture, style, tooling, and required checks.
+- List the requested deliverables in the project's tracker or a short checklist. Give each an observable done-when check.
+- For open-ended targets or work under a goal or stop hook, follow [targets and budgets](references/targets.md).
 
-## Loop
+## Work
 
-- Keep one item in progress. Close it as done, blocked, or dropped before starting another.
-- If part of an item needs something you can't get, like a real provider or credentials, close the rest and file that part as a blocked follow-up.
-- Add discovered work to the list as a follow-up. Do it now only if the current item can't finish without it.
-- When the user adds or reorders work, update the list, then finish or park the current item unless told to switch now.
-- Between items, reread the ask and drop anything that drifted.
-- Edit the working tree directly, not through patch files. Commit each finished item when commits are part of the task.
-- For multi-session work, keep a short note of done, current, next, and blocked items. On resume, read it and the git log. Finished items stay finished unless later edits touched their code.
+- Keep one item in progress. Close it as done, blocked, or dropped before starting another. Finish independent parts of a blocked item and identify what would clear the remainder.
+- Record discoveries as follow-ups; include them now only when the current item depends on them. When the user adds work, update the list and finish or park the current item unless told to switch.
+- Between items, reread the ask and remove drift. Edit the working tree directly and commit finished items when commits are part of the task.
+- For multi-session work, keep a short done/current/next/blocked note. On resume, read it and the git log; reopen completed items only when later changes invalidate them.
 
 ## Checks
 
-- While editing, use the fastest check that covers the change, and close the item when its done-when check passes.
-- Run slow checks, like full suites, matrices, end-to-end runs, and benchmarks, once, after the last edit they cover. If review fixes or later items will touch the same code, wait.
-- Rerun a check only after a relevant edit or a failure.
-- While a long job runs, work on other items or wait quietly, posting only when something changes.
-- Only a failed check the ask or project requires is a blocker. Differences from the version you're replacing are expected.
-- Leave CI and release jobs to CI unless the user or project wants them run locally.
+- Use the fastest covering check while editing. Run slow suites, matrices, end-to-end checks, and benchmarks once after the last edit they cover, including review fixes.
+- Rerun a check after a relevant edit or a failure. Keep unaffected passes. Leave CI and release jobs to CI unless the user or project requires local runs.
+- During a long job, work on independent items or wait, with updates when something changes. A failed required check blocks completion; an expected difference from the replaced version does not.
 
 ## When stuck
 
-- After two failed fixes for the same failure, or when you're re-editing the same files without progress, stop patching. Find the cause with ds-debug or change approach.
-- For environment trouble like missing services, credentials, disk, or permissions, try one or two direct fixes, then stop. Report the blocker and what would clear it, and move to items that don't need it or end the turn. Don't fake a missing service to get a pass.
+- After two failed fixes for the same failure, or repeated edits without progress, stop patching and find the cause with ds-debug or change approach.
+- For missing services, credentials, disk, or permissions, try one or two direct fixes, then report the blocker and what clears it. Continue independent work or hand back. Don't fake a missing service to get a pass.
 
 ## Finish
 
-- Mark every item done, blocked, dropped, or not started. Remove debug code and temporary files, and keep the diff to the ask.
-- Run any required check that hasn't passed since the last edit it covers.
-- Hand off in a few lines: what changed, what ran and its result, anything important you couldn't run, blockers, and follow-ups. Create receipts, manifests, or evidence reports only when the user or project asks.
-- Then stop. Don't keep polishing, and don't add reviews beyond the ones ds-review calls for.
+- Mark each item done, blocked, dropped, or not started. Remove temporary debug code and task-owned output, and run outstanding required checks.
+- Hand off briefly: what changed, checks and results, important gaps, blockers, and follow-ups. Create receipts or evidence reports only when requested by the user or project.
+- Stop when the ask and required checks are complete. Review timing and round limits belong to ds-review.
 
 ## Parallel workers
 
-Use workers only for independent items that touch separate files. Give each one item, its done-when check, its files, and where to stop. Put their worktrees where ds-resources says. Workers don't start other workers.
+Use workers for independent items with separate files. Give each the item, files, done-when check, and stop boundary. Follow project or host worktree rules; workers start no other workers.

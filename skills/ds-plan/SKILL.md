@@ -5,12 +5,12 @@ description: "Use when the user asks for a spec or plan, or when a feature reque
 
 # Plan only as much as the work needs
 
-Small, clear tasks need no plan. Start with the ds-work checklist instead.
+Small, clear tasks need no separate plan.
 
-1. Read the relevant code, docs, and any existing spec or plan first. Reuse what is good enough.
-2. Ask only questions whose answers change what gets built and that the repo can't answer. For everything else, pick a reasonable default and label it an assumption.
-3. For a design choice that is expensive to reverse, give two or three options with their trade-offs and recommend one.
-4. Describe what to build: the behavior, the failure cases that matter, the interfaces and data other parts depend on, and what is out of scope. Leave routine implementation choices to whoever builds it.
-5. Break the work into deliverable items in dependency order. Each item names its files, its done-when check, and whether it can run in parallel. Schedule slow or broad checks once at the end instead of after every item.
+1. Read relevant code, docs, and existing plans. Reuse what fits.
+2. Ask only for missing information that changes what gets built and isn't available in the repo. State a reasonable assumption for routine choices.
+3. For choices expensive to reverse, give two or three options with trade-offs and a recommendation.
+4. Describe the behavior, important failure cases, interfaces and data dependencies, and scope boundaries. Leave routine implementation details to the implementer.
+5. Order deliverables by dependency. Name files and observable completion checks; identify independent items when parallel work helps. Use ds-work for check timing.
 
-A small feature needs a few lines. A multi-week project needs a document. Save it where the project keeps plans or specs, or in its tracker. A plan-only request ends with the plan. Otherwise carry it out with ds-work without asking for approval again.
+Size the plan to the task: a few lines for a small feature, a document for multi-week work. Save it with the project's specs or tracker when a durable plan is needed. A plan-only request ends with the plan; an implementation request continues into the work.
