@@ -5,7 +5,7 @@ description: "Use when changing TypeScript server, database, CLI, or MCP behavio
 
 # TypeScript packages and services
 
-- Use the owning package's scripts, runtime pin, package manager, and workspace filters. Reuse shared modules and consolidate duplication the change touches; leave intentionally different behavior and unrelated code alone. Run ad hoc imports from that package so dependencies resolve correctly.
+- Use the owning package's scripts, runtime pin, package manager, and workspace filters. In a new worktree, inspect setup/dev scripts and resolved dependency-link targets, including `node_modules` and `.bin`, before launch. Repair broken or incompatible shared dependencies through the project's worktree-local setup and lockfile; don't retarget shared links or bypass package-manager safety. Launch and run ad hoc imports from the owning package so dependencies resolve correctly. After two failed setup fixes, report the error and stop affected commands.
 - For Fastify, use the existing app factory and `inject()` to cover registration, validation, auth hooks, and serialization. Await `ready()` and close the app in teardown.
 - Check queries, constraints, transactions, and migrations against the real engine in an isolated database; mocks don't validate migrations.
 - When a worker or transport can retry the same operation, test duplicate delivery and restart after partial success. Preserve the operation's identity so retries don't duplicate effects.

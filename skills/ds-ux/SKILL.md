@@ -10,7 +10,7 @@ Use this workflow for a requested measured UX improvement. An evaluator-only tas
 ## Establish the baseline
 
 - Identify users, primary journey, supplied references, and the requested target. Read [targets and rounds](references/targets.md), [the rubric](references/rubric.md), and [paired scoring](references/scoring.md).
-- Reuse the project's running app, login, seeds, and browser tools. Verify the checkout and journey before scoring. Follow the repair limit in the round budget.
+- Reuse the project's running app, login, seeds, and browser tools. Confirm it serves the intended checkout and journey before captures or scoring. Follow the repair limit in the round budget.
 - Capture 390×844, 768×1024, and 1440×900 CSS viewports. Check 360px width and actual browser 200% zoom as stress cases; a resized viewport is not zoom. Use matched capture conditions and the project's disposable-output location.
 - Exercise relevant initial, loading, empty, error, success, navigation, and keyboard/focus states in supported themes. Inspect [branding and sharing details](references/finishing.md), including logos, favicons, and Open Graph previews. Mark inaccessible coverage unevaluated.
 

@@ -70,6 +70,10 @@ The skill uses a short drafting/editing procedure with fact and voice preservati
 - [sccache compiler dispatch](https://github.com/mozilla/sccache/blob/main/src/compiler/compiler.rs) supports C-family and Rust backends, not solc/Solar. [Foundry compiler configuration](https://getfoundry.sh/config/reference/solidity-compiler/) and compatible fork-provided output caches handle contract compilation separately.
 - The selected toolchain is Cargo-installed `forgeds` from [doublesharp/foundry](https://github.com/doublesharp/foundry) with [Solar](https://github.com/paradigmxyz/solar#binary-usage) for compatible development work. [Cargo install](https://doc.rust-lang.org/cargo/commands/cargo-install.html) supports pinned Git revisions, binary selection, required features, and reusable build output. Select a fork revision whose manifest provides `forgeds`; retain the project's wrappers, artifact paths, and approved release compiler.
 
+## Worktree startup, 2026-11-06
+
+The reported failure was: “The dev startup hit a dependency-link issue in the new worktree; I’m correcting the launch path before taking baseline captures.” It does not identify the package manager or exact error. General setup and working-directory checks belong to ds-work; Node dependency-link inspection and repair belong to ds-typescript. ds-web and ds-ux confirm the served checkout before captures. The decision scenarios cover each boundary, preserving the two-attempt environment repair limit.
+
 ## Updating
 
 The UX rubric, six-round budget, and alternating-provider workflow are author choices maintained in the skill's own references.

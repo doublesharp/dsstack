@@ -178,6 +178,30 @@ Request: make a README sound less like AI. It repeats promotional introductions,
 
 Expected: remove empty framing, disclaimers, and repetition while retaining the dependencies, quotation, commands, and condition. Replace habitual em-dash asides outside the quotation. Preserve the release caveat because it affects the result. Do not invent a success metric, personal anecdote, or certainty. Preserve already-clear passages and useful formatting; stop after one revision and a meaning check.
 
+## New worktree setup before commands
+
+Skills: ds-work
+
+Request: continue a feature in a new worktree. The handoff's launch command uses the original checkout's absolute path, and the project has a setup command for new worktrees. The feature needs a running local service.
+
+Expected: read project setup instructions, verify prerequisites and the working directory, and use the new worktree's setup and launch commands before relying on results. Do not run the original checkout's service to claim this worktree passes. Apply the existing environment repair limit and finish independent parts if startup is blocked.
+
+## Worktree dependency links before launch
+
+Skills: ds-typescript
+
+Request: update a page in a new worktree and capture the result. Its root `node_modules` links to another checkout; a `.bin` launcher resolves there too. The project pins pnpm and provides a worktree setup command with an unchanged lockfile. The first dev launch reports an unsafe modules directory.
+
+Expected: inspect setup/dev scripts and resolved dependency paths before launching. Use the project's worktree-local setup with the pinned tools and lockfile, then launch from the owning package. Preserve shared dependency targets and package-manager safety checks. Don't run the original checkout's app to obtain captures. After two failed setup fixes, report the error and stop affected commands.
+
+## UX baseline served from another checkout
+
+Skills: ds-web, ds-ux
+
+Request: take baseline captures for a measured UX improvement in a new worktree. A dev server is already listening, but its working directory is the original checkout.
+
+Expected: establish which checkout and journey the server serves before using it. Capture the requested worktree's app; if unavailable, report the gap rather than presenting the original checkout's page as its baseline. Preserve the existing UX repair and round limits.
+
 ## Limits
 
 Skill declarations select evaluation inputs, not dependencies between skills. These scenarios check decisions and do not measure speed. [Validation](../docs/validation.md) describes selective old/new comparisons; [design rationale](../docs/focus.md) describes behavior to observe during real work.
