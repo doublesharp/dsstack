@@ -1,0 +1,4 @@
+interface:
+  display_name: "ds-security"
+  short_description: "Dependency patching and bounded security review"
+  default_prompt: "Use $ds-security to check dependencies or review the requested security boundaries."

@@ -35,8 +35,8 @@ class StackTests(unittest.TestCase):
         self.skill("ds-one")
         self.skill("ds-two")
 
-    def skill(self, name):
-        p = self.root / "skills" / name
+    def skill(self, name, optional=False):
+        p = self.root / ("optional-skills" if optional else "skills") / name
         p.mkdir(parents=True)
         (p / "SKILL.md").write_text("---\nname: " + json.dumps(name) + "\ndescription: \"Use when exercising a focused fixture.\"\n---\n# Fixture\n")
         return p
@@ -53,6 +53,68 @@ class StackTests(unittest.TestCase):
             self.assertEqual((self.dest / name).resolve(), (self.root / "skills" / name).resolve())
         self.assertEqual([x["action"] for x in ds.plan_install(self.root, self.dest)], ["keep", "keep"])
         ds.install(self.root, self.dest)
+
+    def test_optional_install_requires_opt_in_and_is_preserved_on_default_update(self):
+        source = self.skill("ds-extra", optional=True)
+        ds.install(self.root, self.dest)
+        self.assertFalse((self.dest / "ds-extra").exists())
+        ds.install(self.root, self.dest, include_optional=["ds-extra"])
+        self.assertEqual((self.dest / "ds-extra").resolve(), source)
+        ds.install(self.root, self.dest)
+        self.assertEqual((self.dest / "ds-extra").resolve(), source)
+        self.assertTrue(ds.doctor(self.root, self.dest)["ok"])
+
+    def test_unknown_optional_and_selected_conflict_prevent_every_install(self):
+        self.skill("ds-extra", optional=True)
+        with self.assertRaises(ds.StackError):
+            ds.install(self.root, self.dest, include_optional=["ds-typo"])
+        self.assertFalse(self.dest.exists())
+        self.dest.mkdir()
+        (self.dest / "ds-extra").write_text("foreign skill")
+        with self.assertRaises(ds.StackError):
+            ds.install(self.root, self.dest, include_optional=["ds-extra"])
+        self.assertFalse((self.dest / "ds-one").exists())
+        self.assertEqual((self.dest / "ds-extra").read_text(), "foreign skill")
+
+    def test_uninstall_removes_owned_optionals_and_preserves_unselected_foreign_optionals(self):
+        self.skill("ds-extra", optional=True)
+        self.skill("ds-foreign", optional=True)
+        ds.install(self.root, self.dest, include_optional=["ds-extra"])
+        (self.dest / "ds-foreign").write_text("keep")
+        ds.uninstall(self.root, self.dest)
+        self.assertFalse((self.dest / "ds-extra").is_symlink())
+        self.assertFalse((self.dest / "ds-one").is_symlink())
+        self.assertEqual((self.dest / "ds-foreign").read_text(), "keep")
+
+    def test_doctor_checks_optional_references_and_scenarios_without_installing(self):
+        source = self.skill("ds-extra", optional=True)
+        self.scenarios("## Optional review\n\nSkills: ds-extra\n\nRequest: review a boundary.\n")
+        self.assertTrue(ds.doctor(self.root)["ok"])
+        path = source / "SKILL.md"
+        path.write_text(path.read_text() + "Read [missing](references/missing.md).\n")
+        self.assertFalse(ds.doctor(self.root)["ok"])
+        self.assertFalse(self.dest.exists())
+
+    def test_list_marks_optional_skills_without_selecting_them(self):
+        self.skill("ds-extra", optional=True)
+        output = io.StringIO()
+        with redirect_stdout(output):
+            status = ds.main(["--stack-root", str(self.root), "list"])
+        self.assertEqual(status, 0)
+        result = {item["name"]: item for item in json.loads(output.getvalue())}
+        self.assertTrue(result["ds-extra"]["optional"])
+        self.assertFalse(result["ds-one"]["optional"])
+        self.assertFalse(self.dest.exists())
+
+    def test_optional_name_collision_and_escaping_symlink_are_rejected(self):
+        source = self.skill("ds-one", optional=True)
+        with self.assertRaises(ds.StackError):
+            ds.install(self.root, self.dest)
+        shutil.rmtree(source)
+        (self.root / "optional-skills/ds-extra").symlink_to(self.base, target_is_directory=True)
+        with self.assertRaises(ds.StackError):
+            ds.install(self.root, self.dest, include_optional=["ds-extra"])
+        self.assertFalse(self.dest.exists())
 
     def test_one_conflict_prevents_every_install(self):
         self.dest.mkdir()
@@ -186,6 +248,74 @@ class StackTests(unittest.TestCase):
         self.assertFalse(self.dest.exists())
         self.assertNotIn("/private-builds", json.dumps(result))
         self.assertEqual(result["skills"], 3)
+
+    def optional_bundle_source(self):
+        self.bundle_source()
+        source = self.skill("ds-extra", optional=True)
+        (source / "references").mkdir()
+        (source / "references/detail.md").write_text("optional detail\n")
+        path = source / "SKILL.md"
+        path.write_text(path.read_text() + "Read [detail](references/detail.md).\n")
+        (source / "agents").mkdir()
+        (source / "agents/openai.yaml").write_text('interface:\n  default_prompt: "Use $ds-extra."\n')
+        return source
+
+    def test_optional_bundle_is_explicit_frozen_and_installs_without_source(self):
+        source = self.optional_bundle_source()
+        default_bundle = self.base / "default-bundle"
+        ds.bundle(self.root, default_bundle, apply=True)
+        self.assertFalse((default_bundle / "skills/ds-extra").exists())
+        self.assertFalse((default_bundle / "optional-skills").exists())
+        preview = ds.bundle(self.root, self.dest, include_optional=["ds-extra"])
+        self.assertEqual(preview["skills"], 4)
+        self.assertFalse(self.dest.exists())
+        ds.bundle(self.root, self.dest, apply=True, include_optional=["ds-extra"])
+        frozen = self.dest / "skills/ds-extra"
+        self.assertEqual((frozen / "references/detail.md").read_text(), "optional detail\n")
+        self.assertEqual((frozen / "agents/openai.yaml").read_text(), (source / "agents/openai.yaml").read_text())
+        shutil.rmtree(self.root)
+        agents = self.base / "agents"
+        ds.install(self.dest, agents)
+        self.assertEqual((agents / "ds-extra").resolve(), frozen)
+        self.assertTrue(ds.doctor(self.dest, agents)["ok"])
+
+    def test_optional_bundle_policy_applies_only_when_selected(self):
+        self.optional_bundle_source()
+        (self.local / "skills/ds-extra.md").write_text("Additional optional policy.\n")
+        with self.assertRaises(ds.StackError):
+            ds.bundle(self.root, self.dest, self.local, apply=True)
+        self.assertFalse(self.dest.exists())
+        ds.bundle(self.root, self.dest, self.local, apply=True, include_optional=["ds-extra"])
+        text = (self.dest / "skills/ds-extra/SKILL.md").read_text()
+        self.assertIn("Additional optional policy.", text)
+        self.assertIn("backed-up storage", text)
+
+    def test_optional_bundle_rejects_unknown_names_and_source_links_before_writes(self):
+        source = self.optional_bundle_source()
+        with self.assertRaises(ds.StackError):
+            ds.bundle(self.root, self.dest, apply=True, include_optional=["ds-typo"])
+        self.assertFalse(self.dest.exists())
+        (source / "leak").symlink_to(self.local / "policy.md")
+        with self.assertRaises(ds.StackError):
+            ds.bundle(self.root, self.dest, apply=True, include_optional=["ds-extra"])
+        self.assertFalse(self.dest.exists())
+
+    def test_optional_cli_flags_preview_and_apply_bundles_and_installs(self):
+        self.optional_bundle_source()
+        self.skill("ds-more", optional=True)
+        flags = ["--include-optional", "ds-extra", "--include-optional", "ds-more"]
+        for command in ("install", "bundle"):
+            destination = self.base / command
+            args = ["--stack-root", str(self.root), command, "--dest", str(destination)] + flags
+            for apply in (False, True):
+                output = io.StringIO()
+                with redirect_stdout(output):
+                    status = ds.main(args + (["--apply"] if apply else []))
+                self.assertEqual(status, 0, output.getvalue())
+                self.assertEqual(destination.exists(), apply)
+            skill_root = destination / "skills" if command == "bundle" else destination
+            self.assertTrue((skill_root / "ds-extra/SKILL.md").is_file())
+            self.assertTrue((skill_root / "ds-more/SKILL.md").is_file())
 
     def test_bundle_freezes_sources_and_inlines_private_instructions(self):
         self.bundle_source()

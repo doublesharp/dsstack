@@ -7,7 +7,7 @@
 
 <h1 align="center">dsstack</h1>
 
-<p align="center">15 skills for Codex and Claude, with a Python standard-library installer.</p>
+<p align="center">15 core skills and an optional security skill for Codex and Claude, with a Python standard-library installer.</p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
@@ -60,6 +60,21 @@ Start with `ds-work`, `ds-debug`, `ds-tdd`, and `ds-review`. Choose domain skill
 
 Project instructions and the user's task control the work. Consultation requires access to the requested providers. Use `ds-ux` for a requested scoring process and `ds-web` for routine interface changes.
 
+### Optional security skill
+
+[ds-security](optional-skills/ds-security/SKILL.md) covers dependency vulnerability checks and patches, focused security reviews, and requested codebase audits. It is excluded from default installations. Routine maintenance uses normal project builds and tests; risky reproductions require containment appropriate to the check.
+
+Add `--include-optional ds-security` to your usual bundle command, preserving any `--local` policy argument. For an installation using `.local/policy`, preview and apply with:
+
+```sh
+python3 scripts/dsstack.py bundle --dest .local/bundles/security-v1 --local .local/policy --include-optional ds-security
+python3 scripts/dsstack.py bundle --dest .local/bundles/security-v1 --local .local/policy --include-optional ds-security --apply
+```
+
+Omit `--local` if you have no private policy. Follow [Updating an installation](#updating-an-installation) when switching from an existing bundle. The selected skill becomes part of the frozen bundle; its own `install` command needs no `--include-optional` flag. That flag selects from the source checkout's optional catalog. For direct source installation, add `--include-optional ds-security` to `install`; copying just `optional-skills/ds-security/` also works. The skill keeps its license and attribution when copied alone.
+
+Invoke it with `Use $ds-security to check and patch vulnerable dependencies.` It does not replace the separately installed `security-audit` skill or change existing installations.
+
 ## Private configuration
 
 Public skills live at the repository root. Keep machine settings and personal additions in ignored `.local/`:
@@ -67,6 +82,7 @@ Public skills live at the repository root. Keep machine settings and personal ad
 ```text
 dsstack/
 ├── skills/                 Public, portable skill folders
+├── optional-skills/        Skills selected explicitly at installation
 ├── scripts/                Bundle and installation tools
 ├── docs/                   Design, validation, and customization
 └── .local/                 Private and ignored by Git
@@ -87,6 +103,7 @@ The bundler appends private rules to the relevant `SKILL.md` files. Use global o
 
 [Customization guide](docs/customization.md)
 
+<a id="updating-an-installation"></a>
 <details>
 <summary><strong>Updating an installation</strong></summary>
 

@@ -78,6 +78,12 @@ On machines with cargo-steward, ds-rust's sccache rule told agents to set `RUSTC
 
 The reported failure was: “The dev startup hit a dependency-link issue in the new worktree; I’m correcting the launch path before taking baseline captures.” It does not identify the package manager or exact error. General setup and working-directory checks belong to ds-work; Node dependency-link inspection and repair belong to ds-typescript. ds-web and ds-ux confirm the served checkout before captures. The decision scenarios cover each boundary, preserving the two-attempt environment repair limit.
 
+## Optional security review, 2026-11-08
+
+`ds-security` adapts the source-grounded finding discipline and supply-chain trust questions from [Cloudflare's security-audit-skill](https://github.com/cloudflare/security-audit-skill/tree/d24bc269171a9171fac58493e0ffba511d571a4a), especially its [entrypoint](https://github.com/cloudflare/security-audit-skill/blob/d24bc269171a9171fac58493e0ffba511d571a4a/skills/security-audit/SKILL.md) and [supply-chain companion](https://github.com/cloudflare/security-audit-skill/blob/d24bc269171a9171fac58493e0ffba511d571a4a/skills/security-audit/SUPPLY-CHAIN-AND-RELEASE.md). Exact consulted file hashes are in the source lock. The installed local copy was inspected to diagnose the reported failure; no instruction text was copied from it.
+
+The MIT license is retained in [licenses/security-audit-LICENSE](../licenses/security-audit-LICENSE) and inside the standalone skill. The new instructions are written for dsstack: opt-in installation, ordinary project checks for dependency patches, containment chosen for hazardous execution, findings supported by source or execution, and bounded reviews without mandatory agents, ledgers, or report files. No upstream code or validators are imported. The triggering failure was a routine dependency patch that skipped all builds/tests because macOS could not enforce every audit-only memory control.
+
 ## Updating
 
 The UX rubric, six-round budget, and alternating-provider workflow are author choices maintained in the skill's own references.

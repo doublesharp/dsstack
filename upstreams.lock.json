@@ -108,6 +108,27 @@
         }
       },
       "use": "Workflow ideas paraphrased into independent skills; no upstream runtime or helper code is installed."
+    },
+    {
+      "name": "security-audit",
+      "repository": "https://github.com/cloudflare/security-audit-skill",
+      "revision": "d24bc269171a9171fac58493e0ffba511d571a4a",
+      "checked_at": "2026-11-08",
+      "files": {
+        "LICENSE": {
+          "url": "https://raw.githubusercontent.com/cloudflare/security-audit-skill/d24bc269171a9171fac58493e0ffba511d571a4a/LICENSE",
+          "sha256": "e598e694aa506650c7192d5ea3be0e50aca0d356ea00551c53429f0b01eb6391"
+        },
+        "skills/security-audit/SKILL.md": {
+          "url": "https://raw.githubusercontent.com/cloudflare/security-audit-skill/d24bc269171a9171fac58493e0ffba511d571a4a/skills/security-audit/SKILL.md",
+          "sha256": "20dcfe14ff1afa9584c0181eb409880a9a7fdc1a3f75abc951b277cd798af056"
+        },
+        "skills/security-audit/SUPPLY-CHAIN-AND-RELEASE.md": {
+          "url": "https://raw.githubusercontent.com/cloudflare/security-audit-skill/d24bc269171a9171fac58493e0ffba511d571a4a/skills/security-audit/SUPPLY-CHAIN-AND-RELEASE.md",
+          "sha256": "f372e919940e335468ba1ae09f99026c3986a345f7fe26f8068f132e199f52a5"
+        }
+      },
+      "use": "Adapted finding discipline and supply-chain review ideas for optional ds-security; no upstream runtime or validators are included."
     }
   ]
 }

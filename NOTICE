@@ -4,6 +4,7 @@ Workflow ideas adapted from:
 - t3dotgg/tstack, MIT. Bounded review, scoped re-review, and explicit PR ownership.
 - obra/superpowers, MIT. Behavioral RED/GREEN, root-cause debugging, resumable progress, and skill validation.
 - cursor/plugins pstack, MIT, Lauren Tan. Practical regression checks, substantiated reviews, and retry-safe operations.
+- cloudflare/security-audit-skill, MIT, Cloudflare, Inc. Source-grounded security findings, dependency/release trust boundaries, and bounded local validation in optional ds-security.
 
 Retained upstream license notices are in licenses/. Exact source revisions and
 file hashes are recorded in upstreams.lock.json. The 2026-10-31 revision also

@@ -1,0 +1,7 @@
+ds-security is written by doublesharp for dsstack.
+
+Adapts source-grounded findings and supply-chain review ideas from
+Cloudflare security-audit-skill, MIT, Copyright (c) 2025-2026 Cloudflare, Inc.
+https://github.com/cloudflare/security-audit-skill/tree/d24bc269171a9171fac58493e0ffba511d571a4a
+
+Both MIT notices are retained in LICENSE. No upstream runtime code is included.

@@ -61,21 +61,40 @@ def _read_skill(path):
     return {"name": name, "description": description, "path": str(path.resolve()), "text": text}
 
 
-def catalog(root):
+def _available_skills(root):
     root = Path(root).resolve()
-    base = root / "skills"
-    if not base.is_dir():
-        raise StackError(f"No skills directory: {base}")
     skills = []
-    for path in sorted(base.iterdir()):
-        if path.name.startswith("."):
+    names = set()
+    for directory in ("skills", "optional-skills"):
+        base = root / directory
+        if directory == "optional-skills" and not base.exists() and not base.is_symlink():
             continue
-        if not path.is_dir() or not path.resolve().is_relative_to(base):
-            raise StackError(f"Unexpected skill path: {path}")
-        skills.append(_read_skill(path))
+        if base.is_symlink() or not base.is_dir():
+            raise StackError(f"Expected a skills directory: {base}")
+        for path in sorted(base.iterdir()):
+            if path.name.startswith("."):
+                continue
+            if not path.is_dir() or not path.resolve().is_relative_to(base):
+                raise StackError(f"Unexpected skill path: {path}")
+            skill = _read_skill(path)
+            if skill["name"] in names:
+                raise StackError(f"Duplicate skill name: {skill['name']}")
+            names.add(skill["name"])
+            skill["optional"] = directory == "optional-skills"
+            skills.append(skill)
     if not skills:
         raise StackError("No skills found")
     return skills
+
+
+def catalog(root, include_optional=()):
+    skills = _available_skills(root)
+    requested = set(include_optional)
+    optional = {skill["name"] for skill in skills if skill["optional"]}
+    unknown = requested - optional
+    if unknown:
+        raise StackError("Unknown optional skills: " + ", ".join(sorted(unknown)))
+    return [skill for skill in skills if not skill["optional"] or skill["name"] in requested]
 
 
 def _owned_link(path, source):
@@ -83,8 +102,8 @@ def _owned_link(path, source):
 
 
 def _stale_links(root, destination, names):
-    """Links into this stack's skills directory for skills it no longer ships."""
-    base = Path(root).resolve() / "skills"
+    """Links into this stack for skills it no longer ships."""
+    bases = {Path(root).resolve() / name for name in ("skills", "optional-skills")}
     if not destination.is_dir():
         return []
     stale = []
@@ -92,15 +111,19 @@ def _stale_links(root, destination, names):
         if path.name in names or not path.is_symlink():
             continue
         target = path.resolve()
-        if target.parent == base and target.name not in names:
+        if target.parent in bases and target.name not in names:
             stale.append({"name": path.name, "action": "prune", "path": str(path), "source": str(target)})
     return stale
 
 
-def plan_install(root, destination):
+def plan_install(root, destination, include_optional=()):
     destination = Path(destination).expanduser().absolute()
     plan = []
-    skills = catalog(root)
+    skills = catalog(root, include_optional)
+    available = _available_skills(root)
+    selected = {skill["name"] for skill in skills}
+    skills += [skill for skill in available if skill["name"] not in selected
+               and _owned_link(destination / skill["name"], Path(skill["path"]))]
     for skill in skills:
         source = Path(skill["path"])
         path = destination / skill["name"]
@@ -111,7 +134,7 @@ def plan_install(root, destination):
         else:
             action = "add"
         plan.append({"name": skill["name"], "action": action, "path": str(path), "source": str(source)})
-    return plan + _stale_links(root, destination, {skill["name"] for skill in skills})
+    return plan + _stale_links(root, destination, {skill["name"] for skill in available})
 
 
 def _reject_conflicts(plan):
@@ -120,8 +143,8 @@ def _reject_conflicts(plan):
         raise StackError("Existing skills were preserved; resolve these conflicts first: " + ", ".join(conflicts))
 
 
-def install(root, destination):
-    plan = plan_install(root, destination)
+def install(root, destination, include_optional=()):
+    plan = plan_install(root, destination, include_optional)
     _reject_conflicts(plan)
     created = []
     try:
@@ -186,7 +209,7 @@ def _scenario_errors(root, names):
 def doctor(root, destination=None):
     errors, warnings = [], []
     try:
-        skills = catalog(root)
+        skills = _available_skills(root)
     except (StackError, OSError) as exc:
         return {"ok": False, "skills": 0, "errors": [str(exc)], "warnings": []}
     for skill in skills:
@@ -214,11 +237,12 @@ def doctor(root, destination=None):
     return {"ok": not errors, "skills": len(skills), "errors": errors, "warnings": warnings}
 
 
-def _copy_inputs(root):
+def _copy_inputs(root, skills):
     """Only runtime instructions, tooling, and attribution belong in a bundle."""
     inputs = ["skills", "scripts/dsstack.py", "VERSION", "LICENSE", "NOTICE"]
     inputs += [name for name in ("licenses", "upstreams.lock.json")
                if (root / name).exists()]
+    inputs += [str(Path("optional-skills") / skill["name"]) for skill in skills if skill["optional"]]
     for name in inputs:
         path = root / name
         if not path.exists():
@@ -275,15 +299,15 @@ def _check_bundle_destination(root, destination):
         raise StackError("Add /.local/ to .gitignore and untrack any .local/ files before bundling there")
 
 
-def bundle(root, destination, local=None, apply=False):
+def bundle(root, destination, local=None, apply=False, include_optional=()):
     """Preview or create a new frozen stack, without touching installed skills."""
     root = Path(root).resolve()
     destination = Path(destination).expanduser().absolute()
     if destination.exists() or destination.is_symlink():
         raise StackError(f"Bundle destination already exists: {destination}")
     _check_bundle_destination(root, destination)
-    skills = catalog(root)
-    inputs = _copy_inputs(root)
+    skills = catalog(root, include_optional)
+    inputs = _copy_inputs(root, skills)
     names = {skill["name"] for skill in skills}
     additions, profile = _local_policy(local, names)
     if profile is not None and "ds-resources" not in names:
@@ -301,6 +325,8 @@ def bundle(root, destination, local=None, apply=False):
     try:
         for name in inputs:
             source, target = root / name, destination / name
+            if Path(name).parts[0] == "optional-skills":
+                target = destination / "skills" / Path(name).name
             target.parent.mkdir(parents=True, exist_ok=True)
             if source.is_dir():
                 shutil.copytree(source, target)
@@ -336,21 +362,27 @@ def main(argv=None):
         command = sub.add_parser(name, help="Preview owned skill links; add --apply to change them")
         command.add_argument("--dest", type=Path, required=True)
         command.add_argument("--apply", action="store_true")
+        if name == "install":
+            command.add_argument("--include-optional", action="append", default=[], metavar="NAME",
+                                 help="Include an optional skill; repeat for several")
     frozen = sub.add_parser("bundle", help="Preview a frozen stack with optional private additions")
     frozen.add_argument("--dest", type=Path, required=True)
     frozen.add_argument("--local", type=Path)
     frozen.add_argument("--apply", action="store_true")
+    frozen.add_argument("--include-optional", action="append", default=[], metavar="NAME",
+                        help="Include an optional skill in this bundle; repeat for several")
     args = parser.parse_args(argv)
     try:
         root = args.stack_root.resolve()
         if args.command == "list":
-            result = [{k: v for k, v in item.items() if k != "text"} for item in catalog(root)]
+            result = [{k: v for k, v in item.items() if k != "text"} for item in _available_skills(root)]
         elif args.command == "doctor":
             result = doctor(root, args.dest)
         elif args.command == "bundle":
-            result = bundle(root, args.dest, args.local, args.apply)
+            result = bundle(root, args.dest, args.local, args.apply, args.include_optional)
         elif args.command == "install":
-            result = install(root, args.dest) if args.apply else plan_install(root, args.dest)
+            result = (install(root, args.dest, args.include_optional) if args.apply
+                      else plan_install(root, args.dest, args.include_optional))
         elif args.command == "uninstall":
             result = uninstall(root, args.dest) if args.apply else plan_uninstall(root, args.dest)
         print(json.dumps(result, indent=2))
