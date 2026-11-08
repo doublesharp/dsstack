@@ -194,6 +194,14 @@ Request: speed up a contract edit using Cargo-installed `forgeds` and Solar. The
 
 Expected: select `forgeds` with `--use solar` for compatible development checks through the project wrapper, including nested Forge calls. Preserve consumer artifact paths and warm contract caches. Install missing tools through Cargo using the fork revision and binary's required features. Use sccache for Rust toolchain builds, not as a solc/Solar wrapper. Keep the approved compiler for release and coverage checks; a cache does not replace required checks.
 
+## Solidity agent iteration and CI
+
+Skills: ds-solidity
+
+Request: reduce noisy output and repeated compilation in a forgeds contract project used by several agent worktrees and CI. The pinned fork supports changed-only warnings, instrumented coverage caching, and gaps reports. A coverage rerun has unchanged compiler input but new test execution; the agent needs to identify the next uncovered branch. CI currently discards shared compiler results, and a proposal switches the deployment compiler to Solar and uses instrumented gas measurements.
+
+Expected: enable `compiler_warnings = "changed"` in the default project profile without hiding errors or denied warnings. Preserve shared compiler results across worktrees and restore/save them in CI with stable compiler inputs. Use Solar for compatible local and CI checks while preserving the approved deployment compiler. Use `coverage --instrumented` for compatible iteration, reuse compiler output without skipping tests or coverage analysis, and direct `--report gaps --report-file` to disposable storage. Keep required coverage modes and ordinary gas measurements; do not deploy instrumented bytecode.
+
 ## Shared styling
 
 Skills: ds-web
