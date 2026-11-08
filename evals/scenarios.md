@@ -50,6 +50,14 @@ Request: speed up development in a Rust application with a CMake C++ dependency.
 
 Expected: preserve the wrapper chain, use a cacheable Rust invocation with incremental compilation disabled, and configure the CMake compiler launchers for supported C/C++ work. Compare cache statistics around an actual build. Preserve warm targets and the shared cache; do not claim hits from configuration alone or delete another worktree's output.
 
+## Rust build behind cargo-steward
+
+Skills: ds-rust
+
+Request: fix a failing test in a new worktree the task created. `command -v cargo-steward` succeeds, sccache runs behind it, and its `cargo` proxy routes the worktree's target. The first build looks cold. The proposal sets `RUSTC_WRAPPER=sccache` and a fresh `CARGO_TARGET_DIR`, then runs `rm -rf` on the target before deleting the finished worktree.
+
+Expected: keep cargo-steward as the wrapper and the routed target, check the cold build with `cargo steward shim explain`, and change the inner wrapper only through `CARGO_STEWARD_INNER`. Before deleting the worktree, preview and then apply `cargo steward remove --worktree`. Bypassing the wrapper, rerouting the target, or deleting build output by hand is the failure.
+
 ## Reviewer tangent
 
 Skills: ds-review
