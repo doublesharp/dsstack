@@ -218,6 +218,22 @@ Request: make a README sound less like AI. It repeats promotional introductions,
 
 Expected: remove empty framing, disclaimers, and repetition while retaining the dependencies, quotation, commands, and condition. Replace habitual em-dash asides outside the quotation. Preserve the release caveat because it affects the result. Do not invent a success metric, personal anecdote, or certainty. Preserve already-clear passages and useful formatting; stop after one revision and a meaning check.
 
+## Direct descriptions and repeated qualifications
+
+Skills: ds-write
+
+Request: edit homepage copy that describes client comments and approval history, then repeatedly says the product is not a decision engine. A separate benchmark paragraph reports a local timing improvement, says cache hits were not counted, and repeats that the result is an observation rather than proof of a cause. Both passages announce their caveats before stating them and end with vague restatements.
+
+Expected: describe the supported product actions directly. Remove imagined objections, announcements of candor, and closing restatements. Keep the benchmark's local scope, measurements, missing cache-hit data, and uncertainty about cause once, beside the finding. Replacing "rather than" with a comma-tail negation or splitting the same empty contrast across sentences is not an improvement.
+
+## Useful dates and supplied voice
+
+Skills: ds-write
+
+Request: edit a migration notice containing a routine "as of" stamp, an export deadline, a deletion date, a JSON-only endpoint, and instructions for teams consuming CSV. Separately, draft a personal update from facts about choosing between two keyboards, using the author's short, conversational writing sample.
+
+Expected: remove the routine freshness stamp while preserving the deadline, deletion date, endpoint, and CSV migration requirement. Keep a date when the fact's truth depends on it. Match the sample's vocabulary and rhythm using only the supplied facts; do not manufacture an anecdote or broader opinion. Return the finished prose without a critique unless asked.
+
 ## New worktree setup before commands
 
 Skills: ds-work

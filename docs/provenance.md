@@ -63,6 +63,19 @@ The ds-write instructions are written independently after comparing the current 
 
 The skill uses a short drafting/editing procedure with fact and voice preservation. It imports no pattern catalog, scanner, scoring system, or upstream skill text. Personal voice preferences belong in local policy. The evaluation includes legitimate punctuation and lists that should survive editing.
 
+## Direct claims and useful qualifications
+
+The reported failure was repeated caveats about what a product or claim does not do, plus unnecessary dates. The ds-write revision replaces its broad caveat advice with a reader-misunderstanding test, a deletion check inside the existing revision, and a short positive example. It retains uncertainty, operational conditions, deadlines, and dates that determine whether a fact is true.
+
+- [Anthropic's prompting guidance](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#control-the-format-of-responses): describe the desired output and use relevant examples. The skill leads with direct, supported descriptions and follows supplied voice samples.
+- [Ian Quah's writing guide, sections 4, 11, and 15](https://ianq.ai/personal_notes/signs_of_ai_writing/): test whether a contrast excludes a plausible reading; inspect paragraph structure for repeated qualifications that survive phrase replacement. The final meaning check covers contrasts split across sentences and disguised as comma tails.
+- [Conor Bronsdon's avoid-ai-writing, Narrated candor](https://github.com/conorbronsdon/avoid-ai-writing/blob/main/dist/avoid-ai-writing.md#narrated-candor), served version 3.38.0: remove disclosure announcements when the information survives their deletion. Its phrase detector for this pattern was reverted because it also matched useful disclosures. The skill uses contextual judgment instead of a scanner.
+- [blader/humanizer, sections 23 and 25](https://github.com/blader/humanizer/blob/main/SKILL.md), served version 4.0.0: remove knowledge-limit residue and repeated document narration while preserving meaning. The skill distinguishes routine freshness stamps from dates needed by the reader.
+- [Practitioner discussion of repeated caveats](https://www.reddit.com/r/vibecoding/comments/1xmn5y4/codexgpt_and_the_endless_caveats/): kenthesaint reports using positive samples and a separate editing pass; CleanFix_Dev suggests phrase checks and more concrete source facts. ds-write uses a sample and the existing meaning check, keeping a single-writer workflow. Required limitations stay with the relevant claim instead of moving to a blanket footer.
+- [Alex Bleakley's negated-instruction experiments](https://alexbleakley.com/blog/saying-what-not-to-do): positive and negative instructions performed similarly on some tested tasks. These older-model results support testing the actual writing task, not a universal claim that negative instructions fail.
+
+These sources informed independently written instructions and an illustrative example; no upstream implementation or pattern catalog is included. The decision scenarios cover redundant scope statements, necessary conditions and dates, source fidelity, and supplied voice.
+
 ## Compiler caching, 2026-11-06
 
 - [sccache usage and supported compilers](https://github.com/mozilla/sccache#usage): use compiler wrappers or CMake launchers for supported Rust, C/C++, and CUDA/HIP builds; inspect cache statistics when configuring or diagnosing reuse.
