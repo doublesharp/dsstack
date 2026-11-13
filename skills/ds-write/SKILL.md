@@ -5,7 +5,7 @@ description: "Use when asked to draft or revise prose for README files, document
 
 # Write for the reader
 
-Identify the reader, purpose, format, and voice from the request and surrounding text. Follow the user's style rules. Match a supplied writing sample's vocabulary, sentence length, and rhythm. For a first draft, use supported source material; for an edit, keep what already works.
+Identify the reader, purpose, format, and voice from the request and surrounding text. Use Oxford commas in lists of three or more items unless the user specifies another style. Match a supplied writing sample's vocabulary, sentence length, and rhythm. For a first draft, use supported source material; for an edit, keep what already works.
 
 - Lead with what the reader needs. State what something does and what the reader can do, using familiar words and complete sentences. Make generic passages concrete with supported actions, mechanisms, or examples. When details are missing, use a simpler accurate statement. Cut announced explanations, empty praise, repeated conclusions, and sections with nothing to add.
 - Keep a caveat or contrast when it corrects a plausible misunderstanding of the surrounding text or changes the reader's decision. Put the necessary condition beside the claim it limits and combine repetitions. Cut defenses against objections the reader has not raised, boilerplate disclaimers, and announcements of candor. Describe the thing itself instead of defining it against what it isn't.
