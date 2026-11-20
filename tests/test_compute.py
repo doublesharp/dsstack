@@ -63,11 +63,11 @@ class ComputeCase(unittest.TestCase):
         self.write_profile({"hosts": {HOST: {"python": sys.executable, "slots": {"shared": 4},
                                               "jobs": {"heavy": 14, "moderate": 4, "light": 2},
                                               "measure_marker": "~/bench/MEASURING"}},
-                            "default_host": HOST, "poll_seconds": 0.1, "remote_poll_seconds": 0.3,
-                            "local": {"jobs": {"heavy": 12}}})
+                            "default_host": HOST})
         self.env = {k: v for k, v in os.environ.items() if not k.startswith("COMPUTE_")}
         self.env.update(COMPUTE_STATE=str(self.state), COMPUTE_PROFILE=str(self.profile), HOME=str(self.home),
                         COMPUTE_SSH=self.fake, PYTHONDONTWRITEBYTECODE="1")
+        self.set_loads(0, 0)
         proj = base / "work" / "myproj"
         (proj / "src").mkdir(parents=True)
         (proj / "target").mkdir()
@@ -86,7 +86,18 @@ class ComputeCase(unittest.TestCase):
             p.communicate()
 
     def write_profile(self, compute):
+        """Pin the local machine's shape so tests do not depend on this host's cores or architecture."""
+        local = {"slots": {"shared": 2}, "arch": "arm64", "jobs": {"heavy": 12, "moderate": 4, "light": 2},
+                 **compute.get("local", {})}
+        compute = {"poll_seconds": 0.1, "remote_poll_seconds": 0.3, **compute, "local": local}
+        for host in compute.get("hosts", {}).values():
+            host.setdefault("arch", "x86_64")
         self.profile.write_text(json.dumps({"compute": compute}))
+
+    def set_loads(self, local_load, remote_load, local_cpus=12, remote_cpus=16):
+        """Sampled load average is real and swings; every test pins it."""
+        self.env["COMPUTE_FAKE_LOADS"] = json.dumps({"local": {"load1": local_load, "cpus": local_cpus},
+                                                      HOST: {"load1": remote_load, "cpus": remote_cpus}})
 
     def compute(self, *args, timeout=60, ssh=None):
         env = dict(self.env, COMPUTE_SSH=ssh or self.fake)
@@ -99,7 +110,7 @@ class ComputeCase(unittest.TestCase):
         self.procs.append(p)
         return p
 
-    def pool(self, name, units, remote=False):
+    def pool(self, name, units, remote=False):  # noqa: D401
         root = (self.home / "compute" / "slots") if remote else (self.state / "slots")
         return C.Pool(str(root), name, units)
 
@@ -162,7 +173,7 @@ class ComputeTests(ComputeCase):
         procs = [self.popen("run", "--class", "moderate", "--", "sleep", "2") for _ in range(2)]
         time.sleep(0.8)
         status = json.loads(self.compute("status", "--json").stdout)
-        self.assertEqual(sum(1 for h in status["local"]["pools"]["moderate"]["holders"] if h), 2)
+        self.assertEqual(sum(1 for h in status["local"]["pools"]["shared"]["holders"] if h), 2)
         third = self.popen("run", "--class", "moderate", "--", "echo", "third")
         light = self.compute("run", "--class", "light", "--", "echo", "light")
         self.assertEqual((light.returncode, light.stdout.strip()), (0, "light"))
@@ -191,7 +202,7 @@ class ComputeTests(ComputeCase):
                             "sh", "-c", "echo $COMPUTE_HOST $COMPUTE_JOBS"], env=env, capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertEqual(r.stdout.split()[0], "local")
-        self.assertEqual(int(r.stdout.split()[1]), os.cpu_count() or 4)
+        self.assertEqual(int(r.stdout.split()[1]), max(2, (os.cpu_count() or 4) - 2))
         r = subprocess.run([sys.executable, str(SCRIPT), "run", "--class", "heavy", "--where", "anything", "--",
                             "true"], env=env, capture_output=True, text=True)
         self.assertEqual(r.returncode, 2)
@@ -230,7 +241,7 @@ class ComputeTests(ComputeCase):
         q.send_signal(signal.SIGINT)
         q.wait(timeout=10)
         self.assertEqual(q.returncode, 130)
-        self.assertEqual(os.listdir(self.state / "queue/heavy"), [])
+        self.assertEqual(os.listdir(self.state / "queue/shared"), [])
         holder.wait(timeout=10)
 
     def test_killed_broker_keeps_the_slot_until_the_job_exits(self):
@@ -238,10 +249,10 @@ class ComputeTests(ComputeCase):
         time.sleep(0.8)
         p.kill()
         p.wait()
-        pool = self.pool("heavy", 1)
-        self.assertIsNone(pool.try_acquire(1, {}))
+        pool = self.pool("shared", 2)
+        self.assertIsNone(pool.try_acquire(2, {}))
         time.sleep(3.5)
-        lease = pool.try_acquire(1, {})
+        lease = pool.try_acquire(2, {})
         self.assertIsNotNone(lease)
         lease.release()
 
@@ -424,7 +435,7 @@ class BundleCarriesComputeSettings(ComputeCase):
         policy = Path(self.tmp.name) / "policy"
         policy.mkdir()
         (policy / "resource-profile.json").write_text(json.dumps({"compute": {
-            "local": {"slots": {"heavy": 3}}, "hosts": {HOST: {"python": sys.executable}}}}))
+            "local": {"slots": {"shared": 3}}, "hosts": {HOST: {"python": sys.executable}}}}))
         dest = Path(self.tmp.name) / "bundle"
         ds.bundle(ROOT, dest, policy, apply=True)
         env = {k: v for k, v in self.env.items() if k != "COMPUTE_PROFILE"}
@@ -432,9 +443,244 @@ class BundleCarriesComputeSettings(ComputeCase):
         out = subprocess.run([sys.executable, "-B", str(dest / "skills/ds-resources/scripts/compute.py"), "status", "--json"],
                              env=env, capture_output=True, text=True)
         status = json.loads(out.stdout)
-        self.assertEqual(status["local"]["pools"]["heavy"]["units"], 3)
+        self.assertEqual(status["local"]["pools"]["shared"]["units"], 3)
         self.assertEqual(list(status["hosts"]), [HOST])
         self.assertTrue(status["hosts"][HOST]["unreachable"])
+
+
+def snap(name, load, cpus, speed=1.0, free=6, units=6, arch="arm64", recent=0.0, reserve=0, measuring=None, down=False,
+         jobs=None, local=None):
+    """A host snapshot with pinned numbers, as the planner sees it."""
+    jobs = jobs or ({"heavy": 10, "moderate": 4, "light": 2} if name == "local" else {"heavy": 12, "moderate": 6, "light": 2})
+    return {"name": name, "local": name == "local" if local is None else local, "down": down, "cpus": cpus, "load1": load,
+            "recent_threads": recent, "norm_load": (load + recent) / cpus, "arch": arch, "speed": speed,
+            "speed_source": "profile", "pools": {"shared": {"units": units, "free": free}}, "running": [],
+            "measuring": measuring, "max_norm_load": None, "reserve": reserve, "jobs": jobs,
+            "classes": {"heavy": ["shared", 2], "moderate": ["shared", 1]}}
+
+
+def rank(snaps, cls="moderate", latency=None, arch="any", work=None, sync=None, bal=None):
+    bal = bal or C.default_balance()
+    latency = latency or ("batch" if cls == "heavy" else "interactive")
+    job = {"class": cls, "latency": latency, "arch": arch, "work": work or bal["work_seconds"][cls], "sync": sync or {}}
+    return C.rank_hosts(job, snaps, bal)
+
+
+def first(result):
+    return result["order"][0]["host"] if result["order"] else None
+
+
+class PlacementTests(unittest.TestCase):
+    """The ranking function with fake loads: M2 = speed 1.0 per core, the older Intel host = 0.45 per thread."""
+
+    def test_busy_but_less_loaded_fast_host_beats_a_swamped_slow_one(self):
+        r = rank([snap("local", 15, 12), snap("mbp", 100, 16, speed=0.45, free=4, units=4)], "heavy")
+        self.assertEqual(first(r), "local")
+
+    def test_idle_hosts_tie_goes_to_the_faster_local_machine(self):
+        for cls in ("moderate", "heavy"):
+            r = rank([snap("local", 0, 12), snap("mbp", 0, 16, speed=0.45, free=4, units=4)], cls)
+            self.assertEqual(first(r), "local")
+
+    def test_slow_host_gets_work_only_when_it_finishes_sooner(self):
+        slow_idle = snap("mbp", 0, 16, speed=0.45, free=4, units=4)
+        self.assertEqual(first(rank([snap("local", 60, 12), slow_idle])), "mbp")      # local swamped
+        self.assertEqual(first(rank([snap("local", 14, 12), slow_idle])), "local")    # local merely busy
+
+    def test_small_jobs_pay_the_sync_cost(self):
+        local, remote = snap("local", 20, 12), snap("mbp", 0, 16, speed=0.45, free=4, units=4)
+        tiny = rank([local, remote], "light", work=5, sync={"mbp": 10})
+        self.assertEqual(first(tiny), "local")
+        free_sync = rank([local, remote], "light", work=5, sync={"mbp": 0.1})
+        self.assertGreater(free_sync["order"][0]["finish"], 0)
+        big = rank([snap("local", 40, 12), remote], "moderate", work=300, sync={"mbp": 10})
+        self.assertEqual(first(big), "mbp")
+
+    def test_batch_work_keeps_off_the_interactive_reserve_but_interactive_does_not(self):
+        local = snap("local", 3, 12, free=3, reserve=2)  # a heavy job (2 units) would leave 1 < reserve
+        remote = snap("mbp", 0, 16, speed=0.45, free=4, units=4)
+        self.assertEqual(first(rank([local, remote], "heavy", latency="batch")), "mbp")
+        self.assertEqual(first(rank([local, remote], "heavy", latency="interactive")), "local")
+        self.assertEqual(first(rank([snap("local", 3, 12, free=6, reserve=2), remote], "heavy", latency="batch")), "local")
+
+    def test_reserve_is_waived_when_the_other_host_is_far_slower_or_absent(self):
+        local = snap("local", 3, 12, free=3, reserve=2)
+        crawling = snap("mbp", 400, 16, speed=0.45, free=4, units=4)
+        self.assertEqual(first(rank([local, crawling], "heavy", latency="batch")), "local")
+        self.assertEqual(first(rank([local], "heavy", latency="batch")), "local")
+        down = snap("mbp", 0, 16, speed=0.45, free=4, units=4, down=True)
+        self.assertEqual(first(rank([local, down], "heavy", latency="batch")), "local")
+
+    def test_batch_waits_rather_than_taking_reserved_units_while_the_other_host_is_merely_full(self):
+        local = snap("local", 3, 12, free=3, reserve=2)
+        full = snap("mbp", 0, 16, speed=0.45, free=0, units=4)
+        r = rank([local, full], "heavy", latency="batch")
+        self.assertEqual(r["order"], [])
+        self.assertFalse(r["local_contending"])  # held back, so not ahead of anyone in the local queue
+        self.assertEqual({o["host"]: o["why"] for o in r["options"]}, {"local": "reserved", "mbp": "full"})
+
+    def test_arch_pin_only_allows_matching_hosts_even_if_slower(self):
+        local, remote = snap("local", 0, 12), snap("mbp", 50, 16, speed=0.45, free=4, units=4, arch="x86_64")
+        self.assertEqual(first(rank([local, remote], arch="x86_64")), "mbp")
+        self.assertEqual(first(rank([local, remote], arch="arm64")), "local")
+        r = rank([local, remote], arch="x86_64")
+        self.assertEqual({o["host"]: o["why"] for o in r["options"]}, {"local": "arch", "mbp": None})
+        self.assertFalse(r["local_contending"])  # a job pinned elsewhere must not hold up the local queue
+
+    def test_measurement_window_and_unreachable_hosts_are_skipped_not_global(self):
+        local = snap("local", 0, 12, measuring={"reason": "bench"})
+        remote = snap("mbp", 0, 16, speed=0.45, free=4, units=4)
+        self.assertEqual(first(rank([local, remote])), "mbp")
+        self.assertEqual(first(rank([snap("local", 0, 12), snap("mbp", 0, 16, down=True, free=4, units=4)])), "local")
+        both = rank([local, snap("mbp", 0, 16, free=4, units=4, measuring={"reason": "x"})])
+        self.assertEqual(both["order"], [])
+        ignored = C.rank_hosts({"class": "moderate", "latency": "interactive", "arch": "any", "work": 60, "sync": {},
+                                "ignore_measure": True}, [local], C.default_balance())
+        self.assertEqual(first(ignored), "local")
+
+    def test_saturated_hosts_leave_the_job_queued(self):
+        r = rank([snap("local", 0, 12, free=0), snap("mbp", 0, 16, free=0, units=4)], "heavy")
+        self.assertEqual(r["order"], [])
+        self.assertTrue(r["local_contending"])
+
+    def test_recently_started_jobs_count_before_the_load_average_catches_up(self):
+        a, b = snap("local", 5, 12), snap("local", 5, 12, recent=30)
+        self.assertLess(rank([a])["order"][0]["finish"], rank([b])["order"][0]["finish"])
+        remote = snap("mbp", 0, 16, speed=0.45, free=4, units=4)
+        self.assertEqual(first(rank([b, remote], "moderate", work=300)), "mbp")
+
+    def test_max_norm_load_takes_a_host_out(self):
+        loaded = snap("local", 30, 12)
+        loaded["max_norm_load"] = 2.0
+        r = rank([loaded, snap("mbp", 0, 16, speed=0.45, free=4, units=4)])
+        self.assertEqual(first(r), "mbp")
+
+    def test_calibrated_speed_is_used_only_for_auto(self):
+        calib = {"local": {"score": 2000.0}, "mbp": {"score": 900.0}}
+        self.assertEqual(C.resolve_speed({"speed": "auto"}, "mbp", calib), (0.45, "calibrated"))
+        self.assertEqual(C.resolve_speed({"speed": 0.5}, "mbp", calib), (0.5, "profile"))
+        self.assertEqual(C.resolve_speed({"speed": "auto"}, "mbp", {})[0], 1.0)
+
+    def test_recent_threads_decay_over_the_window(self):
+        now = time.time()
+        bal = C.default_balance()
+        fresh = C.recent_threads([{"threads": 10, "start": now}], bal, now)
+        older = C.recent_threads([{"threads": 10, "start": now - 45}], bal, now)
+        gone = C.recent_threads([{"threads": 10, "start": now - 200}], bal, now)
+        self.assertAlmostEqual(fresh, 10, places=1)
+        self.assertAlmostEqual(older, 5, places=1)
+        self.assertEqual(gone, 0)
+
+
+@unittest.skipUnless(shutil.which("rsync"), "rsync is required")
+class BalancingTests(ComputeCase):
+    def host_of(self, *extra, cls="moderate"):
+        r = self.compute("run", "--class", cls, *extra, "--", "sh", "-c", "echo $COMPUTE_HOST")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return r.stdout.strip(), r
+
+    def test_auto_sends_the_job_to_the_less_loaded_host_and_logs_why(self):
+        self.set_loads(15, 100)
+        where, r = self.host_of("--sync", str(self.proj))
+        self.assertEqual(where, "local")
+        self.assertIn("placement:", r.stderr)
+        self.set_loads(80, 0)
+        where, _ = self.host_of("--sync", str(self.proj))
+        self.assertEqual(where, HOST)
+        status = self.compute("status").stdout
+        self.assertIn("recent placements", status)
+        self.assertIn("-> builder", status)
+
+    def test_batch_leaves_the_local_reserve_free_for_interactive_work(self):
+        self.write_profile({"local": {"slots": {"shared": 4}, "interactive_reserve": 2},
+                            "hosts": {HOST: {"python": sys.executable, "speed": 0.45, "slots": {"shared": 4}}},
+                            "default_host": HOST})
+        holder = self.popen("run", "--class", "moderate", "--", "sleep", "3")
+        time.sleep(0.8)  # 3 of 4 units free; a heavy job would take 2 and leave 1 < reserve
+        where, _ = self.host_of("--sync", str(self.proj), cls="heavy")
+        self.assertEqual(where, HOST)
+        where, _ = self.host_of("--sync", str(self.proj), "--latency", "interactive", cls="heavy")
+        self.assertEqual(where, "local")
+        holder.wait(timeout=10)
+
+    def test_arch_pins_hosts_for_every_class_and_needs_sync_to_leave_local(self):
+        self.assertEqual(self.host_of("--sync", str(self.proj), "--arch", "x86_64")[0], HOST)
+        self.assertEqual(self.host_of("--sync", str(self.proj), "--arch", "x86_64", cls="light")[0], HOST)
+        self.assertEqual(self.host_of("--sync", str(self.proj), "--arch", "arm64")[0], "local")
+        self.assertEqual(self.host_of("--where", HOST, "--sync", str(self.proj), "--arch", "x86_64")[0], HOST)
+        r = self.compute("run", "--class", "moderate", "--arch", "x86_64", "--", "true")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("--sync", r.stderr)
+        r = self.compute("run", "--class", "moderate", "--where", HOST, "--sync", str(self.proj), "--arch", "arm64", "--", "true")
+        self.assertEqual(r.returncode, 2)
+
+    def test_a_job_pinned_elsewhere_does_not_hold_up_the_local_queue(self):
+        holder = self.popen("run", "--class", "heavy", "--", "sleep", "3")
+        time.sleep(0.8)
+        remote_job = self.popen("run", "--class", "heavy", "--sync", str(self.proj), "--arch", "x86_64", "--", "sleep", "5")
+        time.sleep(1.5)
+        t0 = time.time()
+        y = self.compute("run", "--class", "heavy", "--", "echo", "y", timeout=30)
+        self.assertEqual((y.returncode, y.stdout.strip()), (0, "y"))
+        self.assertLess(time.time() - t0, 3.5)
+        holder.wait(timeout=10)
+        remote_job.wait(timeout=20)
+
+    def test_local_measurement_drains_one_host_and_auto_uses_the_other(self):
+        self.assertEqual(self.compute("measure", "begin", "--host", "local", "--reason", "m2 bench").returncode, 0)
+        where, _ = self.host_of("--sync", str(self.proj))
+        self.assertEqual(where, HOST)
+        # without --sync there is nowhere else to go, so the job waits for the window
+        q = self.popen("run", "--class", "moderate", "--", "echo", "after")
+        time.sleep(1)
+        self.assertIsNone(q.poll())
+        self.compute("measure", "end", "--host", "local")
+        out, err = q.communicate(timeout=15)
+        self.assertIn("after", out)
+        self.assertIn("measurement window", err)
+
+    def test_measure_wait_and_status_see_locks_from_pools_the_profile_no_longer_defines(self):
+        slots = self.state / "slots"
+        slots.mkdir()
+        (slots / "heavy.0.info").write_text(json.dumps({"id": "old", "class": "heavy", "project": "p", "pid": 1,
+                                                        "start": time.time(), "cmd": "old job"}))
+        code = ("import fcntl,os,sys,time;fd=os.open(sys.argv[1],os.O_CREAT|os.O_RDWR);"
+                "fcntl.flock(fd,fcntl.LOCK_EX);print('held',flush=True);time.sleep(30)")
+        holder = subprocess.Popen([sys.executable, "-c", code, str(slots / "heavy.0.lock")], stdout=subprocess.PIPE, text=True)
+        self.procs.append(holder)
+        holder.stdout.readline()
+        status = json.loads(self.compute("status", "--json").stdout)
+        self.assertEqual(len([h for h in status["local"]["pools"]["heavy"]["holders"] if h]), 1)
+        r = self.compute("measure", "begin", "--host", "local", "--wait", "2")
+        self.assertNotIn("host drained", r.stdout)
+        self.assertEqual(r.returncode, 3)
+        self.compute("measure", "end", "--host", "local")
+
+    def test_balance_lists_per_host_load_and_the_placement_it_would_make(self):
+        self.set_loads(15, 100)
+        out = self.compute("balance").stdout
+        self.assertIn("normalized 1.25", out)
+        self.assertIn("normalized 6.25", out)
+        self.assertIn("heavy/batch: local", out)
+        data = json.loads(self.compute("balance", "--json").stdout)
+        self.assertEqual(data["hosts"]["local"]["cpus"], 12)
+        self.assertEqual({p["class"] + "/" + p["latency"]: p["chosen"] for p in data["plan"]}["moderate/interactive"], "local")
+
+    def test_old_pool_format_in_the_profile_fails_with_a_clear_message(self):
+        self.profile.write_text(json.dumps({"compute": {"local": {"slots": {"heavy": 1, "moderate": 2}}}}))
+        r = self.compute("status")
+        self.assertEqual(r.returncode, C.EXIT_BROKER)
+        self.assertIn("old separate heavy/moderate pools", r.stderr)
+
+    def test_calibrate_records_scores_and_auto_speed_uses_them(self):
+        r = self.compute("calibrate", "--seconds", "0.2", timeout=60)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        calib = json.loads((self.state / "calibration.json").read_text())
+        self.assertEqual(sorted(calib), ["builder", "local"])
+        self.write_profile({"local": {"speed": 1.0}, "hosts": {HOST: {"python": sys.executable, "speed": "auto"}},
+                            "default_host": HOST})
+        data = json.loads(self.compute("balance", "--json").stdout)
+        self.assertEqual(data["hosts"][HOST]["speed_source"], "calibrated")
 
 
 if __name__ == "__main__":

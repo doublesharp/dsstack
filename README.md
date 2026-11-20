@@ -141,7 +141,7 @@ python3 skills/ds-resources/scripts/compute.py run --class heavy -- cargo test
 python3 skills/ds-resources/scripts/compute.py status
 ```
 
-`compute.py` gives agents on one machine shared heavy, moderate, and light slots, so concurrent builds queue instead of competing for every core. With a remote host in the resource profile's `compute` section, jobs given `--sync DIR` can overflow to it, and `compute measure` reserves a host for benchmarks. Without a profile it is a local-only scheduler. See the [compute reference](skills/ds-resources/references/compute.md).
+`compute.py` gives agents on one machine shared heavy, moderate, and light slots, so concurrent builds queue instead of competing for every core. With remote hosts in the resource profile's `compute` section, `--where auto` places each job given `--sync DIR` on the host that would finish it soonest, by load, relative speed, CPU architecture, and an interactive or batch hint; `compute balance` shows why, and `compute measure` reserves one host for benchmarks. Without a profile it is a local-only scheduler. See the [compute reference](skills/ds-resources/references/compute.md).
 
 </details>
 

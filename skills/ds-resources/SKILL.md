@@ -21,4 +21,4 @@ When work finishes or a worktree is superseded, reclaim unused task-owned resour
 
 ## Scheduling heavy work
 
-Run heavy builds, tests, fuzzing, and formal verification through the [compute broker](references/compute.md) so agents share slot limits: `python3 <skill>/scripts/compute.py run --class heavy|moderate|light [--sync DIR] -- <command>`, or the host's `compute` wrapper. Pass `-j "$COMPUTE_JOBS"` instead of using every core. Add `--sync DIR` only when the result is architecture-independent (tests, lints, fuzzing, proofs), so a configured remote host can take overflow.
+Run heavy builds, tests, fuzzing, and formal verification through the [compute broker](references/compute.md): `python3 <skill>/scripts/compute.py run --class heavy|moderate|light [--sync DIR] [--arch arm64|x86_64] -- <command>`. The command must use `-j "$COMPUTE_JOBS"`; slots bound CPU only if it does. Add `--sync DIR` when the result is architecture-independent, so it can run on either host. Don't name a host; use `--arch` to require a CPU type.

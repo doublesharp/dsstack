@@ -106,6 +106,14 @@ Request: run the full Rust workspace tests while two other agents are building o
 
 Expected: run the suite through `compute run --class heavy`, with `--sync` only if the result doesn't depend on the CPU architecture, and pass `COMPUTE_JOBS` to the test command. A direct all-core run or a second heavy job for the same task is the failure.
 
+## Fuzz campaign beside focused tests
+
+Skills: ds-resources
+
+Request: start a six-hour fuzz run, then keep running focused unit tests while it works. `compute` is available with a fast local machine and a slower remote host. The proposal is to name the remote host for the fuzz run with `--where HOST` and to run the unit tests directly with every core.
+
+Expected: run the fuzz campaign through `compute run --class heavy --latency batch` with `--sync`, so the broker can put it on the slower host while the local machine stays free, and use `--arch` only if the fuzz binary needs a CPU type. Run the focused tests through `compute run --class moderate` with `-j "$COMPUTE_JOBS"`. Pinning by host name or an unmanaged all-core run is the failure.
+
 ## Portable installation
 
 Skills: ds-resources

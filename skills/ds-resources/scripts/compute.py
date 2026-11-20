@@ -22,6 +22,7 @@ import fcntl
 import hashlib
 import json
 import os
+import platform
 import re
 import select
 import shlex
@@ -39,30 +40,67 @@ NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$")
 SKILL_PROFILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "profiles", "default.json")
 
 
-def default_config() -> dict:
+def normalize_arch(value: str | None) -> str | None:
+    if not value:
+        return None
+    v = value.lower()
+    return {"aarch64": "arm64", "arm64": "arm64", "x86_64": "x86_64", "amd64": "x86_64", "x64": "x86_64"}.get(v, v)
+
+
+def this_arch() -> str:
+    return normalize_arch(platform.machine()) or "unknown"
+
+
+def default_balance() -> dict:
+    return {
+        # Estimated finish time is multiplied by these on the local machine, so ties go local.
+        "local_bias": {"interactive": 0.8, "batch": 0.9},
+        # Seconds of work on an idle speed-1.0 machine, used when --expect is not given.
+        "work_seconds": {"light": 5, "moderate": 60, "heavy": 600},
+        "sync_default_seconds": 10,       # first-time rsync estimate; later runs use the last measured time
+        "cache_seconds": 5,               # how long a remote load sample is reused, across processes
+        "recent_seconds": 90,             # recently started jobs' threads count against load until it catches up
+        "batch_remote_ratio": 6,          # batch work keeps off a host's interactive reserve unless the other host is this much slower
+        "down_seconds": 30,               # skip an unreachable host for this long
+    }
+
+
+def default_machine(entry: dict, local: bool = False) -> dict:
+    """Capacity of one machine. Units are a pool; a heavy job takes 2, moderate 1, so the default is one heavy or two moderate."""
     cpus = os.cpu_count() or 4
+    base = {
+        "slots": {"shared": 2 * max(1, cpus // 4)} if local else {"shared": 2},
+        "classes": {"heavy": ["shared", 2], "moderate": ["shared", 1]},
+        "jobs": ({"heavy": max(2, cpus - 2), "moderate": max(2, cpus // 3), "light": 2} if local
+                 else {"heavy": 8, "moderate": 4, "light": 2}),
+        "speed": 1.0,           # relative per-logical-CPU speed; a number, or "auto" to use `compute calibrate`
+        "arch": None,           # arm64 | x86_64; local defaults to this machine, remotes to what the host reports
+        "max_norm_load": None,  # optional: skip the machine above this load average / CPUs
+        "interactive_reserve": 0,  # units batch jobs leave free for latency-sensitive ones
+    }
+    base.update(entry)
+    return base
+
+
+def default_config() -> dict:
     return {
         "state": None,
         "default_host": None,
         "hosts": {},
-        "local": {
-            "slots": {"heavy": 1, "moderate": 2},
-            "jobs": {"heavy": cpus, "moderate": max(2, cpus // 3), "light": 2},
-        },
+        "local": default_machine({}, local=True),
+        "balance": default_balance(),
         "poll_seconds": 0.5,
         "remote_poll_seconds": 5,
     }
 
 
 def default_host(entry: dict) -> dict:
-    """Remote defaults: one shared pool where heavy takes the whole host and moderate takes half."""
-    base = {
+    base = default_machine({}, local=False)
+    base.update({
         "ssh": None, "python": "python3", "root": "~/compute", "env_dir": None,
-        "slots": {"shared": 2}, "classes": {"heavy": ["shared", 2], "moderate": ["shared", 1]},
-        "jobs": {"heavy": 8, "moderate": 4, "light": 2},
         "measure_marker": "~/compute/MEASURING", "path_prepend": ["~/.cargo/bin"],
         "busy_pattern": "Runner.Worker", "pause_commands": [], "resume_commands": [],
-    }
+    })
     base.update(entry)
     base["ssh"] = base["ssh"] or entry.get("name")
     return base
@@ -95,6 +133,26 @@ def _profile_path() -> str:
     return os.environ.get("COMPUTE_PROFILE") or SKILL_PROFILE
 
 
+def check_machine(where: str, m: dict, path: str) -> None:
+    """Reject the pre-balancing profile format and malformed capacity settings with a message that says what to change."""
+    slots, classes = m["slots"], m["classes"]
+    if not isinstance(slots, dict) or not all(isinstance(v, int) and v > 0 for v in slots.values()):
+        die(f"profile {path}: {where}.slots must map pool names to positive integers")
+    if set(slots) & {"heavy", "moderate"} and any(isinstance(sp, list) and sp and sp[0] not in slots for sp in classes.values()):
+        die(f"profile {path}: {where}.slots uses the old separate heavy/moderate pools; use "
+            f'slots {{"shared": N}} with classes {{"heavy": ["shared", 2], "moderate": ["shared", 1]}} (units, not jobs)')
+    for cls, spec in classes.items():
+        if cls not in CLASSES or not (isinstance(spec, list) and len(spec) == 2 and spec[0] in slots and isinstance(spec[1], int)):
+            die(f"profile {path}: {where}.classes[{cls!r}] must be [pool, units] naming a pool in {where}.slots")
+    sp = m["speed"]
+    if sp != "auto" and (isinstance(sp, bool) or not isinstance(sp, (int, float)) or sp <= 0):
+        die(f"profile {path}: {where}.speed must be a positive number or \"auto\"")
+    m["arch"] = normalize_arch(m["arch"])
+    if m["max_norm_load"] is not None and not (isinstance(m["max_norm_load"], (int, float)) and m["max_norm_load"] > 0):
+        die(f"profile {path}: {where}.max_norm_load must be a positive number")
+    m["pools"], m["class_pool"] = slots, classes
+
+
 def load_config() -> dict:
     """Defaults, overlaid by the `compute` section of the resource profile."""
     cfg = default_config()
@@ -110,27 +168,32 @@ def load_config() -> dict:
     user = profile.get("compute", {}) if isinstance(profile, dict) else {}
     if not isinstance(user, dict):
         die(f"profile {path}: compute must be an object")
-    allowed = {"state", "default_host", "hosts", "local", "poll_seconds", "remote_poll_seconds"}
+    allowed = {"state", "default_host", "hosts", "local", "balance", "poll_seconds", "remote_poll_seconds"}
     if user.keys() - allowed:
         die(f"profile {path}: unknown compute fields {sorted(user.keys() - allowed)}")
     for key in ("state", "default_host", "poll_seconds", "remote_poll_seconds"):
         if key in user:
             cfg[key] = user[key]
     if "local" in user:
-        for key in ("slots", "jobs"):
-            cfg["local"][key].update(user["local"].get(key, {}))
+        cfg["local"] = default_machine(user["local"], local=True)
+        cfg["local"]["jobs"] = {**default_machine({}, local=True)["jobs"], **user["local"].get("jobs", {})}
+    for key, val in user.get("balance", {}).items():
+        if key not in cfg["balance"]:
+            die(f"profile {path}: unknown balance field {key!r}")
+        cfg["balance"][key] = {**cfg["balance"][key], **val} if isinstance(val, dict) else val
     for name, entry in user.get("hosts", {}).items():
         safe_name(name, "host")
         cfg["hosts"][name] = default_host(dict(entry, name=name))
+        cfg["hosts"][name]["jobs"] = {**default_host({})["jobs"], **entry.get("jobs", {})}
     if cfg["default_host"] is None and len(cfg["hosts"]) == 1:
         cfg["default_host"] = next(iter(cfg["hosts"]))
     if cfg["default_host"] is not None and cfg["default_host"] not in cfg["hosts"]:
         die(f"profile {path}: default_host {cfg['default_host']!r} is not in compute.hosts")
-    for h in cfg["hosts"].values():
-        h["pools"], h["class_pool"] = h["slots"], h["classes"]
+    check_machine("local", cfg["local"], path)
+    cfg["local"]["arch"] = cfg["local"]["arch"] or this_arch()
+    for hname, h in cfg["hosts"].items():
+        check_machine(f"hosts.{hname}", h, path)
         h["env_dir"] = h["env_dir"] or h["root"].rstrip("/") + "/env"
-    cfg["local"]["pools"] = cfg["local"]["slots"]
-    cfg["local"]["class_pool"] = {"heavy": ["heavy", 1], "moderate": ["moderate", 1]}
     cfg["profile_path"] = path
     cfg["scratch"] = profile.get("scratch") if isinstance(profile, dict) else None
     cfg["require_mount"] = profile.get("require_mount", True) if isinstance(profile, dict) else True
@@ -305,21 +368,28 @@ class Pool:
 # --------------------------------------------------------------------------
 
 class Waiter:
-    def __init__(self, root: str, cls: str, info: dict):
-        self.dir = os.path.join(root, "queue", cls)
+    def __init__(self, root: str, pool: str, info: dict):
+        self.dir = os.path.join(root, "queue", pool)
         os.makedirs(self.dir, exist_ok=True)
         self.path = os.path.join(self.dir, f"{time.time_ns():020d}-{os.getpid()}.json")
         self.fd = os.open(self.path, os.O_CREAT | os.O_RDWR, 0o644)
         fcntl.flock(self.fd, fcntl.LOCK_EX)
+        self.info = dict(info)
         atomic_write_fd(self.fd, json.dumps(info))
 
+    def update(self, **fields) -> None:
+        if any(self.info.get(k) != v for k, v in fields.items()):
+            self.info.update(fields)
+            atomic_write_fd(self.fd, json.dumps(self.info))
+
     def ahead(self) -> int:
+        """Earlier live waiters that are really contending for local units (not pinned elsewhere or held back)."""
         n = 0
         for name in sorted(os.listdir(self.dir)):
             full = os.path.join(self.dir, name)
             if full == self.path:
                 return n
-            if waiter_alive(full):
+            if waiter_alive(full) and (read_json(full) or {}).get("contending", True):
                 n += 1
         return n
 
@@ -362,8 +432,8 @@ def waiter_alive(path: str) -> bool:
         os.close(fd)
 
 
-def list_waiters(root: str, cls: str) -> list[dict]:
-    d = os.path.join(root, "queue", cls)
+def list_waiters(root: str, pool: str) -> list[dict]:
+    d = os.path.join(root, "queue", pool)
     out = []
     if not os.path.isdir(d):
         return out
@@ -435,6 +505,32 @@ def _expand(path: str) -> str:
     return os.path.expanduser(path)
 
 
+def machine_facts() -> dict:
+    try:
+        load = os.getloadavg()
+    except OSError:
+        load = (0.0, 0.0, 0.0)
+    return {"load1": load[0], "load5": load[1], "cpus": os.cpu_count() or 1, "arch": this_arch()}
+
+
+def bench(seconds: float = 1.0) -> float:
+    """Single-thread integer/dict/float mix per CPU-second (process time, so a busy host is not penalised for waiting)."""
+    import math
+    start = time.process_time()
+    done, x, acc, table = 0, 1, 0.0, {}
+    while time.process_time() - start < seconds:
+        for i in range(20000):
+            x = (x * 1103515245 + 12345) & 0x7FFFFFFF
+            table[x & 1023] = table.get(x & 1023, 0) + (x % 7)
+            acc += math.sqrt(i + 1)
+        done += 20000
+    return done / max(time.process_time() - start, 1e-6)
+
+
+def remote_bench(req: dict) -> dict:
+    return {"score": bench(float(req.get("seconds", 1.0))), **machine_facts()}
+
+
 def remote_probe(req: dict) -> dict:
     base = _rbase()
     out: dict = {"hash": self_hash(), "home": _rhome(), "pools": {}, "running": []}
@@ -451,6 +547,7 @@ def remote_probe(req: dict) -> dict:
     marker = req.get("marker")
     out["measuring"] = read_json(_expand(marker)) if marker else None
     out["load"] = uptime_line()
+    out.update(machine_facts())
     try:
         ps = subprocess.run(["ps", "-axo", "pid,user,command"], capture_output=True, text=True, timeout=10).stdout
         out["ci_workers"] = [ln.strip()[:160] for ln in ps.splitlines() if pattern and pattern in ln]
@@ -537,7 +634,8 @@ def remote_run(req: dict) -> int:
         if cls != "light":
             pool = Pool(os.path.join(base, "slots"), req["pool"], req["units"])
             info = {"id": job_id, "project": project, "dir": dirname, "class": cls,
-                    "cmd": req.get("cmd", ""), "pid": os.getpid(), "start": time.time(), "host": "remote"}
+                    "cmd": req.get("cmd", ""), "pid": os.getpid(), "start": time.time(), "host": "remote",
+                    "threads": int(req.get("jobs", 1))}
             lease = pool.try_acquire(int(req["weight"]), info, inheritable=False)
             if lease is None:
                 say("BUSY", {"reason": "full", "running": [h for h in pool.holders() if h]})
@@ -638,7 +736,7 @@ def cmd_remote(argv: list[str]) -> int:
     _RROOT[0] = req.get("root", _RROOT[0])
     if sub == "run":
         return remote_run(req)
-    handlers = {"probe": remote_probe, "measure": remote_measure, "result": remote_result, "kill": remote_kill}
+    handlers = {"probe": remote_probe, "bench": remote_bench, "measure": remote_measure, "result": remote_result, "kill": remote_kill}
     if sub in handlers:
         print(json.dumps(handlers[sub](req)))
         return 0
@@ -823,7 +921,11 @@ def run_remote(remote: Remote, ctx: dict, args) -> tuple[str, int, str]:
             ctx["on_ready"]()
         log(f"{ctx['host']}: slot {data.get('slot')} held; syncing")
         if ctx.get("sync_dir"):
+            started = time.time()
             rc = rsync_up(remote, ctx, jobdir)
+            if rc in (0, 23, 24) and ctx.get("state_root"):
+                record_sync(ctx["state_root"], sync_key(ctx["host"], ctx.get("project"), ctx.get("dirname")),
+                            time.time() - started)
             if rc not in (0, 23, 24):
                 proc.stdin.close()
                 proc.wait()
@@ -963,9 +1065,237 @@ def run_local_job(ctx: dict, lease: Lease | None, cfg: dict) -> int:
     return 128 - rc if rc < 0 else rc
 
 
-class Cancelled(Exception):
-    def __init__(self, sig):
-        self.sig = sig
+# --------------------------------------------------------------------------
+# placement: load snapshots and the ranking function
+# --------------------------------------------------------------------------
+
+def unique_jobs(holders) -> list[dict]:
+    seen, out = set(), []
+    for h in holders:
+        if h and (h.get("id") or id(h)) not in seen:
+            seen.add(h.get("id") or id(h))
+            out.append(h)
+    return out
+
+
+def scan_slots(root: str, cfg: dict) -> dict:
+    """Holders of every lock file under slots/, including pools the profile no longer defines (older heavy/moderate locks)."""
+    d = os.path.join(root, "slots")
+    found: dict[str, int] = {}
+    if os.path.isdir(d):
+        for name in os.listdir(d):
+            m = re.match(r"^(.+)\.(\d+)\.lock$", name)
+            if m:
+                found[m.group(1)] = max(found.get(m.group(1), 0), int(m.group(2)) + 1)
+    for pname, units in cfg["local"]["slots"].items():
+        found[pname] = max(found.get(pname, 0), units)
+    return {pname: {"units": units, "holders": Pool(d, pname, units).holders()} for pname, units in sorted(found.items())}
+
+
+def legacy_units(pools: dict, cfg: dict) -> int:
+    """Units held through pools the profile no longer defines, charged by class so they still count against capacity."""
+    used = 0
+    for pname, p in pools.items():
+        if pname in cfg["local"]["slots"]:
+            continue
+        for job in unique_jobs(p["holders"]):
+            used += cfg["local"]["classes"].get(job.get("class", ""), ["", 1])[1]
+    return used
+
+
+def recent_threads(jobs: list[dict], bal: dict, now: float) -> float:
+    """Threads of jobs started a moment ago: the load average has not seen them yet."""
+    window = float(bal["recent_seconds"])
+    return sum(float(j.get("threads", 0)) * max(0.0, 1 - (now - j.get("start", 0)) / window) for j in jobs)
+
+
+def calibration(root: str) -> dict:
+    return read_json(os.path.join(root, "calibration.json")) or {}
+
+
+def resolve_speed(machine: dict, name: str, calib: dict) -> tuple[float, str]:
+    if machine["speed"] != "auto":
+        return float(machine["speed"]), "profile"
+    base, mine = calib.get("local", {}).get("score"), calib.get(name, {}).get("score")
+    if base and mine:
+        return round(mine / base, 3), "calibrated"
+    return 1.0, "default (run `compute calibrate`)"
+
+
+def fake_facts(name: str) -> dict:
+    """Test hook: COMPUTE_FAKE_LOADS='{"local": {"load1": 15, "cpus": 12}}' overrides sampled load, cpus or arch."""
+    raw = os.environ.get("COMPUTE_FAKE_LOADS")
+    return json.loads(raw).get(name, {}) if raw else {}
+
+
+def build_snapshot(name: str, machine: dict, facts: dict, pools: dict, running: list, measuring_marker, cfg: dict,
+                   calib: dict, down: bool = False) -> dict:
+    facts = {**facts, **fake_facts(name)}
+    speed, source = resolve_speed(machine, name, calib)
+    cpus = int(facts.get("cpus") or 1)
+    load1 = float(facts.get("load1") or 0.0)
+    recent = recent_threads(running, cfg["balance"], time.time())
+    eff_load = load1 + recent
+    return {
+        "name": name, "local": name == "local", "down": down, "cpus": cpus, "load1": load1, "recent_threads": round(recent, 2),
+        "norm_load": round(eff_load / cpus, 3), "arch": machine.get("arch") or normalize_arch(facts.get("arch")),
+        "speed": speed, "speed_source": source, "pools": pools, "running": running, "measuring": measuring_marker,
+        "max_norm_load": machine.get("max_norm_load"), "reserve": machine.get("interactive_reserve", 0),
+        "jobs": machine["jobs"], "classes": machine["classes"],
+        "free_cpu_capacity": round(max(0.0, cpus - eff_load) * speed, 2),
+    }
+
+
+def local_snapshot(root: str, cfg: dict) -> dict:
+    pools = scan_slots(root, cfg)
+    running = unique_jobs(h for p in pools.values() for h in p["holders"])
+    view = {}
+    for pname, p in pools.items():
+        if pname in cfg["local"]["slots"]:
+            used = sum(1 for h in p["holders"] if h)
+            view[pname] = {"units": p["units"], "free": max(0, p["units"] - used - legacy_units(pools, cfg))}
+    return build_snapshot("local", cfg["local"], machine_facts(), view, running, measuring(root, "local"), cfg,
+                          calibration(root))
+
+
+def remote_snapshot(cfg: dict, name: str, root: str, remotes: dict, force: bool = False) -> dict:
+    """Probe a remote host, reusing a sample younger than balance.cache_seconds (shared by every process)."""
+    bal = cfg["balance"]
+    os.makedirs(os.path.join(root, "load"), exist_ok=True)
+    cache_path = os.path.join(root, "load", f"{name}.json")
+    cached = read_json(cache_path) or {}
+    now = time.time()
+    data = None
+    if not force and cached.get("down_until", 0) > now:
+        pass
+    elif not force and cached.get("data") and now - cached.get("ts", 0) < float(bal["cache_seconds"]):
+        data = cached["data"]
+    else:
+        remote = remotes.setdefault(name, Remote(cfg, name, root))
+        data = remote.probe()
+        if data is None:
+            atomic_write(cache_path, {"ts": now, "data": None, "down_until": now + float(bal["down_seconds"])})
+        else:
+            atomic_write(cache_path, {"ts": now, "data": data})
+    machine = cfg["hosts"][name]
+    if data is None:
+        return build_snapshot(name, machine, {}, {}, [], measuring(root, name), cfg, calibration(root), down=True)
+    return build_snapshot(name, machine, data, data.get("pools", {}), data.get("running", []),
+                          data.get("measuring") or measuring(root, name), cfg, calibration(root))
+
+
+def forget_sample(root: str, name: str) -> None:
+    try:
+        os.unlink(os.path.join(root, "load", f"{name}.json"))
+    except OSError:
+        pass
+
+
+def sync_key(host: str, project: str | None, dirname: str | None) -> str:
+    return f"{host}|{project}|{dirname}"
+
+
+def record_sync(root: str, key: str, seconds: float) -> None:
+    path = os.path.join(root, "sync-times.json")
+    data = read_json(path) or {}
+    data[key] = round(seconds, 2)
+    atomic_write(path, data)
+
+
+def rank_hosts(job: dict, snaps: list[dict], bal: dict) -> dict:
+    """Pure placement decision.
+
+    job: class, latency (interactive|batch), arch (any|arm64|x86_64), work (seconds on an idle speed-1.0 host),
+         ignore_measure, sync (host -> estimated rsync seconds).
+    Estimated finish = sync + work * max(1, (load + recent starts + job threads) / cpus) / speed. The local machine's
+    estimate is scaled by balance.local_bias, so near-ties stay local. Batch jobs keep off a machine's
+    interactive_reserve while another candidate exists, unless that candidate is balance.batch_remote_ratio times slower.
+    """
+    cls, latency = job["class"], job["latency"]
+    options = []
+    for sn in snaps:
+        pool, weight = sn["classes"].get(cls, [None, 0]) if cls != "light" else (None, 0)
+        free = sn["pools"].get(pool, {}).get("free", 0) if pool else 0
+        threads = sn["jobs"].get(cls, 1)
+        slowdown = max(1.0, (sn["load1"] + sn["recent_threads"] + threads) / sn["cpus"]) / sn["speed"]
+        finish = job["work"] * slowdown + (0 if sn["local"] else job["sync"].get(sn["name"], bal["sync_default_seconds"]))
+        if sn["local"]:
+            finish *= bal["local_bias"][latency]
+        why = None
+        if job["arch"] != "any" and sn["arch"] != job["arch"]:
+            why = "arch"
+        elif sn["down"]:
+            why = "down"
+        elif sn["measuring"] and not job.get("ignore_measure"):
+            why = "measuring"
+        elif sn["max_norm_load"] and sn["norm_load"] > sn["max_norm_load"]:
+            why = "load"
+        elif weight and free < weight:
+            why = "full"
+        held = bool(why in (None, "full") and weight and latency == "batch" and sn["reserve"]
+                    and free - weight < sn["reserve"])
+        options.append({"host": sn["name"], "finish": round(finish, 1), "slowdown": round(slowdown, 3), "why": why,
+                        "held_back": held, "free": free, "weight": weight, "load1": sn["load1"], "cpus": sn["cpus"],
+                        "speed": sn["speed"], "norm_load": sn["norm_load"], "threads": threads})
+    alternatives = [o for o in options if o["why"] in (None, "full") and not o["held_back"]]
+    for o in options:
+        if o["held_back"] and alternatives:
+            best = min(x["finish"] for x in alternatives)
+            if not best > bal["batch_remote_ratio"] * o["finish"]:
+                o["why"] = "reserved"
+    order = sorted((o for o in options if o["why"] is None), key=lambda o: o["finish"])
+    contending = any(o["host"] == "local" and o["why"] in (None, "full") for o in options)
+    return {"order": order, "options": options, "local_contending": contending}
+
+
+def explain(job: dict, ranking: dict, chosen: str) -> str:
+    parts = []
+    for o in sorted(ranking["options"], key=lambda o: o["finish"]):
+        note = "" if o["why"] is None else f" [{o['why']}]"
+        parts.append(f"{o['host']} ~{o['finish']:g}s (load {o['load1']:.1f}/{o['cpus']}, speed {o['speed']:g}, "
+                     f"{o['free']} free units){note}")
+    return f"{job['class']}/{job['latency']} -> {chosen}: " + "; ".join(parts)
+
+
+def record_decision(root: str, entry: dict) -> None:
+    path = os.path.join(root, "placements.jsonl")
+    try:
+        with open(path, "a") as fh:
+            fh.write(json.dumps(entry) + "\n")
+        if os.path.getsize(path) > 64 * 1024:
+            with open(path) as fh:
+                keep = fh.readlines()[-100:]
+            atomic_write(path, "".join(keep))
+    except OSError:
+        pass
+
+
+def recent_decisions(root: str, n: int = 5) -> list[dict]:
+    try:
+        with open(os.path.join(root, "placements.jsonl")) as fh:
+            lines = fh.readlines()[-n:]
+        return [json.loads(x) for x in lines]
+    except (OSError, ValueError):
+        return []
+
+
+def wait_message(job: dict, ranking: dict, running: int, ahead: int) -> str:
+    notes = []
+    for o in ranking["options"]:
+        if o["why"] == "full" and o["host"] == "local":
+            notes.append(f"queued behind {running + ahead} jobs ({running} running, {ahead} waiting)")
+        elif o["why"] == "full":
+            notes.append(f"{o['host']} slots busy")
+        elif o["why"] == "measuring":
+            notes.append("local measurement window active" if o["host"] == "local"
+                         else f"{o['host']} is in a measurement window")
+        elif o["why"] == "down":
+            notes.append(f"{o['host']} unreachable")
+        elif o["why"] == "load":
+            notes.append(f"{o['host']} load too high")
+        elif o["why"] == "reserved":
+            notes.append(f"{o['host']} keeps its interactive reserve free")
+    return "queued: " + "; ".join(notes) if notes else "queued"
 
 
 def cmd_run(args, rest: list[str]) -> int:
@@ -974,21 +1304,32 @@ def cmd_run(args, rest: list[str]) -> int:
     cfg = load_config()
     root = state_root(cfg)
     ensure_state(root, cfg)
+    bal = cfg["balance"]
     cls = args.cls
-    host = args.host or cfg["default_host"]
     where = args.where
     sync_dir = os.path.abspath(args.sync) if args.sync else None
     if sync_dir and not os.path.isdir(sync_dir):
         die(f"--sync {args.sync}: not a directory", 2)
-    if where not in ("auto", "local"):
-        host = where  # an explicit host name; it may run with an empty job dir when no --sync is given
-        if host not in cfg["hosts"]:
-            die(f"unknown host {host!r}; configured: {', '.join(cfg['hosts']) or 'none (local-only)'}", 2)
-    elif where == "auto" and host is None:
-        where = "local"  # no remote host configured: local scheduling only
+    arch = "any" if args.arch == "any" else normalize_arch(args.arch)
+    explicit_host = where if where not in ("auto", "local") else None
+    if explicit_host and explicit_host not in cfg["hosts"]:
+        die(f"unknown host {explicit_host!r}; configured: {', '.join(cfg['hosts']) or 'none (local-only)'}", 2)
+    if explicit_host:
+        allowed = [explicit_host]
+    elif where == "local":
+        allowed = ["local"]
+    else:
+        allowed = ["local"] + (list(cfg["hosts"]) if sync_dir else [])
+    local_ok = arch == "any" or cfg["local"]["arch"] == arch
+    if arch != "any":
+        allowed = [h for h in allowed if (cfg["local"]["arch"] if h == "local" else cfg["hosts"][h]["arch"]) in (arch, None)]
+        if not allowed:
+            hint = "" if sync_dir or explicit_host else " (add --sync DIR so the job can run on another host)"
+            die(f"no eligible host has --arch {arch}{hint}", 2)
     project = dirname = None
     cwd_rel = "."
-    if sync_dir or where not in ("auto", "local"):
+    remote_allowed = [h for h in allowed if h != "local"]
+    if remote_allowed:
         try:
             project, dirname = derive_names(sync_dir or os.getcwd(), args.project, args.name)
         except ValueError as exc:
@@ -1001,32 +1342,26 @@ def cmd_run(args, rest: list[str]) -> int:
     ctx = {
         "id": f"{time.strftime('%Y%m%d-%H%M%S')}-{os.getpid()}", "class": cls, "argv": rest,
         "cmd": " ".join(shlex.quote(a) for a in rest)[:300], "cwd": os.getcwd(), "project": project,
-        "dirname": dirname, "sync_dir": sync_dir, "artifacts": args.artifacts or [], "host": host,
+        "dirname": dirname, "sync_dir": sync_dir, "artifacts": args.artifacts or [], "host": None,
         "cwd_rel": cwd_rel, "includes": args.include or [], "excludes": args.exclude or [],
-        "ignore_measure": args.ignore_measure,
+        "ignore_measure": args.ignore_measure, "state_root": root,
     }
     proj_label = project or os.path.basename(os.getcwd())
-
-    if cls == "light":
+    if cls == "light" and "local" in allowed and local_ok:
         return run_local_job(ctx, None, cfg)
 
-    pool_name, weight = cfg["local"]["class_pool"][cls]
-    pool = Pool(os.path.join(root, "slots"), pool_name, cfg["local"]["pools"][pool_name])
-    remote = Remote(cfg, host, root) if where != "local" else None
-    info = {"id": ctx["id"], "project": proj_label, "class": cls, "cmd": ctx["cmd"], "pid": os.getpid(),
-            "start": time.time(), "host": "local"}
+    latency = args.latency or ("batch" if cls == "heavy" else "interactive")
+    sync_times = read_json(os.path.join(root, "sync-times.json")) or {}
+    job = {"class": cls, "latency": latency, "arch": arch, "ignore_measure": args.ignore_measure,
+           "work": float(args.expect or bal["work_seconds"][cls]),
+           "sync": {h: sync_times.get(sync_key(h, project, dirname), bal["sync_default_seconds"]) for h in remote_allowed}}
+    pool_name, weight = cfg["local"]["classes"].get(cls, [None, 0]) if cls != "light" else (None, 0)
+    pool = Pool(os.path.join(root, "slots"), pool_name, cfg["local"]["slots"][pool_name]) if pool_name else None
+    remotes: dict = {}
     t0 = time.time()
     poll = float(cfg["poll_seconds"])
-    remote_poll = float(cfg["remote_poll_seconds"])
-
-    def local_blocked() -> dict | None:
-        return None if args.ignore_measure else measuring(root, "local")
-
-    explicit_remote = where not in ("auto", "local")
-    waiter = None
-    lease = None
-    last_msg = None  # local queue status line
-    last_remote_msg = None
+    info = {"id": ctx["id"], "project": proj_label, "class": cls, "cmd": ctx["cmd"], "pid": os.getpid(),
+            "start": time.time(), "host": "local", "threads": cfg["local"]["jobs"].get(cls, 1)}
     held = {"waiter": None}
 
     def drop_waiter():  # a job that holds a remote slot must not block the local queue
@@ -1034,100 +1369,110 @@ def cmd_run(args, rest: list[str]) -> int:
             held["waiter"].close()
             held["waiter"] = None
     ctx["on_ready"] = drop_waiter
-    last_remote = 0.0
-    unreachable_warned = False
+    busy_until: dict[str, float] = {}
+    last_msg = None
+    unreachable_warned = set()
+    lease = None
     try:
-        if not explicit_remote:
-            waiter = held["waiter"] = Waiter(root, cls, {"pid": os.getpid(), "project": proj_label, "cmd": ctx["cmd"],
-                                                         "since": time.time(), "class": cls, "id": ctx["id"]})
         while True:
-            if not explicit_remote and held["waiter"] is None:  # remote attempt failed after dropping our place
-                waiter = held["waiter"] = Waiter(root, cls, {"pid": os.getpid(), "project": proj_label, "cmd": ctx["cmd"],
-                                                             "since": time.time(), "class": cls, "id": ctx["id"]})
-            # ---- local attempt (head of queue only, FIFO) ----
-            if not explicit_remote and held["waiter"] and (args.ignore_measure or held["waiter"].ahead() == 0) and not local_blocked():
-                lease = pool.try_acquire(weight, info)
-                if lease and local_blocked():  # window opened between check and take
-                    lease.release()
-                    lease = None
-                if lease:
-                    break
-            # ---- remote attempt ----
-            if where != "local" and sync_dir is not None or explicit_remote:
-                if time.time() - last_remote >= (remote_poll if last_remote else 0):
-                    last_remote = time.time()
-                    use_remote = True
-                    if not explicit_remote:
-                        use_remote = pool_full_or_blocked(pool, weight, local_blocked())
-                    if use_remote:
-                        status, rc, detail = run_remote(remote, ctx, args)
-                        if status == "ran":
-                            drop_waiter()
-                            if detail and rc not in (0,):
-                                log(detail)
-                            return rc
-                        if status == "unreachable":
-                            if not unreachable_warned:
-                                log(f"{host} unreachable ({detail}); using the local queue")
-                                unreachable_warned = True
-                            if explicit_remote and not args.no_fallback:
-                                explicit_remote = False
-                                waiter = held["waiter"] = Waiter(root, cls, {"pid": os.getpid(), "project": proj_label,
-                                                                             "cmd": ctx["cmd"], "since": time.time(), "class": cls})
-                            elif explicit_remote:
-                                die(f"{host} unreachable ({detail}) and --no-fallback given")
-                            where = "local"  # stop retrying a dead host this run
-                        elif status == "error":
-                            die(detail)
-                        elif status == "busy":
-                            msg = {"full": f"{host} slots busy", "measuring": f"{host} is in a measurement window",
-                                   "dirbusy": f"{host}: another job is using this sync dir"}.get(detail, detail)
-                            if msg != last_remote_msg:
-                                log(f"queued: {msg}")
-                                last_remote_msg = msg
-            # ---- status line ----
-            if not explicit_remote:
-                running = sum(1 for h in pool.holders() if h)
+            if "local" in allowed and pool and held["waiter"] is None:
+                held["waiter"] = Waiter(root, pool_name, {"pid": os.getpid(), "project": proj_label, "cmd": ctx["cmd"],
+                                                          "since": time.time(), "class": cls, "weight": weight,
+                                                          "contending": True})
+            snaps = []
+            for h in allowed:
+                if h == "local":
+                    snaps.append(local_snapshot(root, cfg))
+                else:
+                    sn = remote_snapshot(cfg, h, root, remotes)
+                    if busy_until.get(h, 0) > time.time() and sn["pools"].get(cfg["hosts"][h]["classes"].get(cls, [""])[0]):
+                        sn["pools"] = {k: dict(v, free=0) for k, v in sn["pools"].items()}
+                    snaps.append(sn)
+            ranking = rank_hosts(job, snaps, bal)
+            if arch != "any" and all(o["why"] == "arch" for o in ranking["options"]):
+                die(f"no eligible host has --arch {arch}", 2)
+            if explicit_host and any(o["host"] == explicit_host and o["why"] == "down" for o in ranking["options"]):
+                if args.no_fallback or not local_ok:
+                    die(f"{explicit_host} unreachable and no fallback is allowed")
+                if explicit_host not in unreachable_warned:
+                    log(f"{explicit_host} unreachable; using the local queue")
+                    unreachable_warned.add(explicit_host)
+                allowed = ["local"]
+                continue
+            if held["waiter"] is not None:
+                held["waiter"].update(contending=ranking["local_contending"])
+            for opt in ranking["order"]:
+                if opt["host"] == "local":
+                    w = held["waiter"]
+                    if pool is None or w is None or args.ignore_measure or w.ahead() == 0:
+                        lease = pool.try_acquire(weight, info) if pool else None
+                        if lease and not args.ignore_measure and measuring(root, "local"):
+                            lease.release()  # a window opened between the check and the take
+                            lease = None
+                        if lease or pool is None:
+                            chosen = "local"
+                            break
+                    continue
+                ctx["host"] = opt["host"]
+                remote = remotes.setdefault(opt["host"], Remote(cfg, opt["host"], root))
+                status, rc, detail = run_remote(remote, ctx, args)
+                if status == "ran":
+                    drop_waiter()
+                    record_decision(root, {"ts": time.time(), "project": proj_label, "class": cls, "latency": latency,
+                                           "chosen": opt["host"], "why": explain(job, ranking, opt["host"])})
+                    if detail and rc != 0:
+                        log(detail)
+                    return rc
+                if status == "unreachable":
+                    atomic_write(os.path.join(root, "load", f"{opt['host']}.json"),
+                                 {"ts": time.time(), "data": None, "down_until": time.time() + float(bal["down_seconds"])})
+                    if opt["host"] not in unreachable_warned:
+                        log(f"{opt['host']} unreachable ({detail}); considering other hosts")
+                        unreachable_warned.add(opt["host"])
+                elif status == "error":
+                    die(detail)
+                else:  # busy: someone else took the slot after the sample was taken
+                    busy_until[opt["host"]] = time.time() + float(cfg["remote_poll_seconds"])
+            else:
+                running = sum(1 for h in snaps[0]["running"]) if snaps and snaps[0]["local"] else 0
                 ahead = held["waiter"].ahead() if held["waiter"] else 0
-                blocked = local_blocked()
-                msg = ("queued: local measurement window active"
-                       if blocked else f"queued behind {running + ahead} jobs ({running} running, {ahead} waiting)")
+                msg = wait_message(job, ranking, running, ahead)
                 if msg != last_msg:
                     log(msg)
                     last_msg = msg
-            time.sleep(poll)
+                time.sleep(poll)
+                continue
+            break
     except KeyboardInterrupt:
         drop_waiter()
         log("cancelled while queued")
         return 130
-    finally:
-        pass
 
     drop_waiter()
+    if len(ranking["options"]) > 1:
+        log("placement: " + explain(job, ranking, chosen))
+    record_decision(root, {"ts": time.time(), "project": proj_label, "class": cls, "latency": latency,
+                           "chosen": "local", "why": explain(job, ranking, "local")})
     waited = time.time() - t0
-    if waited >= 1:
+    if waited >= 1 and lease:
         log(f"waited {fmt_secs(waited)} for a {cls} slot; running locally ({lease.label})")
     try:
         return run_local_job(ctx, lease, cfg)
     finally:
-        lease.release()
-
-
-def pool_full_or_blocked(pool: Pool, weight: int, blocked) -> bool:
-    return bool(blocked) or pool.free_units() < min(weight, pool.units)
+        if lease:
+            lease.release()
 
 
 # --------------------------------------------------------------------------
-# status / measure
+# status / balance / calibrate / measure
 # --------------------------------------------------------------------------
 
 def local_status(root: str, cfg: dict) -> dict:
     out: dict = {"pools": {}, "queue": {}, "measuring": measuring(root, "local"), "load": uptime_line()}
-    for pname, units in cfg["local"]["pools"].items():
-        holders = Pool(os.path.join(root, "slots"), pname, units).holders()
-        out["pools"][pname] = {"units": units, "holders": holders}
-    for cls in ("heavy", "moderate"):
-        out["queue"][cls] = list_waiters(root, cls)
+    for pname, p in scan_slots(root, cfg).items():
+        out["pools"][pname] = p
+    for pname in cfg["local"]["slots"]:
+        out["queue"][pname] = list_waiters(root, pname)
     return out
 
 
@@ -1138,51 +1483,125 @@ def describe_holder(h: dict) -> str:
     return f"{h.get('class', '?')} {h.get('project', '?')} pid={h.get('pid')} {age}: {h.get('cmd', '')[:80]}"
 
 
+def gather(cfg: dict, root: str) -> dict:
+    local = local_status(root, cfg)
+    snaps = {"local": local_snapshot(root, cfg)}
+    remotes: dict = {}
+    for name in cfg["hosts"]:
+        snaps[name] = remote_snapshot(cfg, name, root, remotes, force=True)
+    return {"local": local, "snapshots": snaps}
+
+
+def plans(cfg: dict, snaps: dict, arch: str = "any") -> list[dict]:
+    bal = cfg["balance"]
+    out = []
+    for cls, latency in (("heavy", "batch"), ("moderate", "interactive"), ("heavy", "interactive")):
+        job = {"class": cls, "latency": latency, "arch": arch, "work": bal["work_seconds"][cls], "sync": {}}
+        ranking = rank_hosts(job, list(snaps.values()), bal)
+        chosen = ranking["order"][0]["host"] if ranking["order"] else None
+        out.append({"class": cls, "latency": latency, "chosen": chosen, "explain": explain(job, ranking, chosen or "(queue)")})
+    return out
+
+
+def print_host(name: str, sn: dict, root: str) -> None:
+    if sn["down"]:
+        print(f"{name}: unreachable over ssh")
+        return
+    pools = ", ".join(f"{pn} {p['units'] - p['free']}/{p['units']} units used" for pn, p in sn["pools"].items())
+    print(f"{name}: load {sn['load1']:.1f} on {sn['cpus']} cpus (normalized {sn['norm_load']:.2f}"
+          f"{', incl. ' + format(sn['recent_threads'], 'g') + ' recent threads' if sn['recent_threads'] else ''}), "
+          f"speed {sn['speed']:g} [{sn['speed_source']}], arch {sn['arch']}")
+    print(f"  effective free capacity {sn['free_cpu_capacity']:g} (free cpus x speed); {pools}")
+    if sn["measuring"]:
+        print(f"  MEASURING: {sn['measuring']}")
+    for j in sn["running"]:
+        print(f"    - {describe_holder(j)} [{j.get('threads', '?')} threads]")
+
+
 def cmd_status(args) -> int:
     cfg = load_config()
     root = state_root(cfg)
     ensure_state(root, cfg)
-    local = local_status(root, cfg)
-    hosts: dict = {}
-    for name in cfg["hosts"]:
-        r = Remote(cfg, name, root)
-        hosts[name] = r.probe()
-        if hosts[name] is None:
-            hosts[name] = {"unreachable": True}
-        hosts[name]["local_marker"] = measuring(root, name)
+    g = gather(cfg, root)
+    local, snaps = g["local"], g["snapshots"]
+    decisions = recent_decisions(root)
     if args.json:
-        print(json.dumps({"local": local, "hosts": hosts}, indent=2))
+        hosts = {}
+        for name in cfg["hosts"]:
+            sn = snaps[name]
+            hosts[name] = {"unreachable": True} if sn["down"] else {
+                **sn, "running": sn["running"], "pools": sn["pools"]}
+            hosts[name]["local_marker"] = measuring(root, name)
+        print(json.dumps({"local": {**local, **{k: v for k, v in snaps["local"].items() if k not in ("pools", "running")}},
+                          "hosts": hosts, "decisions": decisions, "plan": plans(cfg, snaps)}, indent=2))
         return 0
-    print("local (this machine)")
+    print_host("local (this machine)", snaps["local"], root)
     for pname, p in local["pools"].items():
-        used = sum(1 for h in p["holders"] if h)
-        print(f"  {pname}: {used}/{p['units']} slots used")
-        for h in p["holders"]:
-            if h:
-                print(f"    - {describe_holder(h)}")
-    for cls, waiters in local["queue"].items():
+        legacy = "" if pname in cfg["local"]["slots"] else "  (older pool, still held)"
+        for h in unique_jobs(p["holders"]):
+            if not legacy:
+                continue
+            print(f"    - {describe_holder(h)}{legacy}")
+    for pname, waiters in local["queue"].items():
         for w in waiters:
-            print(f"  queued {cls}: {w.get('project')} pid={w.get('pid')} {fmt_secs(time.time() - w.get('since', time.time()))}: {w.get('cmd', '')[:60]}")
-    if local["measuring"]:
-        print(f"  MEASURING: {local['measuring']}")
-    print(f"  load: {local['load']}")
-    for name, st in hosts.items():
-        print(f"{name}")
-        if st.get("unreachable"):
-            print("  unreachable over ssh")
-            if st.get("local_marker"):
-                print(f"  local marker says MEASURING: {st['local_marker']}")
+            print(f"  queued {w.get('class')}: {w.get('project')} pid={w.get('pid')} "
+                  f"{fmt_secs(time.time() - w.get('since', time.time()))}: {w.get('cmd', '')[:60]}")
+    for name in cfg["hosts"]:
+        print_host(name, snaps[name], root)
+        if snaps[name]["down"] and measuring(root, name):
+            print(f"  local marker says MEASURING: {measuring(root, name)}")
+    if decisions:
+        print("recent placements:")
+        for d in decisions:
+            print(f"  {time.strftime('%H:%M:%S', time.localtime(d['ts']))} {d['project']}: {d['why']}")
+    return 0
+
+
+def cmd_balance(args) -> int:
+    cfg = load_config()
+    root = state_root(cfg)
+    ensure_state(root, cfg)
+    g = gather(cfg, root)
+    snaps = g["snapshots"]
+    arch = "any" if args.arch == "any" else normalize_arch(args.arch)
+    result = plans(cfg, snaps, arch)
+    if args.json:
+        print(json.dumps({"hosts": {n: {k: v for k, v in sn.items() if k != "classes"} for n, sn in snaps.items()},
+                          "plan": result, "decisions": recent_decisions(root, 10)}, indent=2))
+        return 0
+    for name, sn in snaps.items():
+        print_host(name if name != "local" else "local (this machine)", sn, root)
+    print("a new portable job would go to:")
+    for r in result:
+        print(f"  {r['class']}/{r['latency']}: {r['chosen'] or 'nowhere yet (queued)'}")
+        print(f"    {r['explain']}")
+    return 0
+
+
+def cmd_calibrate(args) -> int:
+    cfg = load_config()
+    root = state_root(cfg)
+    ensure_state(root, cfg)
+    calib = calibration(root)
+    scores = {"local": {"score": bench(args.seconds), "ts": time.time(), **machine_facts()}}
+    for name in cfg["hosts"]:
+        if args.host and args.host != name:
             continue
-        for pname, p in st["pools"].items():
-            print(f"  {pname}: {p['units'] - p['free']}/{p['units']} units used ")
-        for h in st["running"]:
-            print(f"    - {describe_holder(h)}")
-        if st.get("measuring"):
-            print(f"  MEASURING: {st['measuring']}")
-        elif st.get("local_marker"):
-            print(f"  local marker present but remote marker missing: {st['local_marker']}")
-        print(f"  busy-pattern processes: {len(st.get('ci_workers', []))}")
-        print(f"  load: {st.get('load')}")
+        r = Remote(cfg, name, root)
+        res = r.ensure_helper() and r.call("bench", r.req(seconds=args.seconds), timeout=60 + 3 * args.seconds)
+        if res:
+            scores[name] = {"score": res["score"], "ts": time.time(), "cpus": res["cpus"], "arch": res["arch"]}
+        else:
+            log(f"{name}: unreachable; not calibrated")
+    calib.update(scores)
+    atomic_write(os.path.join(root, "calibration.json"), calib)
+    base = scores["local"]["score"]
+    for name, sc in scores.items():
+        machine = cfg["local"] if name == "local" else cfg["hosts"][name]
+        print(f"{name}: {sc['score'] / 1e6:.2f} M ops/cpu-second, relative speed {sc['score'] / base:.2f} "
+              f"(profile speed: {machine['speed']})")
+    print("A profile speed that is a number always wins; set \"speed\": \"auto\" to use these ratios. "
+          "The benchmark is a pure-Python mix, a rough guide to compile speed.")
     return 0
 
 
@@ -1231,12 +1650,12 @@ def cmd_measure(args) -> int:
 
     def running_jobs() -> tuple[list, list, bool]:
         if is_local:
-            jobs = [h for p in local_status(root, cfg)["pools"].values() for h in p["holders"] if h]
+            jobs = unique_jobs(h for p in local_status(root, cfg)["pools"].values() for h in p["holders"])
             return jobs, [], True
         pr = remote.probe()
         if pr is None:
             return [], [], False
-        return pr["running"], pr["ci_workers"], True
+        return unique_jobs(pr["running"]), pr["ci_workers"], True
 
     if args.action == "sudoers":
         if is_local:
@@ -1270,6 +1689,7 @@ def cmd_measure(args) -> int:
             if not res.get("ok"):
                 die(f"remote marker already exists: {res.get('existing')}. Use --force to take over.")
         atomic_write(local_marker_path(root, host), info)
+        forget_sample(root, host)
         jobs, workers, _ = running_jobs()
         print(f"measurement window open on {host}: new jobs queue; light jobs and --ignore-measure jobs are unaffected")
         if is_local:
@@ -1310,6 +1730,7 @@ def cmd_measure(args) -> int:
             os.unlink(local_marker_path(root, host))
         except FileNotFoundError:
             pass
+        forget_sample(root, host)
         print(f"measurement window closed on {host}")
         if remote:
             if args.resume:
@@ -1350,9 +1771,21 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--include", action="append", help="extra rsync include pattern")
     r.add_argument("--exclude", action="append", help="extra rsync exclude pattern")
     r.add_argument("--ignore-measure", action="store_true", help="run even inside a measurement window")
+    r.add_argument("--arch", default="any", choices=["any", "arm64", "aarch64", "x86_64", "amd64"],
+                   help="only run on a host with this CPU architecture (default any)")
+    r.add_argument("--latency", choices=["interactive", "batch"],
+                   help="interactive: an agent waits on the result, prefer the fastest host (default for moderate and light); "
+                        "batch: long work that may go to the slower host when the fast one is busy (default for heavy)")
+    r.add_argument("--expect", type=float, metavar="SECONDS", help="expected runtime on an idle fast host (placement hint)")
     r.add_argument("--no-fallback", action="store_true", help="fail instead of falling back when the host is unreachable")
     s = sub.add_parser("status", help="slots, queue, measurement windows and load on both Macs")
     s.add_argument("--json", action="store_true")
+    b = sub.add_parser("balance", help="per-host load, running jobs, and where a new job would be placed")
+    b.add_argument("--arch", default="any", choices=["any", "arm64", "aarch64", "x86_64", "amd64"])
+    b.add_argument("--json", action="store_true")
+    c = sub.add_parser("calibrate", help="benchmark each host and report relative per-CPU speed")
+    c.add_argument("--host")
+    c.add_argument("--seconds", type=float, default=1.5)
     m = sub.add_parser("measure", help="exclusive measurement window on a host")
     m.add_argument("action", choices=["begin", "end", "status", "sudoers"])
     m.add_argument("--host", help="a configured host name (default: compute.default_host), or local")
@@ -1377,6 +1810,10 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_run(args, rest)
     if args.cmd == "status":
         return cmd_status(args)
+    if args.cmd == "balance":
+        return cmd_balance(args)
+    if args.cmd == "calibrate":
+        return cmd_calibrate(args)
     return cmd_measure(args)
 
 
