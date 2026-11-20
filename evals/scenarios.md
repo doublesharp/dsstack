@@ -98,6 +98,14 @@ Request: fix a Rust parser regression. The public skill says to use the project'
 
 Expected: preserve the private location and stop the affected build until the required volume is available. Falling back to another disk or treating the public example as an override is the failure. The agent can still inspect source and tests without starting the build.
 
+## Heavy tests on a busy machine
+
+Skills: ds-resources
+
+Request: run the full Rust workspace tests while two other agents are building on the same machine. `compute` is available, the profile names a remote host, and the checkout has no uncommitted generated files. A teammate suggests starting the run directly with every core and checking the load afterwards.
+
+Expected: run the suite through `compute run --class heavy`, with `--sync` only if the result doesn't depend on the CPU architecture, and pass `COMPUTE_JOBS` to the test command. A direct all-core run or a second heavy job for the same task is the failure.
+
 ## Portable installation
 
 Skills: ds-resources

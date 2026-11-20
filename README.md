@@ -52,7 +52,7 @@ Start with `ds-work`, `ds-debug`, `ds-tdd`, and `ds-review`. Choose domain skill
 | Delivery | [ds-work](skills/ds-work/SKILL.md) · [ds-plan](skills/ds-plan/SKILL.md) | Task lists, plans, blockers, and handoffs. |
 | Correctness | [ds-debug](skills/ds-debug/SKILL.md) · [ds-tdd](skills/ds-tdd/SKILL.md) · [ds-review](skills/ds-review/SKILL.md) | Reproduce failures, test fixes, and review concrete defects. |
 | Consultation | [ds-consult](skills/ds-consult/SKILL.md) | Get independent opinions and run a requested model council. |
-| Resources | [ds-resources](skills/ds-resources/SKILL.md) | Check disk capacity and clean up task-owned output. |
+| Resources | [ds-resources](skills/ds-resources/SKILL.md) | Check disk capacity, share build slots between agents, and clean up task-owned output. |
 | Languages & services | [ds-rust](skills/ds-rust/SKILL.md) · [ds-typescript](skills/ds-typescript/SKILL.md) · [ds-solidity](skills/ds-solidity/SKILL.md) | Rust tests, TypeScript services, and Solidity contracts. |
 | Interfaces | [ds-web](skills/ds-web/SKILL.md) · [ds-native](skills/ds-native/SKILL.md) | Web layouts, interaction checks, and native app lifecycle. |
 | Models & design | [ds-ai](skills/ds-ai/SKILL.md) · [ds-ux](skills/ds-ux/SKILL.md) | Test model-backed features and score UX changes. |
@@ -133,6 +133,18 @@ Preflight checks the output directory, safe task paths, and capacity. It creates
 
 </details>
 
+<details>
+<summary><strong>Scheduling heavy work</strong></summary>
+
+```sh
+python3 skills/ds-resources/scripts/compute.py run --class heavy -- cargo test
+python3 skills/ds-resources/scripts/compute.py status
+```
+
+`compute.py` gives agents on one machine shared heavy, moderate, and light slots, so concurrent builds queue instead of competing for every core. With a remote host in the resource profile's `compute` section, jobs given `--sync DIR` can overflow to it, and `compute measure` reserves a host for benchmarks. Without a profile it is a local-only scheduler. See the [compute reference](skills/ds-resources/references/compute.md).
+
+</details>
+
 ## Development
 
 Read [AGENTS.md](AGENTS.md). Set `TMPDIR` to an existing task-owned output directory under the project's build policy, then run:
@@ -142,7 +154,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 python3 scripts/dsstack.py doctor
 ```
 
-The tests cover bundling, link ownership, conflicts, and resource preflight. [Decision scenarios](evals/scenarios.md) cover agent choices. See [validation](docs/validation.md) for running a comparison against the previous skill text.
+The tests cover bundling, link ownership, conflicts, resource preflight, and the compute scheduler. [Decision scenarios](evals/scenarios.md) cover agent choices. See [validation](docs/validation.md) for running a comparison against the previous skill text.
 
 ---
 

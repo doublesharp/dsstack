@@ -28,6 +28,8 @@ For example, a private resource addition can name a build volume, a backed-up wo
 }
 ```
 
+Scheduling settings for `compute` (slot counts, a remote host alias, its job root, environment files, and optional pause commands) go in the same file under a `compute` object, so the bundle carries them and the public source names no host. The [compute reference](../skills/ds-resources/references/compute.md#profile) lists the fields.
+
 `require_mount: false` permits an ordinary directory. Choose values for your machine rather than copying another developer's hardware budget.
 
 Create the policy files you need, then preview and build at a new destination:

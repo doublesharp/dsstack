@@ -15,6 +15,10 @@ python3 <skill>/scripts/preflight.py --project NAME --task ID --expected-gib N
 
 When present, the bundled profile selects the output root and limits. Use `--profile PATH` for an external profile; pass `--scratch PATH` only when no profile selects a root. Preflight validates paths and capacity without creating directories or scheduling builds. Repeat when changed estimates or capacity could alter admission. Report a shortfall; don't lower the configured reserve to fit.
 
-Reuse project output routing; otherwise use the task paths printed by preflight. Use available sccache for supported Rust, C/C++, and CUDA/HIP compilation through the project's wrapper or compiler launcher. Keep shared compiler caches separate from worktree output, give concurrent builds separate targets, and preserve warm artifacts. Respect configured concurrency limits. When enabling or diagnosing caching, compare `sccache --show-stats` before and after a build; configuration alone doesn't prove reuse.
+Reuse project output routing; otherwise use the task paths printed by preflight. Use available sccache for supported Rust, C/C++, and CUDA/HIP compilation through the project's wrapper or compiler launcher. Keep shared compiler caches separate from worktree output, give concurrent builds separate targets, and preserve warm artifacts. Respect configured concurrency limits by running heavy work through `compute` (below). When enabling or diagnosing caching, compare `sccache --show-stats` before and after a build; configuration alone doesn't prove reuse.
 
 When work finishes or a worktree is superseded, reclaim unused task-owned resources using the [cleanup procedure](references/cleanup.md). Preserve active/shared resources, requested deliverables, and unmerged work.
+
+## Scheduling heavy work
+
+Run heavy builds, tests, fuzzing, and formal verification through the [compute broker](references/compute.md) so agents share slot limits: `python3 <skill>/scripts/compute.py run --class heavy|moderate|light [--sync DIR] -- <command>`, or the host's `compute` wrapper. Pass `-j "$COMPUTE_JOBS"` instead of using every core. Add `--sync DIR` only when the result is architecture-independent (tests, lints, fuzzing, proofs), so a configured remote host can take overflow.

@@ -549,7 +549,7 @@ class StackTests(unittest.TestCase):
     def test_profile_validation_rejects_silent_typo_and_invalid_values(self):
         profile = self.base / "profile.json"
         for invalid in ({"reserve_gib": -1}, {"require_mount": "false"}, {"reserve_gib": True},
-                        {"reseve_gib": 10}, [], {"scratch": "relative/path"}):
+                        {"reseve_gib": 10}, [], {"scratch": "relative/path"}, {"compute": []}):
             profile.write_text(json.dumps(invalid))
             with self.subTest(invalid=invalid), self.assertRaises(ds.StackError):
                 resources.load_profile(self.root, profile)
