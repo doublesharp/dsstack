@@ -683,5 +683,131 @@ class BalancingTests(ComputeCase):
         self.assertEqual(data["hosts"][HOST]["speed_source"], "calibrated")
 
 
+class WindowExpiryTests(unittest.TestCase):
+    def sleeper(self):
+        p = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+        self.addCleanup(lambda: (p.kill(), p.wait()))
+        return p
+
+    def test_window_status_covers_owner_liveness_maximum_and_foreign_hosts(self):
+        p = self.sleeper()
+        marker = C.window_info("t", 3600, p.pid)
+        self.assertEqual(C.window_status(marker)["owner"], "alive")
+        self.assertIsNone(C.window_status(marker)["ended"])
+        p.kill()
+        p.wait()
+        gone = C.window_status(marker)
+        self.assertEqual(gone["owner"], "exited")
+        self.assertIn("exited", gone["ended"])
+        late = C.window_info("t", 60, None)
+        self.assertIn("maximum", C.window_status(late, now=time.time() + 120)["ended"])
+        self.assertEqual(C.window_status(late)["owner"], "untracked")
+        foreign = dict(C.window_info("t", 3600, 1), owner_host="some-other-host")
+        st = C.window_status(foreign)
+        self.assertTrue(st["owner"].startswith("unknown"))
+        self.assertIsNone(st["ended"])  # another host's pid cannot be judged, only the maximum applies
+        self.assertIn("maximum", C.window_status(foreign, now=time.time() + 7200)["ended"])
+
+    def test_a_reused_pid_does_not_keep_a_window_alive(self):
+        marker = C.window_info("t", 3600, os.getpid())
+        marker["owner_start"] = "Mon Jan  1 00:00:00 1990"
+        self.assertEqual(C.window_status(marker)["owner"], "exited")
+
+    def test_markers_without_expiry_fields_end_after_the_default_maximum(self):
+        old = {"reason": "legacy", "since": time.time() - C.DEFAULT_WINDOW_SECONDS - 10}
+        self.assertIn("maximum", C.window_status(old)["ended"])
+        self.assertIsNone(C.window_status({"reason": "legacy", "since": time.time()})["ended"])
+
+    def test_durations_need_a_unit(self):
+        self.assertEqual((C.parse_duration("90s"), C.parse_duration("45m"), C.parse_duration("3h")), (90, 2700, 10800))
+        for bad in ("3", "", "h", "-1h", "3 days"):
+            with self.assertRaises(ValueError):
+                C.parse_duration(bad)
+
+
+@unittest.skipUnless(shutil.which("rsync"), "rsync is required")
+class WindowLifecycleTests(ComputeCase):
+    def owner(self):
+        p = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(120)"])
+        self.procs.append(p)
+        return p
+
+    def test_local_window_clears_when_its_owner_exits_and_queued_jobs_proceed(self):
+        owner = self.owner()
+        r = self.compute("measure", "begin", "--host", "local", "--reason", "smoke", "--owner-pid", str(owner.pid))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn(f"pid {owner.pid}", r.stdout)
+        marker = self.state / "measure/local.json"
+        info = json.loads(marker.read_text())
+        self.assertEqual((info["owner_pid"], info["max_seconds"]), (owner.pid, 3 * 3600))
+        q = self.popen("run", "--class", "moderate", "--", "echo", "unblocked")
+        time.sleep(1)
+        self.assertIsNone(q.poll())
+        status = self.compute("measure", "status", "--host", "local").stdout
+        self.assertIn("alive", status)
+        owner.kill()
+        owner.wait()
+        out, err = q.communicate(timeout=15)
+        self.assertIn("unblocked", out)
+        self.assertIn(f"owner pid {owner.pid} exited", err)
+        self.assertFalse(marker.exists())
+
+    def test_remote_window_clears_both_markers_when_its_owner_exits(self):
+        owner = self.owner()
+        self.compute("measure", "begin", "--host", HOST, "--owner-pid", str(owner.pid))
+        remote_marker = self.home / "bench/MEASURING"
+        self.assertTrue(remote_marker.exists())
+        q = self.popen("run", "--class", "moderate", "--where", HOST, "--sync", str(self.proj), "--", "echo", "remote-ok")
+        time.sleep(1.5)
+        self.assertIsNone(q.poll())
+        owner.kill()
+        owner.wait()
+        out, err = q.communicate(timeout=30)
+        self.assertIn("remote-ok", out)
+        self.assertFalse(remote_marker.exists())
+        self.assertFalse((self.state / f"measure/{HOST}.json").exists())
+
+    def test_max_duration_ends_a_window_and_status_reports_it(self):
+        self.assertEqual(self.compute("measure", "begin", "--host", "local", "--max", "2s", "--owner-pid", "none").returncode, 0)
+        status = self.compute("status").stdout
+        self.assertIn("MEASURING", status)
+        self.assertIn("no owner tracked", status)
+        time.sleep(2.5)
+        r = self.compute("run", "--class", "moderate", "--", "echo", "free", timeout=20)
+        self.assertEqual(r.stdout.strip(), "free")
+        self.assertIn("maximum", r.stderr)
+        self.assertFalse((self.state / "measure/local.json").exists())
+
+    def test_begin_replaces_an_ended_window_without_force_and_rejects_a_live_one(self):
+        owner = self.owner()
+        self.assertEqual(self.compute("measure", "begin", "--host", "local", "--owner-pid", str(owner.pid)).returncode, 0)
+        again = self.compute("measure", "begin", "--host", "local")
+        self.assertNotEqual(again.returncode, 0)
+        self.assertIn("alive", again.stderr)
+        owner.kill()
+        owner.wait()
+        fresh = self.compute("measure", "begin", "--host", "local", "--reason", "second", "--owner-pid", "none")
+        self.assertEqual(fresh.returncode, 0, fresh.stderr)
+        self.assertEqual(json.loads((self.state / "measure/local.json").read_text())["reason"], "second")
+        self.compute("measure", "end", "--host", "local")
+
+    def test_a_shell_caller_is_not_tracked_but_a_program_caller_is(self):
+        env = dict(self.env)
+        cmd = f"{sys.executable} {SCRIPT} measure begin --host local; true"  # the trailing command keeps sh as the parent
+        r = subprocess.run(["sh", "-c", cmd], env=env, capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("owner not tracked", r.stderr)
+        self.assertIsNone(json.loads((self.state / "measure/local.json").read_text())["owner_pid"])
+        self.compute("measure", "end", "--host", "local")
+        self.compute("measure", "begin", "--host", "local")  # parent is this test process
+        self.assertEqual(json.loads((self.state / "measure/local.json").read_text())["owner_pid"], os.getpid())
+        self.compute("measure", "end", "--host", "local")
+
+    def test_bad_max_is_a_usage_error(self):
+        r = self.compute("measure", "begin", "--host", "local", "--max", "3")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("unit", r.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

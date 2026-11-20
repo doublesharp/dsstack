@@ -27,6 +27,7 @@ import re
 import select
 import shlex
 import signal
+import socket
 import subprocess
 import sys
 import threading
@@ -453,8 +454,83 @@ def local_marker_path(root: str, host: str) -> str:
     return os.path.join(root, "measure", f"{host}.json")
 
 
+DEFAULT_WINDOW_SECONDS = 3 * 3600
+ONE_SHOT_SHELLS = {"sh", "bash", "zsh", "dash", "fish", "ksh"}
+
+
+def parse_duration(text: str) -> float:
+    m = re.fullmatch(r"(\d+(?:\.\d+)?)([smh])", text.strip())
+    if not m:
+        raise ValueError(f"duration {text!r} needs a unit: 90s, 45m or 3h")
+    return float(m.group(1)) * {"s": 1, "m": 60, "h": 3600}[m.group(2)]
+
+
+def proc_start(pid) -> str | None:
+    """Start time of a process, to tell it from a later process that reused the pid."""
+    try:
+        out = subprocess.run(["ps", "-o", "lstart=", "-p", str(int(pid))], capture_output=True, text=True, timeout=5)
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        return None
+    return out.stdout.strip() or None
+
+
+def proc_name(pid) -> str:
+    try:
+        out = subprocess.run(["ps", "-o", "comm=", "-p", str(int(pid))], capture_output=True, text=True, timeout=5)
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        return ""
+    return os.path.basename(out.stdout.strip()).lstrip("-")
+
+
+def window_info(reason: str, max_seconds: float, owner_pid) -> dict:
+    now = time.time()
+    return {"reason": reason, "since": now, "since_human": time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime(now)),
+            "by": os.environ.get("USER", ""), "owner_host": socket.gethostname(), "owner_pid": owner_pid,
+            "owner_start": proc_start(owner_pid) if owner_pid else None, "max_seconds": max_seconds,
+            "expires": now + max_seconds}
+
+
+def window_status(marker: dict, now: float | None = None, check_owner: bool = True) -> dict:
+    """Is a measurement window still in force? The owner's pid is checked only on the host it was recorded on;
+    elsewhere, or when no owner was recorded, only the maximum duration applies."""
+    now = now or time.time()
+    expires = marker.get("expires") or (marker.get("since", now) + DEFAULT_WINDOW_SECONDS)
+    pid, owner = marker.get("owner_pid"), "untracked"
+    if pid and marker.get("owner_host") == socket.gethostname() and check_owner:
+        start = marker.get("owner_start")
+        owner = "alive" if pid_alive(pid) and (not start or proc_start(pid) == start) else "exited"
+    elif pid:
+        owner = "unknown (owner is on another host)"
+    status = {"owner": owner, "remaining": expires - now, "ended": None}
+    if owner == "exited":
+        status["ended"] = f"owner pid {pid} exited"
+    elif now > expires:
+        status["ended"] = f"past its {fmt_secs(marker.get('max_seconds') or DEFAULT_WINDOW_SECONDS)} maximum"
+    return status
+
+
+def describe_window(marker: dict) -> str:
+    st = window_status(marker)
+    owner = f"pid {marker.get('owner_pid')} on {marker.get('owner_host')}: {st['owner']}" if marker.get("owner_pid") else "no owner tracked"
+    return (f"\"{marker.get('reason', '')}\" since {marker.get('since_human', '?')}, owner {owner}, "
+            f"{'ends in ' + fmt_secs(st['remaining']) if st['remaining'] > 0 else 'past its maximum'}")
+
+
 def measuring(root: str, host: str) -> dict | None:
-    return read_json(local_marker_path(root, host))
+    """The host's window marker, or None. A window whose owner is gone or that outlived its maximum is cleared here."""
+    marker = read_json(local_marker_path(root, host))
+    if not marker:
+        return None
+    st = window_status(marker)
+    if st["ended"]:
+        log(f"measurement window on {host} ended ({st['ended']}); markers cleared")
+        try:
+            os.unlink(local_marker_path(root, host))
+        except OSError:
+            pass
+        forget_sample(root, host)
+        return None
+    return marker
 
 
 # --------------------------------------------------------------------------
@@ -642,6 +718,8 @@ def remote_run(req: dict) -> int:
                 return EXIT_BUSY
             marker = req.get("marker")
             mk = read_json(_expand(marker)) if marker else None
+            if mk and window_status(mk, check_owner=False)["ended"]:
+                mk = None  # past its maximum; the client clears the file
             if mk and not req.get("ignore_measure"):
                 say("BUSY", {"reason": "measuring", "marker": mk})
                 return EXIT_MEASURING
@@ -1143,6 +1221,7 @@ def build_snapshot(name: str, machine: dict, facts: dict, pools: dict, running: 
         "max_norm_load": machine.get("max_norm_load"), "reserve": machine.get("interactive_reserve", 0),
         "jobs": machine["jobs"], "classes": machine["classes"],
         "free_cpu_capacity": round(max(0.0, cpus - eff_load) * speed, 2),
+        "window": window_status(measuring_marker) if measuring_marker else None,
     }
 
 
@@ -1180,8 +1259,21 @@ def remote_snapshot(cfg: dict, name: str, root: str, remotes: dict, force: bool 
     machine = cfg["hosts"][name]
     if data is None:
         return build_snapshot(name, machine, {}, {}, [], measuring(root, name), cfg, calibration(root), down=True)
+    marker = data.get("measuring")
+    if marker:
+        ended = window_status(marker)["ended"]
+        if ended:
+            log(f"measurement window on {name} ended ({ended}); clearing its markers")
+            remote = remotes.setdefault(name, Remote(cfg, name, root))
+            remote.call("measure", remote.req(action="end", marker=machine["measure_marker"]))
+            try:
+                os.unlink(local_marker_path(root, name))
+            except OSError:
+                pass
+            forget_sample(root, name)
+            marker = None
     return build_snapshot(name, machine, data, data.get("pools", {}), data.get("running", []),
-                          data.get("measuring") or measuring(root, name), cfg, calibration(root))
+                          marker or measuring(root, name), cfg, calibration(root))
 
 
 def forget_sample(root: str, name: str) -> None:
@@ -1513,7 +1605,7 @@ def print_host(name: str, sn: dict, root: str) -> None:
           f"speed {sn['speed']:g} [{sn['speed_source']}], arch {sn['arch']}")
     print(f"  effective free capacity {sn['free_cpu_capacity']:g} (free cpus x speed); {pools}")
     if sn["measuring"]:
-        print(f"  MEASURING: {sn['measuring']}")
+        print(f"  MEASURING: {describe_window(sn['measuring'])}")
     for j in sn["running"]:
         print(f"    - {describe_holder(j)} [{j.get('threads', '?')} threads]")
 
@@ -1634,6 +1726,24 @@ def print_ci_commands(host_cfg: dict, action: str) -> None:
         print("    ssh {} {}".format(host_cfg["ssh"], shlex.join(c)))
 
 
+def owner_pid(requested: str | None) -> int | None:
+    """The process whose exit ends the window: --owner-pid, else the calling process unless it is a shell
+    (a one-shot shell exits as soon as the command returns, which would end the window at once)."""
+    if requested == "none":
+        return None
+    if requested:
+        try:
+            return int(requested)
+        except ValueError:
+            die("--owner-pid takes a pid or 'none'", 2)
+    parent = os.getppid()
+    if proc_name(parent) in ONE_SHOT_SHELLS:
+        log("owner not tracked (the caller is a shell); the window ends after --max or `measure end`. "
+            "Pass --owner-pid PID of the long-lived process to end it when that exits")
+        return None
+    return parent
+
+
 def cmd_measure(args) -> int:
     cfg = load_config()
     root = state_root(cfg)
@@ -1645,8 +1755,14 @@ def cmd_measure(args) -> int:
         die(f"unknown host {host!r}", 2)
     hcfg = {} if is_local else cfg["hosts"][host]
     remote = None if is_local else Remote(cfg, host, root)
-    info = {"reason": args.reason or "", "owner_pid": os.getppid(), "since": time.time(),
-            "since_human": time.strftime("%Y-%m-%d %H:%M:%S %Z"), "by": os.environ.get("USER", "")}
+    info = None
+    if args.action == "begin":
+        try:
+            max_seconds = parse_duration(args.max) if args.max else DEFAULT_WINDOW_SECONDS
+        except ValueError as exc:
+            die(str(exc), 2)
+        owner = owner_pid(args.owner_pid)
+        info = window_info(args.reason or "", max_seconds, owner)
 
     def running_jobs() -> tuple[list, list, bool]:
         if is_local:
@@ -1666,10 +1782,14 @@ def cmd_measure(args) -> int:
     if args.action == "status":
         marker = measuring(root, host)
         jobs, workers, reachable = running_jobs()
-        print(f"{host}: {'MEASURING ' + json.dumps(marker) if marker else 'no measurement window'}")
+        print(f"{host}: {'MEASURING ' + describe_window(marker) if marker else 'no measurement window'}")
         if not is_local:
             pr = remote.probe()
-            print(f"  remote marker: {pr['measuring'] if pr else 'unreachable'}")
+            if pr and pr["measuring"] and not marker:
+                ended = window_status(pr["measuring"])["ended"]
+                print(f"  remote marker only: {describe_window(pr['measuring'])}" + (f" (ended: {ended})" if ended else ""))
+            elif not pr:
+                print("  remote marker: unreachable")
         print(f"  running broker jobs: {len(jobs)}" + ("" if reachable else " (host unreachable)"))
         for j in jobs:
             print(f"    - {describe_holder(j)}")
@@ -1680,18 +1800,24 @@ def cmd_measure(args) -> int:
     if args.action == "begin":
         existing = measuring(root, host)
         if existing and not args.force:
-            die(f"{host} already has a measurement window: {existing}. Use `compute measure end` or --force.")
+            die(f"{host} already has a measurement window: {describe_window(existing)}. "
+                "Use `compute measure end` or --force.")
         if remote:
             res = remote.ensure_helper() and remote.call(
                 "measure", remote.req(action="begin", marker=hcfg["measure_marker"], info=info, force=args.force))
             if not res:
                 die(f"cannot reach {host}; no marker written. Retry when ssh works.")
-            if not res.get("ok"):
-                die(f"remote marker already exists: {res.get('existing')}. Use --force to take over.")
+            if not res.get("ok") and window_status(res.get("existing", {}))["ended"]:
+                log(f"replacing an ended window on {host} ({window_status(res['existing'])['ended']})")
+                res = remote.call("measure", remote.req(action="begin", marker=hcfg["measure_marker"], info=info, force=True))
+            if not res or not res.get("ok"):
+                die(f"remote marker already exists: {describe_window(res['existing'])}. Use --force to take over.")
         atomic_write(local_marker_path(root, host), info)
         forget_sample(root, host)
         jobs, workers, _ = running_jobs()
         print(f"measurement window open on {host}: new jobs queue; light jobs and --ignore-measure jobs are unaffected")
+        print(f"  ends after {fmt_secs(info['max_seconds'])}" + (f" or when pid {info['owner_pid']} exits"
+                                                              if info["owner_pid"] else ""))
         if is_local:
             print("local heavy and moderate jobs now queue until `compute measure end --host local`")
         print(f"running broker jobs to drain: {len(jobs)}")
@@ -1791,6 +1917,9 @@ def build_parser() -> argparse.ArgumentParser:
     m.add_argument("--host", help="a configured host name (default: compute.default_host), or local")
     m.add_argument("--reason")
     m.add_argument("--wait", type=int, metavar="SECONDS", help="begin: wait for running jobs to drain")
+    m.add_argument("--max", metavar="DURATION", help="begin: longest the window may last, e.g. 90m or 3h (default 3h)")
+    m.add_argument("--owner-pid", metavar="PID",
+                   help="begin: the window ends when this process exits (default: the caller unless it is a shell; 'none' to disable)")
     m.add_argument("--force", action="store_true")
     m.add_argument("--pause", action="store_true", help="begin: run the host's configured pause commands (sudo -n only)")
     m.add_argument("--resume", action="store_true", help="end: run the host's configured resume commands (sudo -n only)")
