@@ -7,4 +7,10 @@ At completion, cancellation, or replacement, identify resources this task create
 - **Docker:** stop and remove task-owned containers and networks. Remove unused task images and disposable task volumes only after confirming no running or retained workload needs them. Do not run global prune commands or remove persistent user data.
 - **Local AI:** stop task-started model servers or unload idle task models. Remove task-only downloads, inference caches, and generated datasets when unused; preserve shared model libraries and user-selected models.
 
-Use scoped removal commands through the host-authorized execution route. Check reclaimed space when disk pressure motivated cleanup. State any resource retained because it is still needed.
+## Projects not in regular use
+
+Warm builds, installed dependencies, and project caches pay off only when the project gets more work. After one-off work in a project, such as a dependency bump or bug fix, decide whether it is in regular use: work on several separate recent days, other sessions or worktrees with work in progress, or the user's stated plans. Missing or unreadable evidence means regular use.
+
+If the user or host instructions authorize putting idle projects away, then once the work is merged or saved, also remove the project's regenerable output: builds, installed dependencies, project-only caches, and temporary files. Keep source, lockfiles, persistent data, unique diagnostics, and caches shared with other projects. State the decision and its evidence in the handoff.
+
+Use scoped removal commands. Check reclaimed space when disk pressure motivated cleanup, and state any resource retained because it is still needed.
