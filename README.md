@@ -52,7 +52,7 @@ Start with `ds-work`, `ds-debug`, `ds-tdd`, and `ds-review`. Choose domain skill
 | Delivery | [ds-work](skills/ds-work/SKILL.md) · [ds-plan](skills/ds-plan/SKILL.md) | Task lists, plans, blockers, and handoffs. |
 | Correctness | [ds-debug](skills/ds-debug/SKILL.md) · [ds-tdd](skills/ds-tdd/SKILL.md) · [ds-review](skills/ds-review/SKILL.md) | Reproduce failures, test fixes, and review concrete defects. |
 | Consultation | [ds-consult](skills/ds-consult/SKILL.md) | Get independent opinions and run a requested model council. |
-| Resources | [ds-resources](skills/ds-resources/SKILL.md) | Check disk capacity and clean up task-owned output. |
+| Resources | [ds-resources](skills/ds-resources/SKILL.md) | Check disk capacity, schedule shared builds, and clean up task-owned output. |
 | Languages & services | [ds-rust](skills/ds-rust/SKILL.md) · [ds-typescript](skills/ds-typescript/SKILL.md) · [ds-solidity](skills/ds-solidity/SKILL.md) | Rust tests, TypeScript services, and Solidity contracts. |
 | Authentication | [ds-auth](skills/ds-auth/SKILL.md) | Passkey-first accounts, privileged access, recovery, sessions, and scoped client grants. |
 | Interfaces | [ds-web](skills/ds-web/SKILL.md) · [ds-native](skills/ds-native/SKILL.md) | Web layouts, interaction checks, and native app lifecycle. |
@@ -109,6 +109,8 @@ The bundler appends private rules to the relevant `SKILL.md` files. Use global o
 <summary><strong>Updating an installation</strong></summary>
 
 Build at a new bundle path and compare it with the active bundle. Preview uninstalling the old bundle and installing the new one, then apply the switch. Uninstall removes only that bundle's owned links; retain the previous bundle for rollback.
+
+Pass `--compare <active-bundle>` to `bundle` to see which skill files the candidate would drop. The assembled `BUNDLE.json` records the source revision, working tree status, and selected optional skills. Check each host's installed links after the switch, including any optional skill installed separately.
 
 An in-checkout bundle must be under ignored, untracked `.local/`; external destinations also work. Direct installation from source is supported for development and makes source edits live immediately.
 

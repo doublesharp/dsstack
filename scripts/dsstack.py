@@ -228,6 +228,14 @@ def doctor(root, destination=None):
             if "$" + skill["name"] not in ui_text:
                 errors.append(f"{skill['name']}: UI prompt must name the skill")
     errors.extend(_scenario_errors(root, {skill["name"] for skill in skills}))
+    resources = Path(root) / "skills/ds-resources"
+    profile = resources / "profiles/default.json"
+    if profile.is_file():
+        try:
+            if "compute" in _resources.load_profile(resources, profile):
+                _check_compute_profile(resources, profile)
+        except (StackError, OSError, ValueError) as exc:
+            errors.append(str(exc))
     if destination is not None:
         for item in plan_install(root, destination):
             if item["action"] != "keep":
@@ -252,6 +260,55 @@ def _copy_inputs(root, skills):
             if child.is_symlink() or not (child.is_file() or child.is_dir()):
                 raise StackError(f"Bundle inputs must be regular files or directories: {child}")
     return inputs
+
+
+def _check_compute_profile(resources, profile):
+    broker = resources / "scripts/compute.py"
+    if not broker.is_file():
+        raise StackError("A compute profile requires ds-resources/scripts/compute.py")
+    checked = subprocess.run([sys.executable, "-B", str(broker), "check-profile", str(profile)],
+                             capture_output=True, text=True)
+    if checked.returncode:
+        raise StackError(f"Invalid compute profile {profile}: {checked.stderr.strip() or checked.stdout.strip()}")
+
+
+def _bundle_target(name):
+    path = Path(name)
+    if path.parts[0] == "optional-skills":
+        return Path("skills") / path.name
+    return path
+
+
+def _removed_skill_files(root, inputs, profile, compare):
+    previous = Path(compare).expanduser().resolve() / "skills"
+    if not previous.is_dir():
+        raise StackError(f"Expected a bundle skills directory: {previous}")
+    candidate = set()
+    for name in inputs:
+        target = _bundle_target(name)
+        if target.parts[0] != "skills":
+            continue
+        source = root / name
+        candidate.update(target / path.relative_to(source) for path in source.rglob("*") if path.is_file())
+    if profile is not None:
+        candidate.add(Path("skills/ds-resources/profiles/default.json"))
+    previous_files = {path.relative_to(previous.parent) for path in previous.rglob("*") if path.is_file()}
+    return sorted(path.as_posix() for path in previous_files - candidate)
+
+
+def _source_provenance(root):
+    revision = subprocess.run(["git", "rev-parse", "--show-toplevel", "HEAD"], cwd=root,
+                              capture_output=True, text=True)
+    if revision.returncode:
+        return {"revision": None, "dirty": None}
+    toplevel, commit = revision.stdout.splitlines()
+    if Path(toplevel).resolve() != root:
+        return {"revision": None, "dirty": None}
+    status = subprocess.run(["git", "--no-optional-locks", "status", "--porcelain", "--untracked-files=normal"],
+                            cwd=root, capture_output=True, text=True)
+    if status.returncode:
+        raise StackError(f"Unable to check source status: {status.stderr.strip()}")
+    return {"revision": commit, "dirty": bool(status.stdout)}
 
 
 def _local_policy(local, names):
@@ -299,7 +356,7 @@ def _check_bundle_destination(root, destination):
         raise StackError("Add /.local/ to .gitignore and untrack any .local/ files before bundling there")
 
 
-def bundle(root, destination, local=None, apply=False, include_optional=()):
+def bundle(root, destination, local=None, apply=False, include_optional=(), compare=None):
     """Preview or create a new frozen stack, without touching installed skills."""
     root = Path(root).resolve()
     destination = Path(destination).expanduser().absolute()
@@ -312,21 +369,25 @@ def bundle(root, destination, local=None, apply=False, include_optional=()):
     additions, profile = _local_policy(local, names)
     if profile is not None and "ds-resources" not in names:
         raise StackError("Private resource profile requires ds-resources in the bundle")
+    if profile is not None and "compute" in profile:
+        _check_compute_profile(root / "skills/ds-resources", Path(local).expanduser() / "resource-profile.json")
     check = doctor(root)
     if not check["ok"]:
         raise StackError("; ".join(check["errors"]))
     result = {"ok": True, "destination": str(destination), "skills": len(skills),
               "customized_skills": sorted(additions), "resource_profile": profile is not None,
               "applied": apply}
+    if compare is not None:
+        result["removed_skill_files"] = _removed_skill_files(root, inputs, profile, compare)
+    manifest = {"source": _source_provenance(root), "optional_skills": sorted(include_optional)}
+    result["source"] = manifest["source"]
     if not apply:
         return result
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.mkdir(mode=0o700)  # Exclusive creation; never replace an existing bundle.
     try:
         for name in inputs:
-            source, target = root / name, destination / name
-            if Path(name).parts[0] == "optional-skills":
-                target = destination / "skills" / Path(name).name
+            source, target = root / name, destination / _bundle_target(name)
             target.parent.mkdir(parents=True, exist_ok=True)
             if source.is_dir():
                 shutil.copytree(source, target)
@@ -340,6 +401,7 @@ def bundle(root, destination, local=None, apply=False, include_optional=()):
             path = destination / "skills/ds-resources/profiles/default.json"
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(json.dumps(profile, indent=2) + "\n", encoding="utf-8")
+        (destination / "BUNDLE.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
         check = doctor(destination)
         if not check["ok"]:
             raise StackError("; ".join(check["errors"]))
@@ -368,6 +430,8 @@ def main(argv=None):
     frozen = sub.add_parser("bundle", help="Preview a frozen stack with optional private additions")
     frozen.add_argument("--dest", type=Path, required=True)
     frozen.add_argument("--local", type=Path)
+    frozen.add_argument("--compare", type=Path, metavar="OLD_BUNDLE",
+                        help="Report skill files present in the old bundle that the candidate would drop")
     frozen.add_argument("--apply", action="store_true")
     frozen.add_argument("--include-optional", action="append", default=[], metavar="NAME",
                         help="Include an optional skill in this bundle; repeat for several")
@@ -379,7 +443,7 @@ def main(argv=None):
         elif args.command == "doctor":
             result = doctor(root, args.dest)
         elif args.command == "bundle":
-            result = bundle(root, args.dest, args.local, args.apply, args.include_optional)
+            result = bundle(root, args.dest, args.local, args.apply, args.include_optional, args.compare)
         elif args.command == "install":
             result = (install(root, args.dest, args.include_optional) if args.apply
                       else plan_install(root, args.dest, args.include_optional))

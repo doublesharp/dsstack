@@ -47,7 +47,7 @@ def preflight(scratch, project, task, expected_gib=0, reserve_gib=0, warning_gib
 def load_profile(root, override=None):
     path = Path(override).expanduser() if override is not None else Path(root) / "profiles/default.json"
     profile = json.loads(path.read_text(encoding="utf-8")) if override is not None or path.exists() else {}
-    allowed = {"name", "scratch", "reserve_gib", "warning_gib", "require_mount", "recommendations", "notes"}
+    allowed = {"name", "scratch", "reserve_gib", "warning_gib", "require_mount", "recommendations", "notes", "compute"}
     if not isinstance(profile, dict) or profile.keys() - allowed:
         raise StackError(f"Invalid resource profile fields: {path}")
     for key in ("reserve_gib", "warning_gib"):
@@ -56,6 +56,8 @@ def load_profile(root, override=None):
             raise StackError(f"{key} must be finite and non-negative: {path}")
     if not isinstance(profile.get("require_mount", True), bool):
         raise StackError(f"require_mount must be true or false: {path}")
+    if not isinstance(profile.get("compute", {}), dict):
+        raise StackError(f"compute must be an object: {path}")
     if "scratch" in profile:
         value = profile["scratch"]
         if not isinstance(value, str) or not Path(value).expanduser().is_absolute():

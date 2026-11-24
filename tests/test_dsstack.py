@@ -365,6 +365,50 @@ class StackTests(unittest.TestCase):
             ds.bundle(self.root, self.dest, self.local)
         self.assertFalse(self.dest.exists())
 
+    def test_compute_profile_rejects_a_missing_or_incompatible_broker_before_building(self):
+        self.bundle_source()
+        profile_file = self.local / "resource-profile.json"
+        profile = json.loads(profile_file.read_text())
+        profile["compute"] = {"unsupported_setting": True}
+        profile_file.write_text(json.dumps(profile))
+        scripts = self.root / "skills/ds-resources/scripts"
+        (scripts / "compute.py").unlink()
+        with self.assertRaisesRegex(ds.StackError, "compute.py"):
+            ds.bundle(self.root, self.dest, self.local)
+        shutil.copy2(ROOT / "skills/ds-resources/scripts/compute.py", scripts)
+        with self.assertRaisesRegex(ds.StackError, "unsupported_setting"):
+            ds.bundle(self.root, self.dest, self.local)
+        self.assertFalse(self.dest.exists())
+
+    def test_bundle_preview_compares_files_and_keeps_prior_bundle_untouched(self):
+        self.bundle_source()
+        helper = self.root / "skills/ds-one/helper.py"
+        helper.write_text("print('example')\n")
+        previous = self.base / "previous"
+        ds.bundle(self.root, previous, apply=True)
+        helper.unlink()
+        output = io.StringIO()
+        with redirect_stdout(output):
+            code = ds.main(["--stack-root", str(self.root), "bundle", "--dest", str(self.dest),
+                            "--compare", str(previous)])
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(output.getvalue())["removed_skill_files"], ["skills/ds-one/helper.py"])
+        self.assertTrue((previous / "skills/ds-one/helper.py").is_file())
+        self.assertFalse(self.dest.exists())
+
+    def test_bundle_records_the_checkout_revision_and_working_tree_status(self):
+        self.bundle_source()
+        subprocess.run(["git", "init", "--quiet", str(self.root)], check=True)
+        subprocess.run(["git", "add", "."], cwd=self.root, check=True)
+        subprocess.run(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                        "commit", "--quiet", "-m", "Fixture"], cwd=self.root, check=True)
+        revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.root, text=True).strip()
+        self.assertEqual(ds.bundle(self.root, self.dest)["source"], {"revision": revision, "dirty": False})
+        (self.root / "skills/ds-one/helper.py").write_text("print('example')\n")
+        ds.bundle(self.root, self.dest, apply=True)
+        manifest = json.loads((self.dest / "BUNDLE.json").read_text())
+        self.assertEqual(manifest["source"], {"revision": revision, "dirty": True})
+
     def test_bundle_omits_unrelated_root_resource_files(self):
         self.bundle_source()
         (self.root / "profiles").mkdir()
