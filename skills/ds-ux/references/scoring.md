@@ -2,7 +2,7 @@
 
 ## Judge briefs
 
-Give each evaluator its own prior matrix for the retained best, never the other provider's. Ask for both current matrices and an observation for each changed score. Reverse the pair's presentation order between evaluators; current paired observations take precedence over prior ratings.
+Give each evaluator its own prior matrix for the retained best, never another provider's. Ask for both current matrices (previous best and candidate) and an observation for each changed score. Vary the pair's presentation order across evaluators and rotate which provider sees the candidate first across rounds; current paired observations take precedence over prior ratings.
 
 ## Capture conditions
 
@@ -16,19 +16,19 @@ Have each evaluator compare the candidate, previous best, and references in the 
 
 ## Retain the best
 
-For the council scorecard, take the lower of the two category scores in each device/category cell. Calculate device totals and the 70/30 aggregate from this combined matrix, using unrounded values. Do this for both versions. This conservative rule is fixed before baseline scoring; do not switch aggregation methods to make a candidate win.
+For the council scorecard, take the lowest category score across evaluators in each device/category cell. Calculate device totals and the 70/30 aggregate from this combined matrix, using unrounded values. Do this for both versions. This conservative rule is fixed before baseline scoring; do not switch aggregation methods to make a candidate win.
 
 Retain the individual matrices for the acceptance rule below. Missing evidence or an incomplete evaluator response leaves scoring pending; do not invent a verdict or substitute implementation self-scores.
 
 Use each council's paired previous-best/candidate delta to decide progress. Keep the earlier score rows intact. Target checks use the retained best's combined matrix, including the baseline; a rejected candidate cannot satisfy the target. Disagreements feed the next implementation round; do not add debate or tie-break review loops.
 
-The coordinator checks requested competitor rankings as well as the numeric target. Both evaluators score every candidate; a single-model screening score cannot accept work or satisfy the target. If quota prevents the full council, report the blocker and stop within the remaining round budget instead of silently reducing the roster.
+The coordinator checks requested competitor rankings as well as the numeric target. Every council evaluator scores every candidate; a partial or single-model screening score cannot accept work or satisfy the target. If quota prevents the full council, report the blocker and stop within the remaining round budget instead of silently reducing the roster.
 
 Keep a short record of the retained best and each failed hypothesis so the next provider tries a different fix rather than repeating a rejected candidate. Never change the rubric, hide essential content, or weaken journey checks to raise the score.
 
 ## Acceptance
 
-ACCEPT requires a higher unrounded council aggregate, no category/device regression in either evaluator's matrix, both ACCEPT recommendations, passing fast covering checks, and an intact journey and essential content. Missing scoring-device, journey, or covering-check evidence leaves the decision pending. Unavailable stress checks are reported gaps unless required for acceptance by the ask. A regression means REVISE; request a decision only if deliberately pursuing that specific tradeoff.
+ACCEPT requires a higher unrounded council aggregate, no category/device regression in any evaluator's matrix, unanimous ACCEPT recommendations from all council evaluators, passing fast covering checks, and an intact journey and essential content. Missing scoring-device, journey, or covering-check evidence leaves the decision pending. Unavailable stress checks are reported gaps unless required for acceptance by the ask. A regression means REVISE; request a decision only if deliberately pursuing that specific tradeoff.
 
 ## Reporting
 

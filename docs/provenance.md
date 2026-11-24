@@ -109,6 +109,12 @@ The MIT license is retained in [licenses/security-audit-LICENSE](../licenses/sec
 
 ## Updating
 
-The UX rubric, six-round budget, and alternating-provider workflow are author choices maintained in the skill's own references.
+The UX rubric, six-round budget, and rotating-provider workflow are author choices maintained in the skill's own references.
 
 Compare a pinned source's new revision file by file, and keep or revise each adaptation on purpose. Stars and activity don't show that agents finish more work. Don't merge upstream automatically or bring back model-specific instructions that newer guidance retired.
+
+## Authentication design policy
+
+`ds-auth` records the requested passkey-first design across application stacks. It is independently written from the [WebAuthn specification](https://www.w3.org/TR/webauthn-3/), NIST SP 800-63B-4 [authenticators](https://pages.nist.gov/800-63-4/sp800-63b/authenticators/), [assurance](https://pages.nist.gov/800-63-4/sp800-63b/aal/), and [recovery](https://pages.nist.gov/800-63-4/sp800-63b/events/), OWASP [MFA](https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html) and [session](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html) guidance, [OAuth security BCP](https://www.rfc-editor.org/rfc/rfc9700.html), and [MCP authorization](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). No upstream instruction text or implementation is imported.
+
+The profile boundaries, two-key activation rule, recovery promotion defaults, and suggested session limits are design choices. The policy keeps authentication strength separate from enrollment provenance: enrolling a key after restricted recovery cannot manufacture privileged trust. Existing application libraries, local-only products, provider identities, and encryption-key recovery retain their distinct boundaries. The skill and routing example carry the shared policy; project-specific adoption work stays private.

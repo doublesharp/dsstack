@@ -1,4 +1,4 @@
 interface:
   display_name: "DS UX"
-  short_description: "Alternating Codex/Claude UX hill climb with council scoring"
-  default_prompt: "Use $ds-ux to score this interface from 0 to 10, alternate Codex and Claude implementation, and have their council score each update for up to six rounds, stopping at the target or two rounds without improvement."
+  short_description: "Rotating Codex/Claude/Gemini 4 Neon (High) UX hill climb with council scoring"
+  default_prompt: "Use $ds-ux to score this interface from 0 to 10, rotate Codex, Claude, and Gemini 4 Neon (High) implementation, and have their council score each update for up to six rounds, stopping at the target or two rounds without improvement."

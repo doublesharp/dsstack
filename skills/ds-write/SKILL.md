@@ -5,17 +5,16 @@ description: "Use when asked to draft or revise prose for README files, document
 
 # Write for the reader
 
-Identify the reader, purpose, format, and voice from the request and surrounding text. Use Oxford commas in lists of three or more items unless the user specifies another style. Match a supplied writing sample's vocabulary, sentence length, and rhythm. For a first draft, use supported source material; for an edit, keep what already works.
+Identify reader, purpose, format, and voice from the request and surrounding text. Use Oxford commas in lists of three or more items unless the user specifies another style. Match a supplied writing sample's vocabulary, sentence length, and rhythm. Use supported source material for drafts; keep what already works in edits.
 
-- Lead with what the reader needs. State what something does and what the reader can do, using familiar words and complete sentences. Make generic passages concrete with supported actions, mechanisms, or examples. When details are missing, use a simpler accurate statement. Cut announced explanations, empty praise, repeated conclusions, and sections with nothing to add.
-- Keep a caveat or contrast when it corrects a plausible misunderstanding of the surrounding text or changes the reader's decision. Put the necessary condition beside the claim it limits and combine repetitions. Cut defenses against objections the reader has not raised, boilerplate disclaimers, and announcements of candor. Describe the thing itself instead of defining it against what it isn't.
-- Use specific dates for deadlines, chronology, or facts whose truth depends on the date. Remove routine "as of" stamps and knowledge-cutoff disclaimers from standalone prose.
-- Inspect paragraphs for repeated openings, forced groups, uniform sentence shapes, and habitual em dashes. Replace habitual dashes with ordinary punctuation or a new sentence. Keep useful formatting, humor, established terms, and real three-item lists; use patterns as inspection prompts, not automatic bans.
-- Preserve facts, quantities, conditions, uncertainty, attribution, and the author's position. Removing a hedge must not strengthen the claim. Do not invent facts, evidence, citations, personal experiences, opinions, or deliberate mistakes to add personality.
-- Preserve code, commands, identifiers, paths, link targets, metadata, and exact quotations unless the task changes them.
+- Lead with what the reader needs. State what something does and what the reader can do, using familiar words, complete sentences, and supported specifics—or a simpler accurate statement when details are missing. Cut empty framing, praise, repeated conclusions, and filler sections.
+- Describe the thing itself instead of defining it against what it isn't. Keep a caveat or contrast only beside the claim it limits, when deleting it would change the claim, its reliability, or the reader's next action. Combine repetitions and cut imagined objections, boilerplate disclaimers, and announcements of candor.
+- Use specific dates for deadlines, chronology, or date-dependent facts. Cut routine "as of" stamps and knowledge-cutoff disclaimers.
+- Inspect paragraphs for repeated openings, forced groups, uniform sentence shapes, and habitual em dashes; replace habitual dashes outside quotes with ordinary punctuation or a new sentence. Keep useful formatting, humor, established terms, and real three-item lists.
+- Preserve facts, quantities, conditions, uncertainty, attribution, the author's position, code, commands, identifiers, paths, link targets, metadata, and exact quotations. Cutting a hedge must not strengthen the claim. Never invent facts, citations, anecdotes, opinions, or deliberate errors.
 
-For a tool that stores client comments and approval history, a direct description is: "Review client comments and see who approved each revision."
+For a tool that stores client comments and approval history, write directly: "Review client comments and see who approved each revision."
 
-Make one revision, then compare it with the source for lost meaning, unsupported additions, awkward phrasing, and a changed voice. Try deleting each remaining disclaimer, contrast, and sentence that tells the reader how to interpret the previous one. Keep it only if deletion changes the claim, its reliability, or the reader's next action. Check for the same empty contrast returning as "rather than," a ", not Y" tail, or two separate sentences. Stop after this meaning check; do not chase detector scores or pattern counts.
+Make one revision, then check it against the source for lost meaning, unsupported additions, awkward phrasing, and voice drift. Test deleting each remaining disclaimer, contrast (including "rather than," ", not Y" tails, or two-sentence splits), and interpretive sentence; keep only those that pass the rule above. Stop after this meaning check; do not chase detector scores.
 
-Return the finished text, or edit the requested file and summarize briefly. Give a critique or before/after analysis only when requested. An audit-only request ends with findings and leaves the text unchanged.
+Return finished text, or edit the file and summarize briefly. Give a critique only when asked; an audit-only request leaves the text unchanged.

@@ -20,7 +20,7 @@ For each device, take the mean of its seven categories. The aggregate is `0.7 ×
 
 The 360px and zoom checks can reveal acceptance-blocking problems but do not add scoring devices. An unavailable stress check alone does not make an observed category unscorable unless the ask requires it for acceptance; report that gap. Do not average “Not evaluated” cells as zero or omit them to manufacture an aggregate. Report partial category observations and leave the overall pending when a scoring device lacks evidence.
 
-Preserve the baseline scope, data, and rubric within each comparison. Carry unchanged scores forward unless new observations justify a correction. Correct an erroneous baseline explicitly and recompute its comparisons; do not count that correction as candidate progress. Each verdict uses its evaluator's matched previous-best/candidate pair. Combine the two matrices using [paired scoring](scoring.md).
+Preserve the baseline scope, data, and rubric within each comparison. Carry unchanged scores forward unless new observations justify a correction. Correct an erroneous baseline explicitly and recompute its comparisons; do not count that correction as candidate progress. Each verdict uses its evaluator's matched previous-best/candidate pair. Combine the evaluators' matrices using [paired scoring](scoring.md).
 
 A task failure, broken keyboard/focus order, or removed essential content blocks acceptance regardless of score. Relate score changes to concrete observations, such as a visible primary action or preserved return state.
 

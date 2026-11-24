@@ -17,3 +17,13 @@ To adopt it, add the block to your host's global instructions file, such as `~/.
 - Add a caveat only when it changes what the reader should do. Keep internal status, test notes, and hedges out of product copy, UI text, and user-facing docs.
 - Once the requested result and required checks are done, hand off in a few lines and stop.
 ```
+
+## Authentication design
+
+For projects that use ds-auth, add this focused routing instruction to the same global instructions or to the project template's AGENTS.md/CLAUDE.md:
+
+```markdown
+When designing a new application's accounts or changing login, factors, recovery, sessions, identity linking, or delegated client access, use the ds-auth skill. Select the relevant policy profiles and record deliberate project-specific exceptions. Local-only applications may need no account.
+```
+
+Keep the policy in the skill; application docs record only their selected profiles, provider, recovery procedure, and exceptions.

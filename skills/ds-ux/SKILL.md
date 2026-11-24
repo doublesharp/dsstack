@@ -1,6 +1,6 @@
 ---
 name: "ds-ux"
-description: "Use when asked for a measured UX/design hill climb with alternating Codex/Claude implementation and council scoring, or its seven-category evaluator role. Routine interface edits use ds-web."
+description: "Use when asked for a measured UX/design hill climb with rotating Codex/Claude/Gemini 4 Neon (High) implementation and council scoring, or its seven-category evaluator role. Routine interface edits use ds-web."
 ---
 
 # Improve against the previous best
@@ -16,9 +16,9 @@ Use this workflow for a requested measured UX improvement. An evaluator-only tas
 
 ## Improve and score
 
-- Alternate Codex and Claude implementers unless the user chooses another order. Keep one writer at a time. Report unavailable requested providers without substituting a solo run.
+- Rotate Codex, Claude, and Gemini 4 Neon (High) implementers unless the user chooses another order (in T3, check `orchestrator_capabilities` and select Antigravity's `gemini-4-neon` with `thought_level: "high"`). Keep one writer at a time. Report unavailable requested providers without substituting a solo or partial run.
 - Give each writer the retained best, last feedback, one priority, and remaining rounds. Build on shared components, styles, and theme tokens. Preserve a recoverable previous best and unrelated edits.
-- Use fresh independent Codex and Claude evaluators for each pair. Give both the same scope, matched captures, rubric, diff, and checks. Hide desired scores, implementer identity, and the other judge's answer.
+- Use fresh independent Codex, Claude, and Gemini 4 Neon (High) evaluators for each pair. Give every evaluator the same scope, matched captures, rubric, diff, and checks. Hide desired scores, implementer identity, and other judges' answers.
 - Apply the [paired scoring acceptance rule](references/scoring.md#acceptance); missing evidence leaves the decision pending.
 - A rejection keeps the best unchanged. Try a different candidate within the remaining budget; do not resubmit unchanged work. At finish, restore only your unaccepted changes.
 

@@ -1,11 +1,11 @@
 ---
 name: "ds-consult"
-description: "Use when asking Codex or Claude for an independent opinion, or when the user asks for a model council."
+description: "Use when asking Codex, Claude, or Gemini 4 Neon (High) for an independent opinion, or when the user asks for a model council."
 ---
 
 # Independent opinions and councils
 
-Use one reviewer from the other provider for a normal consult. For a requested council, follow [the council procedure](references/council.md). Honor the user's providers and models; report unavailable choices without substitutions.
+Use one reviewer from another provider for a normal consult. For a requested council, follow [the council procedure](references/council.md). Honor the user's providers and models; report unavailable choices without substitutions.
 
 Write a fresh brief: goal, exact repository/files or diff, constraints, completed checks, question, and stop boundary. Omit secrets, unrelated context, and your preferred verdict.
 

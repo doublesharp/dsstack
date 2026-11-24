@@ -1,0 +1,4 @@
+interface:
+  display_name: "DS Auth"
+  short_description: "Passkey-first accounts, recovery, sessions, and client grants"
+  default_prompt: "Use $ds-auth to design or update authentication, recovery, sessions, or delegated access around the authority it grants."

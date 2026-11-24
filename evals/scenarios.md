@@ -166,7 +166,7 @@ Expected: include all three requested interfaces, keep adapters around the exist
 
 Skills: ds-ux
 
-Request: run a measured UX hill climb with the default budget. Both evaluators score the baseline above 9 on every device with no category below 8.
+Request: run a measured UX hill climb with the default budget. All council evaluators score the baseline above 9 on every device with no category below 8.
 
 Expected: stop after the baseline; do not spend implementation rounds on a target already met. If later user work starts another comparison, retain its stated scope and budget using ds-ux's round budget rather than a general goal budget.
 
@@ -261,3 +261,27 @@ Expected: establish which checkout and journey the server serves before using it
 ## Limits
 
 Skill declarations select evaluation inputs, not dependencies between skills. These scenarios check decisions and do not measure speed. [Validation](../docs/validation.md) describes selective old/new comparisons; [design rationale](../docs/focus.md) describes behavior to observe during real work.
+
+## Passkey adoption preserves access
+
+Skills: ds-auth
+
+Request: add passkeys to an existing password/TOTP product. Its security settings allow a recovery code to substitute for TOTP.
+
+Expected: preserve existing login while verifying passkey enrollment, required user verification, independent backup, recovery, and revocation. Distinguish password plus a saved backup second factor from account recovery. Record the method for capability checks; keep actual account-recovery provenance separate from newly enrolled passkey strength.
+
+## Recovery cannot manufacture privilege
+
+Skills: ds-auth
+
+Request: an email-recovered account enrolls a new passkey and uses it to replace the payout destination. The email recovery policy permits only restricted access.
+
+Expected: deny the sensitive change until independent promotion requirements succeed; implement a reachable completion path. Verify the decision in the shared application operation and all affected adapters.
+
+## A local app needs no web login
+
+Skills: ds-auth
+
+Request: apply the standard auth architecture to an offline encrypted application.
+
+Expected: retain no-account use and OS verification, with separate data-key recovery and an offline restore check. Do not introduce hosted identity or imply an account reset recovers encryption keys.

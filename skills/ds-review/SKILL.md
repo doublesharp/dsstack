@@ -5,7 +5,7 @@ description: "Use when reviewing a change, or when coordinating a requested inde
 
 # Review for what breaks
 
-Read the finished diff against the ask, project instructions, and contribution guidelines. Inspect the callers and dependencies needed to judge behavior. Skip unrelated code and personal style preferences.
+Read the full target diff (including staged and untracked files for a working tree) against the ask, project instructions, and contribution guidelines. Inspect the callers and dependencies needed to judge behavior. Skip unrelated code and personal style preferences.
 
 - **Must fix:** a demonstrated violation of the ask or project requirements, regression, or security, data-loss, or fund-loss path. Rarity does not lower severity.
 - **Follow-up:** improvements outside that boundary.

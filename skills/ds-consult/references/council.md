@@ -1,6 +1,6 @@
 # Council procedure
 
-Use a council only when requested. Use the requested roster, or one Codex and one Claude reviewer. Keep the same evaluation criteria for every reviewer; do not silently substitute unavailable providers.
+Use a council only when requested. Use the requested roster, or one Codex, one Claude, and one Gemini 4 Neon (High) reviewer. Keep the same evaluation criteria for every reviewer; do not silently substitute unavailable providers.
 
 1. Send each reviewer the same scope, constraints, source material, questions, and stop boundary. Start fresh contexts without the coordinator's preferred answer or other reviewers' conclusions. Reviewers inspect only and start no nested agents.
 2. Collect substantive answers before comparing them. Verify each factual claim against source or an executable check. Merge findings that share a root cause; a majority vote cannot establish a technical fact.
