@@ -1,6 +1,6 @@
 # Keep local policy private
 
-The repository root holds public skills and tooling. Keep machine paths, resource limits, personal additions, and private helpers under ignored `.local/`, then assemble the needed policy into a private bundle. Agents receive concrete additions in the skill they already loaded; no separate preferences skill has to activate.
+Keep machine paths, resource limits, personal instructions, and private helpers under ignored `.local/`. When you build a private bundle, dsstack appends your instructions to the relevant `SKILL.md` files.
 
 ```text
 .local/
@@ -15,9 +15,9 @@ The repository root holds public skills and tooling. Keep machine paths, resourc
   backups/                     # Private recovery material
 ```
 
-Keep `policy.md` short and limited to rules that apply whenever any skill runs. Put domain-specific additions under `policy/skills/`. Use global or project instructions for policy that must apply even when no skill is selected. Additions cannot grant permissions or override host policy. Private helpers remain local; name their location in the relevant addition when an agent needs them.
+Use `policy.md` for short rules shared by all bundled skills and `policy/skills/` for rules specific to one skill. Put rules that must apply in every session in global or project instructions. All additions remain subject to host policy and permissions. If an agent needs a private helper, give its path in the relevant policy file.
 
-For example, a private resource addition can name a build volume, a backed-up worktree directory, and what to do if the volume is missing. Its resource profile records the build volume and capacity settings:
+Use the `ds-resources` addition for worktree location and what to do if the build volume is missing. Put the build volume and capacity settings in `resource-profile.json`.
 
 ```json
 {
@@ -28,20 +28,18 @@ For example, a private resource addition can name a build volume, a backed-up wo
 }
 ```
 
-`require_mount: false` permits an ordinary directory. Choose values for your machine rather than copying another developer's hardware budget.
+`require_mount: false` permits an ordinary directory. Set the reserve and warning thresholds for your machine.
 
-Create the policy files you need, then preview and build at a new destination:
+Create the policy files you need, then preview and build at a new destination.
 
 ```sh
-python3 scripts/dsstack.py bundle --dest .local/bundles/v1 --local .local/policy
-python3 scripts/dsstack.py bundle --dest .local/bundles/v1 --local .local/policy --apply
-python3 .local/bundles/v1/scripts/dsstack.py doctor
+python3 scripts/dsstack.py bundle --dest .local/bundles/personal-v1 --local .local/policy
+python3 scripts/dsstack.py bundle --dest .local/bundles/personal-v1 --local .local/policy --apply
+python3 .local/bundles/personal-v1/scripts/dsstack.py doctor
 ```
 
-An in-checkout destination must be under `.local/`, ignored by Git, and untracked. The tool checks those conditions before assembly. You may also keep inputs and bundles outside the checkout.
+Keep `.local/` ignored and untracked. If it has ever been committed, review Git history for private data before publishing the repository. You can also keep policy and bundles outside the checkout.
 
-Review the assembled `SKILL.md` files before activating the bundle. Its preflight uses the bundled default resource profile; an explicit `--profile` selects another profile and `--scratch` supplies a root only when the profile has none. A profile with a `compute` section requires the bundled broker to accept it. Keep the broker and its reference in tracked skill source so a bundle can be rebuilt without copying files from the active install.
+Review the assembled `SKILL.md` files before installing. Preflight uses `ds-resources/profiles/default.json` in the bundle. Use `--profile` to select a different profile or `--scratch` to select a root when the profile leaves it unset. The bundler checks any `compute` section with the broker from tracked skill source and copies that broker and its reference into the bundle.
 
-Bundle creation leaves public source and existing installations alone. Destinations must be new; an update is another bundle followed by an explicit installation switch. Existing links into a different bundle are conflicts, so uninstall the previous bundle's owned links before installing its replacement. Keep the previous bundle for rollback and start a fresh agent session after switching.
-
-`.local/` can contain private data, including backups of scrubbed history. Keep it untracked and avoid force-adding it. Ignoring files does not remove earlier commits; review history before a first public push.
+After review, install the bundle or switch from the active one. [Quick start](../README.md#quick-start) · [Updating an installation](../README.md#updating-an-installation)

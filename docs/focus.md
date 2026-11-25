@@ -1,27 +1,25 @@
 # Why these rules exist
 
-The skills grew from recurring problems in real coding sessions: repeated review rounds, checks invalidated by later edits, environment troubleshooting that outlasted the task, and unrelated work expanding the assignment. Published guidance informed the response; exact sources are in [provenance.md](provenance.md).
-
-The collection makes a few deliberate choices:
+These rules grew out of recurring problems in coding sessions. [Sources and adaptations](provenance.md)
 
 | Failure | Response |
 |---|---|
-| A task grows while the agent works | One requested item in progress; discoveries become follow-ups |
-| Slow checks run before the code settles | Focused checks while editing; broader required checks after relevant edits |
-| Each review creates another review | Findings tied to a triggering scenario; a bounded re-check |
+| A task grows while the agent works | Finish one requested item at a time and record discoveries as follow-ups |
+| Later edits invalidate slow checks | Run focused checks while editing and broader required checks after the relevant edits |
+| Each review creates another review | Tie findings to a triggering scenario and limit re-checks |
 | Repeated fixes obscure the cause | A counted attempt limit, then diagnosis or a clear blocker |
 | An open-ended goal has no finish | A metric, target, and budget before iteration |
 | Reporting becomes its own project | A short handoff unless the task needs more |
 | Guessed file paths or wrong package roots fail repeatedly | Locate files in the current checkout and run imports from the owning package |
 
-Each skill includes enough guidance to run alone. General delivery belongs to ds-work, model councils to ds-consult, and UX scoring and round budgets to ds-ux. Narrow descriptions keep ordinary tasks from activating specialized workflows.
+Each skill can run on its own. Narrow descriptions help agents select specialized workflows for the tasks that need them. [Skill catalog](../README.md#skills)
 
-## What has been measured
+## Evaluating an installation
 
-Local session observations motivated these rules. They are not a controlled benchmark: projects, models, instructions, and task difficulty changed between periods. The public collection makes no numerical claim about time saved or completion rates.
+The observations came from sessions that varied by project, model, instructions, and task difficulty. Use comparable tasks to measure changes in completion rates or time spent.
 
-To evaluate an installation, use [decision scenarios](../evals/scenarios.md) before normal work, then inspect a small sample of completed tasks. Look for required outcomes finished, relevant checks passed, repeated review chains, and time spent on unrelated work. Compare similar tasks and retain failures as examples. Keep raw session records private.
+Try the decision scenarios before normal work, then inspect a small sample of completed tasks. Check whether agents finished the requested work, ran the required checks, repeated review rounds, or spent time on unrelated work. Keep examples of failures and store raw session records privately. [Decision scenarios](../evals/scenarios.md)
 
 ## Custom policy belongs outside the defaults
 
-A build volume, hardware reserve, hosting contract, or personal reporting preference can be useful without being universal. [Private customization](customization.md) places those details in the assembled installation while the public skills remain portable. Changing the public source does not activate a new bundle.
+Put machine paths, hardware reserves, hosting rules, and personal preferences into your private bundle. That keeps the same public skills usable across machines and projects. [Private customization](customization.md)

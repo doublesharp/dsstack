@@ -1,20 +1,20 @@
 # Sources and adaptations
 
-Exact upstream revisions and file hashes are in [upstreams.lock.json](../upstreams.lock.json), and upstream MIT notices are in [licenses](../licenses). dsstack installs no upstream code or hooks.
+dsstack ships its own skill text and tooling. The source lock records revisions and file hashes for pinned material, and the license directory holds the upstream MIT notices. [Source lock](../upstreams.lock.json) · [License notices](../licenses)
 
 ## Adapted workflows
 
 | Source | Idea | How dsstack differs |
 |---|---|---|
 | t3dotgg/tstack sol-loop and council | Independent reviews, cross-provider councils, and findings checked as they arrive | Task-specific roster and reasoning effort, direct handling of small tasks, and bounded rechecks |
-| t3dotgg/tstack full-stop | Owning work through to a clear finish | No activation by emphatic phrases, and the user's authority stays binding |
-| obra/superpowers TDD and debugging | Failing test first, root-cause hypotheses | No test per helper, no workspace rerun after every step, no revert-to-red cycle |
-| obra/superpowers brainstorming and writing-plans | Intent discovery, buildable specs, task decomposition | One planning skill sized to the work, no compulsory spec, plan, and review sequence |
+| t3dotgg/tstack full-stop | Owning work through to a clear finish | The task and the user's authorization determine the finish line |
+| obra/superpowers TDD and debugging | Failing test first, root-cause hypotheses | Tests at behavior boundaries and focused reruns during edits |
+| obra/superpowers brainstorming and writing-plans | Intent discovery, buildable specs, and task decomposition | One planning skill sized to the work |
 | Existing project contracts | Output routing and domain test boundaries | Project commands, versions, trackers, and required checks still win |
 
 ## Published guidance for the 2026-10-31 revision
 
-All pages were read on 2026-10-31. Quotes are short excerpts, and the skills paraphrase rather than copy.
+The skills paraphrase guidance from the sources consulted for this revision.
 
 Anthropic
 
@@ -47,7 +47,7 @@ Practitioners and research
 
 ## Compact, independent skills, 2026-11-06
 
-The source lock pins the compared files; instructions are paraphrased and upstream code is not executed.
+The source lock pins the compared files.
 
 - [pstack TDD](https://github.com/cursor/plugins/blob/2776ddd2355d6d6c8747d3964600f28daf62f049/pstack/skills/tdd/SKILL.md): choose a useful executable regression check when a new harness would outgrow the change; project-required checks remain binding.
 - [pstack interrogate](https://github.com/cursor/plugins/blob/2776ddd2355d6d6c8747d3964600f28daf62f049/pstack/skills/interrogate/SKILL.md): substantiate findings. Here, a complete source trace can establish a defect when running it is impractical; no adversary fan-out is required.
@@ -55,26 +55,26 @@ The source lock pins the compared files; instructions are paraphrased and upstre
 - [Anthropic skill creator](https://github.com/anthropics/skills/blob/ca45fc496a3436251f191354091d557da31c15b5/skills/skill-creator/SKILL.md) and [Superpowers writing-skills](https://github.com/obra/superpowers/blob/22f0b463e7a5e579904dd6211a520321035526f7/skills/writing-skills/SKILL.md): compare affected behavior with the prior skill. Trials stay selective and budgeted, without a mandatory viewer or benchmark pipeline.
 - [tstack takeover](https://github.com/t3dotgg/tstack/tree/main/skills/takeover): treat inherited completion claims as context. Reuse valid results and check only an unsupported dependency the next item needs.
 
-General councils belong to ds-consult; UX scoring and round accounting belong to ds-ux. Each skill keeps its own references and essential procedure. A fuzzy checker for repeated prose was declined: self-contained skills can use different wording, and scenario declarations test a useful structural boundary instead.
+`ds-consult` defines general councils, and `ds-ux` defines UX scoring and round budgets. Each skill includes the references and procedure it needs. The scenario declarations let `doctor` check which skills each scenario names.
 
 ## Writing guidance, 2026-11-06
 
-The ds-write instructions are written independently after comparing the current [pstack unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md), [Humanizer 3.1.0](https://github.com/blader/humanizer/blob/main/SKILL.md), [theclaymethod unslop 2.3.0](https://github.com/theclaymethod/unslop/blob/main/references/core-contract.md), [ccf humanize](https://github.com/ccf/humanize/blob/main/skills/humanize/references/principles.md), and [mshumer unslop](https://github.com/mshumer/unslop). These links record the consulted sources; version labels were read from the served files, not verified against commit hashes.
+`ds-write` sets out a short editing procedure that preserves facts and the author's voice. It was written independently after comparing the sources below. Version labels are from the files as served. [pstack unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) · [Humanizer 3.1.0](https://github.com/blader/humanizer/blob/main/SKILL.md) · [theclaymethod unslop 2.3.0](https://github.com/theclaymethod/unslop/blob/main/references/core-contract.md) · [ccf humanize](https://github.com/ccf/humanize/blob/main/skills/humanize/references/principles.md) · [mshumer unslop](https://github.com/mshumer/unslop)
 
-The skill uses a short drafting/editing procedure with fact and voice preservation. It imports no pattern catalog, scanner, scoring system, or upstream skill text. Personal voice preferences belong in local policy. The evaluation includes legitimate punctuation and lists that should survive editing.
+The scenarios check that edits preserve deliberate punctuation and lists. Put personal voice preferences in local policy.
 
 ## Direct claims and useful qualifications
 
-The reported failure was repeated caveats about what a product or claim does not do, plus unnecessary dates. The ds-write revision replaces its broad caveat advice with a reader-misunderstanding test, a deletion check inside the existing revision, and a short positive example. It retains uncertainty, operational conditions, deadlines, and dates that determine whether a fact is true.
+Repeated caveats and unnecessary dates prompted a revision to `ds-write`. The skill asks writers to try deleting each qualification during the edit and keep it when deletion changes the meaning, confidence, or reader's next action. That includes uncertainty, operational conditions, deadlines, and dates that determine whether a fact is true.
 
 - [Anthropic's prompting guidance](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#control-the-format-of-responses): describe the desired output and use relevant examples. The skill leads with direct, supported descriptions and follows supplied voice samples.
 - [Ian Quah's writing guide, sections 4, 11, and 15](https://ianq.ai/personal_notes/signs_of_ai_writing/): test whether a contrast excludes a plausible reading; inspect paragraph structure for repeated qualifications that survive phrase replacement. The final meaning check covers contrasts split across sentences and disguised as comma tails.
-- [Conor Bronsdon's avoid-ai-writing, Narrated candor](https://github.com/conorbronsdon/avoid-ai-writing/blob/main/dist/avoid-ai-writing.md#narrated-candor), served version 3.38.0: remove disclosure announcements when the information survives their deletion. Its phrase detector for this pattern was reverted because it also matched useful disclosures. The skill uses contextual judgment instead of a scanner.
+- Remove disclosure announcements when the information survives their deletion. A phrase detector for this pattern also matched useful disclosures, so the project reverted it. [Conor Bronsdon's avoid-ai-writing, Narrated candor, served version 3.38.0](https://github.com/conorbronsdon/avoid-ai-writing/blob/main/dist/avoid-ai-writing.md#narrated-candor)
 - [blader/humanizer, sections 23 and 25](https://github.com/blader/humanizer/blob/main/SKILL.md), served version 4.0.0: remove knowledge-limit residue and repeated document narration while preserving meaning. The skill distinguishes routine freshness stamps from dates needed by the reader.
 - [Practitioner discussion of repeated caveats](https://www.reddit.com/r/vibecoding/comments/1xmn5y4/codexgpt_and_the_endless_caveats/): kenthesaint reports using positive samples and a separate editing pass; CleanFix_Dev suggests phrase checks and more concrete source facts. ds-write uses a sample and the existing meaning check, keeping a single-writer workflow. Required limitations stay with the relevant claim instead of moving to a blanket footer.
-- [Alex Bleakley's negated-instruction experiments](https://alexbleakley.com/blog/saying-what-not-to-do): positive and negative instructions performed similarly on some tested tasks. These older-model results support testing the actual writing task, not a universal claim that negative instructions fail.
+- Positive and negative instructions performed similarly on some tasks with the models tested. Evaluate the instructions on the writing task you care about. [Alex Bleakley's negated-instruction experiments](https://alexbleakley.com/blog/saying-what-not-to-do)
 
-These sources informed independently written instructions and an illustrative example; no upstream implementation or pattern catalog is included. The decision scenarios cover redundant scope statements, necessary conditions and dates, source fidelity, and supplied voice.
+The decision scenarios cover redundant scope statements, necessary conditions and dates, source fidelity, and supplied voice.
 
 The light-edit trial drew on [Weston Hancock's Unslop eval](https://github.com/westonhancock/unslop/blob/main/eval.md#voice-do-these-checks-first) for preserving strong original sentences and [Sepia's discourse guidance](https://github.com/Nanako0129/sepia/blob/v0.13.0/skills/sepia/references/discourse-pass.md) for checking what each section contributes. The ds-write scenario checks an unchanged passage and a procedure whose steps belong together.
 
@@ -87,17 +87,17 @@ The light-edit trial drew on [Weston Hancock's Unslop eval](https://github.com/w
 
 ## forgeds agent workflows, 2026-11-08
 
-The missing guidance was changed-only warnings, reusable instrumented coverage, compact coverage gaps, and CI cache reuse. The fork's [feature guide](https://github.com/doublesharp/foundry/blob/402b5f166132929d556f431dd3d8f9ccb698e99d/FORGEDS.md) now makes these discoverable from its README. Instructions are paraphrased from that guide and checked against the implementation and tests at `4ca15fcba25aa61a1b436d28b428e30b459f3d56`:
+The `ds-solidity` reference covers changed-only warnings, reusable instrumented coverage, compact coverage gaps, and CI cache reuse. It draws on the fork's feature guide and the implementation and tests at `4ca15fcba25aa61a1b436d28b428e30b459f3d56`. [forgeds feature guide](https://github.com/doublesharp/foundry/blob/402b5f166132929d556f431dd3d8f9ccb698e99d/FORGEDS.md)
 
 - [Compiler warning configuration](https://github.com/doublesharp/foundry/blob/4ca15fcba25aa61a1b436d28b428e30b459f3d56/crates/config/src/lib.rs) and [build tests](https://github.com/doublesharp/foundry/blob/4ca15fcba25aa61a1b436d28b428e30b459f3d56/crates/forge/tests/cli/build.rs) establish `compiler_warnings = "changed"`, profile inheritance, and visibility of errors and denied warnings.
 - [Coverage command](https://github.com/doublesharp/foundry/blob/4ca15fcba25aa61a1b436d28b428e30b459f3d56/crates/forge/src/cmd/coverage.rs) and [coverage tests](https://github.com/doublesharp/foundry/blob/4ca15fcba25aa61a1b436d28b428e30b459f3d56/crates/forge/tests/cli/coverage.rs) establish compiler-output reuse with solc and Solar, fresh execution and coverage metadata on reruns, and `--report gaps` with `--report-file`. Instrumentation retains optimizer/viaIR settings but changes bytecode and gas.
 - [Shared compiler caching](https://github.com/doublesharp/foundry/blob/4ca15fcba25aa61a1b436d28b428e30b459f3d56/docs/dev/solidity-compiler-cache.md) defines stable compiler inputs, local locking, and optional sccache storage for CI. Shared compiler results and project caches serve different purposes; preserve both.
 
-The skill keeps the project's approved release compiler and required coverage modes. It makes no timing claim and imports no upstream code.
+Use the project's approved release compiler and required coverage modes.
 
 ## cargo-steward, 2026-11-07
 
-On machines with cargo-steward, ds-rust's sccache rule told agents to set `RUSTC_WRAPPER=sccache`, which bypasses cargo-steward's rustc wrapper; its separate-target and manual-cleanup rules duplicated what the `cargo` proxy and `cargo steward remove --worktree` already do under Cargo's locks. ds-rust now detects the tool, keeps the earlier rules for machines without it, and defers details to the `cargo-steward` skill that the tool installs (`cargo steward skill install`).
+On machines with cargo-steward, `RUSTC_WRAPPER=sccache` bypasses the steward's rustc wrapper. The `cargo` proxy and `cargo steward remove --worktree` already handle targets and cleanup under Cargo's locks. `ds-rust` uses the managed workflow when it detects cargo-steward and points to the skill installed by `cargo steward skill install`. It keeps the ordinary Cargo guidance for other machines.
 
 ## Worktree startup, 2026-11-06
 
@@ -117,11 +117,11 @@ The council workflow draws on [tstack's council procedure](https://github.com/t3
 
 The UX rubric, six-round budget, and rotating-provider workflow are author choices maintained in the skill's own references.
 
-Compare a pinned source's new revision file by file, and keep or revise each adaptation on purpose. Stars and activity don't show that agents finish more work. Don't merge upstream automatically or bring back model-specific instructions that newer guidance retired.
+When a pinned source changes, compare revisions file by file and decide which adaptations still serve the task. Use the decision scenarios to check changes to model-specific instructions. [Validation guide](validation.md)
 
 ## Shared compute broker
 
-The broker and its reference come from this project's `feature/compute-broker` work and the maintained local `20261122-project-retention` bundle. The bundled version adds named-resource leases to the branch implementation. Host configuration stays in the private resource profile.
+The shared compute broker and its reference come from this project's `feature/compute-broker` work. The `20261122-project-retention` bundle contributed named-resource leases. Configure hosts in the private resource profile. [Compute broker reference](../skills/ds-resources/references/compute.md)
 
 ## Authentication design policy
 
