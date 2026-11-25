@@ -250,6 +250,18 @@ Request: edit a public README that opens with a staging rollout date, release ve
 
 Expected: lead the README with setup and the download link. Move upgrade steps below normal use and cut staging and incidental rollout details. Preserve the config key, minimum version, export deadline, deletion date, endpoint, and CSV migration requirement. Keep the commit in the PR reproduction steps. Match the sample's vocabulary and rhythm using only the supplied facts. Return the finished prose without a critique unless asked.
 
+## Grouped instructions and light edits
+
+Skills: ds-write
+
+Request: copyedit a help page that splits choosing, verifying, and downloading a backup across three promotional headings. Keep both screenshots. One caption repeats the instruction to choose a file. The other explains that a green check appears beside the file name after successful verification. Only workspace owners can download backups. Separately, lightly copyedit this product post excerpt and trim filler where it helps:
+
+> I keep the recorder open during soundcheck. When someone says “try it now,” I press Option+R and keep my eyes on the stage.
+>
+> Option+R starts or stops recording while the app is in focus. The shortcut requires macOS 14 or later.
+
+Expected: group the three steps in order, cut the redundant caption, and preserve the verification cue and owner requirement. Return the product post excerpt verbatim.
+
 ## New worktree setup before commands
 
 Skills: ds-work

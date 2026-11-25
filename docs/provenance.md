@@ -76,6 +76,8 @@ The reported failure was repeated caveats about what a product or claim does not
 
 These sources informed independently written instructions and an illustrative example; no upstream implementation or pattern catalog is included. The decision scenarios cover redundant scope statements, necessary conditions and dates, source fidelity, and supplied voice.
 
+The light-edit trial drew on [Weston Hancock's Unslop eval](https://github.com/westonhancock/unslop/blob/main/eval.md#voice-do-these-checks-first) for preserving strong original sentences and [Sepia's discourse guidance](https://github.com/Nanako0129/sepia/blob/v0.13.0/skills/sepia/references/discourse-pass.md) for checking what each section contributes. The ds-write scenario checks an unchanged passage and a procedure whose steps belong together.
+
 ## Compiler caching, 2026-11-06
 
 - [sccache usage and supported compilers](https://github.com/mozilla/sccache#usage): use compiler wrappers or CMake launchers for supported Rust, C/C++, and CUDA/HIP builds; inspect cache statistics when configuring or diagnosing reuse.
