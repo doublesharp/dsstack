@@ -242,13 +242,13 @@ Request: edit homepage copy that describes client comments and approval history,
 
 Expected: describe the supported product actions directly. Remove imagined objections, announcements of candor, and closing restatements. Keep the benchmark's local scope, measurements, missing cache-hit data, and uncertainty about cause once, beside the finding. Replacing "rather than" with a comma-tail negation or splitting the same empty contrast across sentences is not an improvement.
 
-## Useful dates and supplied voice
+## Evergreen docs, useful dates, and supplied voice
 
 Skills: ds-write
 
-Request: edit a migration notice containing a routine "as of" stamp, an export deadline, a deletion date, a JSON-only endpoint, and instructions for teams consuming CSV. Separately, draft a personal update from facts about choosing between two keyboards, using the author's short, conversational writing sample.
+Request: edit a public README that opens with a staging rollout date, release version, commit hash, and upgrade steps. It also has ordinary setup instructions, a stable download link, an exact config key, and a migration notice with a minimum supported version, export deadline, deletion date, and JSON endpoint for CSV users. The accompanying PR description cites the commit that reproduces a migration issue. Separately, draft a personal update from facts about choosing between two keyboards, using the author's short, conversational writing sample.
 
-Expected: remove the routine freshness stamp while preserving the deadline, deletion date, endpoint, and CSV migration requirement. Keep a date when the fact's truth depends on it. Match the sample's vocabulary and rhythm using only the supplied facts; do not manufacture an anecdote or broader opinion. Return the finished prose without a critique unless asked.
+Expected: lead the README with setup and the download link. Move upgrade steps below normal use and cut staging and incidental rollout details. Preserve the config key, minimum version, export deadline, deletion date, endpoint, and CSV migration requirement. Keep the commit in the PR reproduction steps. Match the sample's vocabulary and rhythm using only the supplied facts. Return the finished prose without a critique unless asked.
 
 ## New worktree setup before commands
 
