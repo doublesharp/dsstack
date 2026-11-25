@@ -1,4 +1,4 @@
 interface:
   display_name: "DS Consult"
-  short_description: "Codex, Claude, and Gemini 4 Neon (High) reviews and councils"
+  short_description: "Model councils with Codex, Claude, and Gemini"
   default_prompt: "Use $ds-consult for an independent opinion or a bounded model council on this task."

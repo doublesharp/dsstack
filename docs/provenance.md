@@ -6,7 +6,7 @@ Exact upstream revisions and file hashes are in [upstreams.lock.json](../upstrea
 
 | Source | Idea | How dsstack differs |
 |---|---|---|
-| t3dotgg/tstack sol-loop and council | Bounded review, one reviewer by default, independent named reviewers on request | Two rounds by default, must-fix versus follow-up, no agreement loop or brand requirement |
+| t3dotgg/tstack sol-loop and council | Independent reviews, cross-provider councils, and findings checked as they arrive | Task-specific roster and reasoning effort, direct handling of small tasks, and bounded rechecks |
 | t3dotgg/tstack full-stop | Owning work through to a clear finish | No activation by emphatic phrases, and the user's authority stays binding |
 | obra/superpowers TDD and debugging | Failing test first, root-cause hypotheses | No test per helper, no workspace rerun after every step, no revert-to-red cycle |
 | obra/superpowers brainstorming and writing-plans | Intent discovery, buildable specs, task decomposition | One planning skill sized to the work, no compulsory spec, plan, and review sequence |
@@ -106,6 +106,10 @@ The reported failure was: “The dev startup hit a dependency-link issue in the 
 `ds-security` adapts the source-grounded finding discipline and supply-chain trust questions from [Cloudflare's security-audit-skill](https://github.com/cloudflare/security-audit-skill/tree/d24bc269171a9171fac58493e0ffba511d571a4a), especially its [entrypoint](https://github.com/cloudflare/security-audit-skill/blob/d24bc269171a9171fac58493e0ffba511d571a4a/skills/security-audit/SKILL.md) and [supply-chain companion](https://github.com/cloudflare/security-audit-skill/blob/d24bc269171a9171fac58493e0ffba511d571a4a/skills/security-audit/SUPPLY-CHAIN-AND-RELEASE.md). Exact consulted file hashes are in the source lock. The installed local copy was inspected to diagnose the reported failure; no instruction text was copied from it.
 
 The MIT license is retained in [licenses/security-audit-LICENSE](../licenses/security-audit-LICENSE) and inside the standalone skill. The new instructions are written for dsstack: opt-in installation, ordinary project checks for dependency patches, containment chosen for hazardous execution, findings supported by source or execution, and bounded reviews without mandatory agents, ledgers, or report files. No upstream code or validators are imported. The triggering failure was a routine dependency patch that skipped all builds/tests because macOS could not enforce every audit-only memory control.
+
+## Cross-provider councils, 2026-11-24
+
+The council workflow draws on [tstack's council procedure](https://github.com/t3dotgg/tstack/blob/11e37a74d0a6868c121cd0910ab2b3bd9873b92a/skills/council/SKILL.md) for preparing the review target, running independent reviews in parallel, and checking findings as they arrive against a stable checkout. The caller contributes its own assessment and normally asks the other two providers.
 
 ## Updating
 

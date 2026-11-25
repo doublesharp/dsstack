@@ -14,6 +14,6 @@ For each finding, give its location, triggering input, impact, and suggested fix
 
 When fixes are requested, search the changed code once for the same root cause and reuse reproductions as regression checks. Do not expand that search into unrelated cleanup.
 
-Use an independent reviewer when requested or required by the project. Give the ask, diff, and completed checks without suggesting a verdict. Honor the requested provider; report unavailability. Reviewers inspect only and start no nested reviews.
+Use independent reviewers when requested or required by the project. For substantial changes, prefer a cross-provider council and use `ds-consult` when available. Give the ask, diff, and completed checks without suggesting a verdict. Honor the requested providers and report unavailability. Reviewers inspect only and start no nested reviews.
 
 Review once and recheck must-fix corrections once. Fix any new defect inside a correction without another review round unless requested. Finish with findings and remaining gaps; a review alone does not authorize edits or release.

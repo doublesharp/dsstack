@@ -27,6 +27,19 @@
       "use": "Adapted ideas and workflow boundaries; no upstream code is executed by dsstack."
     },
     {
+      "name": "tstack-council",
+      "repository": "https://github.com/t3dotgg/tstack",
+      "revision": "11e37a74d0a6868c121cd0910ab2b3bd9873b92a",
+      "checked_at": "2026-11-24",
+      "files": {
+        "skills/council/SKILL.md": {
+          "url": "https://raw.githubusercontent.com/t3dotgg/tstack/11e37a74d0a6868c121cd0910ab2b3bd9873b92a/skills/council/SKILL.md",
+          "sha256": "91cab56e85ca2ce2920961b50931573890e0513adbc5a60b33969b1e2501251c"
+        }
+      },
+      "use": "Adapted review preparation, parallel reviews, and checking findings against a stable checkout."
+    },
+    {
       "name": "superpowers",
       "repository": "https://github.com/obra/superpowers",
       "revision": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",

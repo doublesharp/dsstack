@@ -170,6 +170,22 @@ Request: run a measured UX hill climb with the default budget. All council evalu
 
 Expected: stop after the baseline; do not spend implementation rounds on a target already met. If later user work starts another comparison, retain its stated scope and budget using ds-ux's round budget rather than a general goal budget.
 
+## Council size follows the decision
+
+Skills: ds-consult
+
+Request: a Codex agent is asked to recommend a migration strategy for live customer data. Two viable designs trade downtime against rollback complexity. Try the scenario with both reviewers available and with Gemini unavailable.
+
+Expected: make an independent assessment and ask Claude and Gemini to review the same evidence. Choose models suited to the migration and rollback risks. Verify findings before recommending a design. If Gemini is unavailable, continue with Claude's review and disclose the missing review.
+
+## Small fixes proceed directly
+
+Skills: ds-consult
+
+Request: correct a misleading CLI error message. The invalid input and intended wording are already known.
+
+Expected: make the edit and verify it with the reproducing command. Skip the council. If a focused question warrants a second opinion, choose a single reviewer suited to it.
+
 ## Council agreement remains incomplete
 
 Skills: ds-consult

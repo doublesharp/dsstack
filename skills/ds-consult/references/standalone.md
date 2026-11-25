@@ -1,6 +1,6 @@
 # Standalone route
 
-Use this only outside T3, where running another provider's CLI directly is allowed. Check the installed CLI's help before using version-specific flags. Help shows syntax but not which models your account can use, so confirm the model you plan to request. Keep existing authentication, sandbox, approval, and project rules. Never bypass a permission or retry a denial through another route. If a requested provider or model (such as Gemini 4 Neon (High)) has no installed, permitted read-only CLI outside T3, report it unavailable instead of substituting another provider.
+Use this outside T3 when running another provider's CLI directly is allowed. Check the installed CLI's help for flags and confirm your account can use the selected model. Keep existing authentication, sandbox, approval, and project rules. Use a Gemini CLI only if the installed tool supports the selected model and a permitted read-only review. Otherwise report it unavailable.
 
 Put the brief and output in the project's configured disposable-output location. Write a fresh, nonempty brief for each consult.
 

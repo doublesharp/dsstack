@@ -51,7 +51,7 @@ Start with `ds-work`, `ds-debug`, `ds-tdd`, and `ds-review`. Choose domain skill
 | :--- | :--- | :--- |
 | Delivery | [ds-work](skills/ds-work/SKILL.md) · [ds-plan](skills/ds-plan/SKILL.md) | Task lists, plans, blockers, and handoffs. |
 | Correctness | [ds-debug](skills/ds-debug/SKILL.md) · [ds-tdd](skills/ds-tdd/SKILL.md) · [ds-review](skills/ds-review/SKILL.md) | Reproduce failures, test fixes, and review concrete defects. |
-| Consultation | [ds-consult](skills/ds-consult/SKILL.md) | Get independent opinions and run a requested model council. |
+| Consultation | [ds-consult](skills/ds-consult/SKILL.md) | Get independent opinions and choose a council suited to the decision. |
 | Resources | [ds-resources](skills/ds-resources/SKILL.md) | Check disk capacity, schedule shared builds, and clean up task-owned output. |
 | Languages & services | [ds-rust](skills/ds-rust/SKILL.md) · [ds-typescript](skills/ds-typescript/SKILL.md) · [ds-solidity](skills/ds-solidity/SKILL.md) | Rust tests, TypeScript services, and Solidity contracts. |
 | Authentication | [ds-auth](skills/ds-auth/SKILL.md) | Passkey-first accounts, privileged access, recovery, sessions, and scoped client grants. |
