@@ -238,9 +238,19 @@ Expected: remove empty framing, disclaimers, and repetition while retaining the 
 
 Skills: ds-write
 
-Request: edit homepage copy that describes client comments and approval history, then repeatedly says the product is not a decision engine. A separate benchmark paragraph reports a local timing improvement, says cache hits were not counted, and repeats that the result is an observation rather than proof of a cause. Both passages announce their caveats before stating them and end with vague restatements.
+Request: edit homepage copy that describes client comments and approval history, mentions that approval history passed staging tests, and repeatedly says the product is not a decision engine. A separate benchmark paragraph reports a local timing improvement, says cache hits were not counted, and repeats that the result is an observation rather than proof of a cause. Both passages announce their caveats before stating them and end with vague restatements.
 
-Expected: describe the supported product actions directly. Remove imagined objections, announcements of candor, and closing restatements. Keep the benchmark's local scope, measurements, missing cache-hit data, and uncertainty about cause once, beside the finding. Replacing "rather than" with a comma-tail negation or splitting the same empty contrast across sentences is not an improvement.
+Expected: describe the supported product actions directly. Remove the staging test note, imagined objections, announcements of candor, and closing restatements. Keep the benchmark's local scope, measurements, missing cache-hit data, and uncertainty about cause once, beside the finding. Replacing "rather than" with a comma-tail negation or splitting the same empty contrast across sentences is not an improvement.
+
+## Casual message with a required condition
+
+Skills: ds-write
+
+Request: polish this text to a friend:
+
+> Actually, badge pickup moved to 3 — you’ll need photo ID. ✨ Look for the sign that says ‘Café →’.
+
+Expected: lead with the new pickup time and keep the photo ID requirement. Drop the filler emphasis and emoji. Replace the em dash, curly apostrophe, and curly quotation marks with plain punctuation. Keep the sign text `Café →` verbatim.
 
 ## Evergreen docs, useful dates, and supplied voice
 
