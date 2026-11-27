@@ -128,6 +128,18 @@ Preflight checks the output root, task paths, and free space before you create d
 
 </details>
 
+<details>
+<summary><strong>Scheduling heavy work</strong></summary>
+
+```sh
+python3 skills/ds-resources/scripts/compute.py run --class heavy -- sh -c 'cargo test -j "$COMPUTE_JOBS"'
+python3 skills/ds-resources/scripts/compute.py status
+```
+
+The broker queues heavy work and sets `COMPUTE_JOBS` for the command's concurrency limit. With remote hosts configured, add `--sync DIR` to let it place a portable job on the host expected to finish soonest. `compute balance` explains placement, and `compute measure` reserves a host for benchmarks. [Compute reference](skills/ds-resources/references/compute.md)
+
+</details>
+
 ## Development
 
 Set `TMPDIR` to an existing task-owned output directory under the project's build policy before running the tests. [AGENTS.md](AGENTS.md)

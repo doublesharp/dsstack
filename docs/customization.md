@@ -30,6 +30,8 @@ Use the `ds-resources` addition for worktree location and what to do if the buil
 
 `require_mount: false` permits an ordinary directory. Set the reserve and warning thresholds for your machine.
 
+Set slot counts and remote host settings in the profile's `compute` object. [Compute profile fields](../skills/ds-resources/references/compute.md#profile)
+
 Create the policy files you need, then preview and build at a new destination.
 
 ```sh
